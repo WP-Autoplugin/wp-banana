@@ -1,0 +1,18 @@
+{
+  "name": "balazsp/wp-banana",
+  "description": "AI image generation/edit plugin for WordPress using Nano Banana and other models.",
+  "type": "wordpress-plugin",
+  "license": "proprietary",
+  "require": {
+    "php": ">=7.2"
+  },
+  "config": {
+    "optimize-autoloader": true,
+    "sort-packages": true
+  },
+  "autoload": {
+      "classmap": [
+          "src/"
+      ]
+  }
+}

@@ -1,0 +1,81 @@
+.misc-pub-wp-banana {
+	padding-top: 12px;
+	border-top: 1px solid #dcdcde;
+}
+
+.wp-banana-submitbox-heading {
+	margin: 0 0 8px;
+}
+
+.wp-banana-submitbox-derived {
+	margin: 0 0 12px;
+}
+
+.wp-banana-submitbox-derived a {
+	text-decoration: none;
+}
+
+.wp-banana-submitbox-derived a:hover,
+.wp-banana-submitbox-history__derived a:hover {
+	text-decoration: underline;
+}
+
+.wp-banana-submitbox-history {
+	display: block;
+	margin: 0;
+	padding: 0;
+}
+
+.wp-banana-submitbox-history__summary-label {
+	cursor: pointer;
+	font-weight: 600;
+	margin: 0;
+}
+
+.wp-banana-submitbox-history__body {
+	margin-top: 10px;
+}
+
+.wp-banana-submitbox-history__list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: grid;
+	gap: 12px;
+}
+
+.wp-banana-submitbox-history__item {
+	padding: 10px;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	background: #fbfbfc;
+	display: grid;
+	gap: 6px;
+}
+
+.wp-banana-submitbox-history__summary {
+	font-weight: 600;
+}
+
+.wp-banana-submitbox-history__meta {
+	font-size: 12px;
+	color: #50575e;
+}
+
+.wp-banana-submitbox-history__derived,
+.wp-banana-submitbox-history__prompt {
+	font-size: 13px;
+	color: #1d2327;
+}
+
+.wp-banana-submitbox-history__note,
+.wp-banana-submitbox-history-empty,
+.wp-banana-submitbox-history-disabled {
+	margin: 12px 0 0;
+	font-size: 12px;
+	color: #50575e;
+}
+
+.wp-banana-submitbox-history__prompt {
+	margin: 0;
+}

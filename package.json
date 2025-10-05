@@ -1,0 +1,20 @@
+{
+  "name": "wp-banana",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "wp-scripts build --source-path=assets/admin",
+    "postbuild": "npm run format",
+    "start": "wp-scripts start --source-path=assets/admin",
+    "format": "phpcbf . --extensions=php --ignore='vendor/*' --ignore='node_modules/*'"
+  },
+  "devDependencies": {
+    "@wordpress/scripts": "^30.5.0",
+    "@types/react": "^18.2.47",
+    "@types/react-dom": "^18.2.18",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "typescript": "^5.5.4"
+  }
+}
+

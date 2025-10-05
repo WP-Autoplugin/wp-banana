@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ES2019",
+    "lib": ["ES2019", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "jsx": "react-jsx",
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "typeRoots": ["./types", "./node_modules/@types"],
+    "types": ["react", "react-dom"]
+  },
+  "include": [
+    "assets/**/*.ts",
+    "assets/**/*.tsx",
+    "types/**/*.d.ts"
+  ]
+}

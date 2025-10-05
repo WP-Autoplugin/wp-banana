@@ -1,0 +1,37 @@
+.media-modal.wp-banana-media-tab-active .media-frame-content > :not(.wp-banana-media-panel) {
+	display: none !important;
+}
+
+.media-modal.wp-banana-media-tab-active .wp-banana-media-panel {
+	display: block;
+}
+
+.wp-banana-media-panel {
+	display: none;
+	padding: 16px;
+	box-sizing: border-box;
+	max-height: calc(100vh - 220px);
+	overflow-y: auto;
+	background: #fff;
+}
+
+.wp-banana-media-tab-active .wp-banana-media-panel .wp-banana-generate-panel__actions {
+	display: flex;
+	gap: 12px;
+	align-items: center;
+}
+
+.media-menu-item.wp-banana-media-tab {
+	position: relative;
+}
+
+.media-modal.wp-banana-media-tab-active .media-toolbar-secondary,
+.media-modal.wp-banana-media-tab-active .media-toolbar-primary {
+	display: none;
+}
+
+.wp-banana-media-panel .components-notice,
+.wp-banana-edit-panel .components-notice,
+.wp-banana-generate-panel .components-notice {
+	margin-bottom: 1em;
+}
