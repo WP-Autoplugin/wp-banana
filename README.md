@@ -93,9 +93,7 @@ WP Nano Banana is a free WordPress plugin that lets you generate and edit images
 <details open>
 <summary>Watch a 1-minute demo video</summary>
 
-<video src="assets/demo.mp4" controls width="600" style="max-width:100%;border-radius:8px;margin-bottom:1em;">
-  Sorry, your browser doesn't support embedded videos.
-</video>
+https://github.com/user-attachments/assets/28a5ef2d-682e-4206-99e7-6eb1f141146d
 
 </details>
 
