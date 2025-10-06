@@ -11,6 +11,8 @@ WP Nano Banana is a free WordPress plugin that lets you generate and edit images
 - Edit, enhance, and transform images using AI models like **Google Nano Banana**, **gpt-image-1**, **Seedream 4.0** and more
 - Native-like integration in Gutenberg, Classic Editor, and most page builders
 
+[▼ **See Screenshots & Demo**](#screenshots--demo)
+
 ## Plugin Highlights
 
 - **Native Integration**: Looks and feels like WordPress core — no flashy UI, no distractions
@@ -86,7 +88,16 @@ WP Nano Banana is a free WordPress plugin that lets you generate and edit images
 4. The edited image will appear in the preview area. You can undo changes if needed.
 5. Click **Save Changes** to apply the edits or **Save Copy** to keep both versions.
 
-## Screenshots
+## Screenshots & Demo
+
+<details open>
+<summary>Watch a 1-minute demo video</summary>
+
+<video src="assets/demo.mp4" controls width="600" style="max-width:100%;border-radius:8px;margin-bottom:1em;">
+  Sorry, your browser doesn't support embedded videos.
+</video>
+
+</details>
 
 <details>
 <summary>AI image generation from the Media Library</summary>
