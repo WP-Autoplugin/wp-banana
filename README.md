@@ -64,6 +64,16 @@ WP Nano Banana is a free WordPress plugin that lets you generate and edit images
 3. Go to **Settings → WP Nano Banana** and add your API key (OpenAI, Replicate, etc.).
 4. Start generating and editing images right inside your WordPress dashboard.
 
+For environments where you don’t want keys in the DB, you can define them in `wp-config.php`:
+
+```
+define( 'WP_BANANA_OPENAI_API_KEY', 'sk-...' );
+define( 'WP_BANANA_GOOGLE_API_KEY', 'AIza...' );
+define( 'WP_BANANA_REPLICATE_API_KEY', 'r8_...' );
+```
+
+Constants (if present) take priority over saved settings.
+
 ## Usage Examples
 
 ### Generate a New Image
