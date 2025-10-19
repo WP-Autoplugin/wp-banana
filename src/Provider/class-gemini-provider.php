@@ -32,18 +32,21 @@ final class Gemini_Provider implements Provider_Interface {
 	 * @var string
 	 */
 	private $api_url = 'https://generativelanguage.googleapis.com/v1beta/models';
+
 	/**
 	 * Gemini API key.
 	 *
 	 * @var string
 	 */
 	private $api_key;
+
 	/**
 	 * Default model name.
 	 *
 	 * @var string
 	 */
 	private $default_model;
+
 	/**
 	 * Timeout in seconds.
 	 *

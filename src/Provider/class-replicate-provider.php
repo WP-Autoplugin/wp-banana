@@ -33,18 +33,21 @@ final class Replicate_Provider implements Provider_Interface {
 	 * @var string
 	 */
 	private $api_url = 'https://api.replicate.com/v1/models';
+
 	/**
 	 * Replicate API token.
 	 *
 	 * @var string
 	 */
 	private $api_token;
+
 	/**
 	 * Default model name.
 	 *
 	 * @var string
 	 */
 	private $default_model;
+
 	/**
 	 * Timeout in seconds.
 	 *

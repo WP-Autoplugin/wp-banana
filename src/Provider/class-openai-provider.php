@@ -32,24 +32,28 @@ final class OpenAI_Provider implements Provider_Interface {
 	 * @var string
 	 */
 	private $generation_url = 'https://api.openai.com/v1/images/generations';
+
 	/**
 	 * OpenAI edit endpoint.
 	 *
 	 * @var string
 	 */
 	private $edit_url = 'https://api.openai.com/v1/images/edits';
+
 	/**
 	 * API key.
 	 *
 	 * @var string
 	 */
 	private $api_key;
+
 	/**
 	 * Default model.
 	 *
 	 * @var string
 	 */
 	private $default_model;
+
 	/**
 	 * Timeout seconds.
 	 *
