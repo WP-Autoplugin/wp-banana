@@ -905,17 +905,17 @@ const EditPanel = ( {
 		<Card>
 			<CardBody>
 				{ loadError && (
-					<Notice status="error" isDismissible={ false }>
+					<Notice status="error" isDismissible onRemove={ () => setLoadError( null ) }>
 						{ loadError }
 					</Notice>
 				) }
 				{ submitError && (
-					<Notice status="error" isDismissible={ false }>
+					<Notice status="error" isDismissible onRemove={ () => setSubmitError( null ) }>
 						{ submitError }
 					</Notice>
 				) }
 				{ referenceError && (
-					<Notice status="warning" isDismissible={ false }>
+					<Notice status="warning" isDismissible onRemove={ () => setReferenceError( null ) }>
 						{ referenceError }
 					</Notice>
 				) }
@@ -925,7 +925,11 @@ const EditPanel = ( {
 					</Notice>
 				) }
 				{ notice && (
-					<Notice status={ notice.type === 'success' ? 'success' : 'info' } isDismissible={ false }>
+					<Notice
+						status={ notice.type === 'success' ? 'success' : 'info' }
+						isDismissible
+						onRemove={ () => setNotice( null ) }
+					>
 						{ notice.message }
 						{ notice.url && (
 							<>
