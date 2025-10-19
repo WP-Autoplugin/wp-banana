@@ -100,7 +100,19 @@ final class Models_Controller {
 		}
 
 		$models = Models_Catalog::get( $purpose, $provider );
+		/**
+		 * Filter the models list returned by the REST API.
+		 *
+		 * @since 0.2.0
+		 *
+		 * @param array           $models  Model identifiers.
+		 * @param string          $purpose Purpose (generate|edit).
+		 * @param string          $provider Provider slug.
+		 * @param WP_REST_Request $req     Current request.
+		 */
+		$models = apply_filters( 'wp_banana_rest_models_list', $models, $purpose, $provider, $req );
+		$models = is_array( $models ) ? array_values( $models ) : [];
 
-		return new WP_REST_Response( [ 'models' => array_values( $models ) ], 200 );
+		return new WP_REST_Response( [ 'models' => $models ], 200 );
 	}
 }

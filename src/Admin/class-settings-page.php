@@ -150,15 +150,38 @@ final class Settings_Page {
 		// New: default model selections.
 		$catalog = Models_Catalog::all();
 
-		$allowed_generate = array_merge( $catalog['generate']['gemini'], $catalog['generate']['openai'], $catalog['generate']['replicate'] );
+		$allowed_generate = [];
+		if ( isset( $catalog['generate'] ) && is_array( $catalog['generate'] ) ) {
+			foreach ( $catalog['generate'] as $models ) {
+				if ( is_array( $models ) ) {
+					foreach ( $models as $model_slug ) {
+						$allowed_generate[] = (string) $model_slug;
+					}
+				}
+			}
+		}
+		$allowed_generate = array_values( array_unique( $allowed_generate ) );
 
-		$allowed_edit = array_merge( $catalog['edit']['gemini'], $catalog['edit']['openai'], $catalog['edit']['replicate'] );
+		$allowed_edit = [];
+		if ( isset( $catalog['edit'] ) && is_array( $catalog['edit'] ) ) {
+			foreach ( $catalog['edit'] as $models ) {
+				if ( is_array( $models ) ) {
+					foreach ( $models as $model_slug ) {
+						$allowed_edit[] = (string) $model_slug;
+					}
+				}
+			}
+		}
+		$allowed_edit = array_values( array_unique( $allowed_edit ) );
+
+		$default_generate_fallback = ! empty( $allowed_generate ) ? (string) $allowed_generate[0] : 'gemini-2.5-flash-image-preview';
+		$default_edit_fallback     = ! empty( $allowed_edit ) ? (string) $allowed_edit[0] : 'gemini-2.5-flash-image-preview';
 
 		$gen_model_raw = isset( $input['default_generator_model'] ) ? sanitize_text_field( $input['default_generator_model'] ) : ( isset( $current['default_generator_model'] ) ? $current['default_generator_model'] : 'gemini-2.5-flash-image-preview' );
 
 		$edit_model_raw = isset( $input['default_editor_model'] ) ? sanitize_text_field( $input['default_editor_model'] ) : ( isset( $current['default_editor_model'] ) ? $current['default_editor_model'] : 'gemini-2.5-flash-image-preview' );
-		$current['default_generator_model'] = in_array( $gen_model_raw, $allowed_generate, true ) ? $gen_model_raw : 'gemini-2.5-flash-image-preview';
-		$current['default_editor_model']    = in_array( $edit_model_raw, $allowed_edit, true ) ? $edit_model_raw : 'gemini-2.5-flash-image-preview';
+		$current['default_generator_model'] = in_array( $gen_model_raw, $allowed_generate, true ) ? $gen_model_raw : $default_generate_fallback;
+		$current['default_editor_model']    = in_array( $edit_model_raw, $allowed_edit, true ) ? $edit_model_raw : $default_edit_fallback;
 
 		// phpcs:enable Generic.Formatting.MultipleStatementAlignment
 		return $current;
@@ -174,21 +197,21 @@ final class Settings_Page {
 			wp_die( esc_html__( 'You do not have permission to access this page.', 'wp-banana' ) );
 		}
 
-		$opts             = $this->options->get_all();
-		$gemini_state     = $this->get_constant_state( 'gemini' );
-		$openai_state     = $this->get_constant_state( 'openai' );
-		$replicate_state  = $this->get_constant_state( 'replicate' );
-		$gemini_value     = $gemini_state['defined']
+		$opts               = $this->options->get_all();
+		$gemini_state       = $this->get_constant_state( 'gemini' );
+		$openai_state       = $this->get_constant_state( 'openai' );
+		$replicate_state    = $this->get_constant_state( 'replicate' );
+		$gemini_value       = $gemini_state['defined']
 			? ( $gemini_state['has_value'] ? '********' : '' )
 			: ( isset( $opts['providers']['gemini']['api_key'] ) ? (string) $opts['providers']['gemini']['api_key'] : '' );
-		$openai_value     = $openai_state['defined']
+		$openai_value       = $openai_state['defined']
 			? ( $openai_state['has_value'] ? '********' : '' )
 			: ( isset( $opts['providers']['openai']['api_key'] ) ? (string) $opts['providers']['openai']['api_key'] : '' );
-		$replicate_value  = $replicate_state['defined']
+		$replicate_value    = $replicate_state['defined']
 			? ( $replicate_state['has_value'] ? '********' : '' )
 			: ( isset( $opts['providers']['replicate']['api_token'] ) ? (string) $opts['providers']['replicate']['api_token'] : '' );
-		$gemini_disabled  = $gemini_state['defined'] ? ' disabled="disabled" aria-disabled="true"' : '';
-		$openai_disabled  = $openai_state['defined'] ? ' disabled="disabled" aria-disabled="true"' : '';
+		$gemini_disabled    = $gemini_state['defined'] ? ' disabled="disabled" aria-disabled="true"' : '';
+		$openai_disabled    = $openai_state['defined'] ? ' disabled="disabled" aria-disabled="true"' : '';
 		$replicate_disabled = $replicate_state['defined'] ? ' disabled="disabled" aria-disabled="true"' : '';
 		?>
 		<div class="wrap">
@@ -205,7 +228,7 @@ final class Settings_Page {
 					<tr>
 						<th scope="row">Gemini API Key</th>
 						<td>
-							<input type="password" style="width:420px" name="<?php echo esc_attr( Options::OPTION_NAME ); ?>[providers][gemini][api_key]" value="<?php echo esc_attr( $gemini_value ); ?>" placeholder="AIza..."<?php echo $gemini_disabled; ?> />
+							<input type="password" style="width:420px" name="<?php echo esc_attr( Options::OPTION_NAME ); ?>[providers][gemini][api_key]" value="<?php echo esc_attr( $gemini_value ); ?>" placeholder="AIza..."<?php echo $gemini_state['defined'] ? ' disabled="disabled" aria-disabled="true"' : ''; ?> />
 							<?php if ( $gemini_state['defined'] ) : ?>
 								<?php $this->render_constant_notice( $gemini_state['constant'], $gemini_state['has_value'] ); ?>
 							<?php endif; ?>
@@ -214,7 +237,7 @@ final class Settings_Page {
 					<tr>
 						<th scope="row">OpenAI API Key</th>
 						<td>
-							<input type="password" style="width:420px" name="<?php echo esc_attr( Options::OPTION_NAME ); ?>[providers][openai][api_key]" value="<?php echo esc_attr( $openai_value ); ?>" placeholder="sk-..."<?php echo $openai_disabled; ?> />
+							<input type="password" style="width:420px" name="<?php echo esc_attr( Options::OPTION_NAME ); ?>[providers][openai][api_key]" value="<?php echo esc_attr( $openai_value ); ?>" placeholder="sk-..."<?php echo $openai_state['defined'] ? ' disabled="disabled" aria-disabled="true"' : ''; ?> />
 							<?php if ( $openai_state['defined'] ) : ?>
 								<?php $this->render_constant_notice( $openai_state['constant'], $openai_state['has_value'] ); ?>
 							<?php endif; ?>
@@ -223,41 +246,34 @@ final class Settings_Page {
 					<tr>
 						<th scope="row">Replicate API Token</th>
 						<td>
-							<input type="password" style="width:420px" name="<?php echo esc_attr( Options::OPTION_NAME ); ?>[providers][replicate][api_token]" value="<?php echo esc_attr( $replicate_value ); ?>" placeholder="r8_..."<?php echo $replicate_disabled; ?> />
+							<input type="password" style="width:420px" name="<?php echo esc_attr( Options::OPTION_NAME ); ?>[providers][replicate][api_token]" value="<?php echo esc_attr( $replicate_value ); ?>" placeholder="r8_..."<?php echo $replicate_state['defined'] ? ' disabled="disabled" aria-disabled="true"' : ''; ?> />
 							<?php if ( $replicate_state['defined'] ) : ?>
 								<?php $this->render_constant_notice( $replicate_state['constant'], $replicate_state['has_value'] ); ?>
 							<?php endif; ?>
 						</td>
 					</tr>
-					<?php // phpcs:disable Generic.Formatting.MultipleStatementAlignment
-					$catalog     = Models_Catalog::all();
-					$gen_gemini  = $catalog['generate']['gemini'];
-					$gen_openai  = $catalog['generate']['openai'];
-					$gen_rep     = $catalog['generate']['replicate'];
-					$edit_gemini = $catalog['edit']['gemini'];
-					$edit_openai = $catalog['edit']['openai'];
-					$edit_rep    = $catalog['edit']['replicate'];
-						// phpcs:enable Generic.Formatting.MultipleStatementAlignment
+					<?php
+					$catalog         = Models_Catalog::all();
+					$generate_groups = isset( $catalog['generate'] ) && is_array( $catalog['generate'] ) ? $catalog['generate'] : [];
+					$edit_groups     = isset( $catalog['edit'] ) && is_array( $catalog['edit'] ) ? $catalog['edit'] : [];
 					?>
 					<tr>
 						<th scope="row"><?php esc_html_e( 'Default Generator Model', 'wp-banana' ); ?></th>
 						<td>
 							<select style="min-width:420px" name="<?php echo esc_attr( Options::OPTION_NAME ); ?>[default_generator_model]">
-								<optgroup label="Google">
-									<?php foreach ( $gen_gemini as $m ) : ?>
-										<option value="<?php echo esc_attr( $m ); ?>" <?php selected( $opts['default_generator_model'], $m ); ?>><?php echo esc_html( $m ); ?></option>
-									<?php endforeach; ?>
-								</optgroup>
-								<optgroup label="OpenAI">
-									<?php foreach ( $gen_openai as $m ) : ?>
-										<option value="<?php echo esc_attr( $m ); ?>" <?php selected( $opts['default_generator_model'], $m ); ?>><?php echo esc_html( $m ); ?></option>
-									<?php endforeach; ?>
-								</optgroup>
-								<optgroup label="Replicate">
-									<?php foreach ( $gen_rep as $m ) : ?>
-										<option value="<?php echo esc_attr( $m ); ?>" <?php selected( $opts['default_generator_model'], $m ); ?>><?php echo esc_html( $m ); ?></option>
-									<?php endforeach; ?>
-								</optgroup>
+								<?php
+								foreach ( $generate_groups as $provider_slug => $models ) :
+									if ( empty( $models ) || ! is_array( $models ) ) {
+										continue;
+									}
+									$label = $this->provider_label( (string) $provider_slug );
+									?>
+									<optgroup label="<?php echo esc_attr( $label ); ?>">
+										<?php foreach ( $models as $model_slug ) : ?>
+											<option value="<?php echo esc_attr( $model_slug ); ?>" <?php selected( $opts['default_generator_model'], $model_slug ); ?>><?php echo esc_html( $model_slug ); ?></option>
+										<?php endforeach; ?>
+									</optgroup>
+								<?php endforeach; ?>
 							</select>
 						</td>
 					</tr>
@@ -265,21 +281,19 @@ final class Settings_Page {
 						<th scope="row"><?php esc_html_e( 'Default Editor Model', 'wp-banana' ); ?></th>
 						<td>
 							<select style="min-width:420px" name="<?php echo esc_attr( Options::OPTION_NAME ); ?>[default_editor_model]">
-								<optgroup label="Google">
-									<?php foreach ( $edit_gemini as $m ) : ?>
-										<option value="<?php echo esc_attr( $m ); ?>" <?php selected( $opts['default_editor_model'], $m ); ?>><?php echo esc_html( $m ); ?></option>
-									<?php endforeach; ?>
-								</optgroup>
-								<optgroup label="OpenAI">
-									<?php foreach ( $edit_openai as $m ) : ?>
-										<option value="<?php echo esc_attr( $m ); ?>" <?php selected( $opts['default_editor_model'], $m ); ?>><?php echo esc_html( $m ); ?></option>
-									<?php endforeach; ?>
-								</optgroup>
-								<optgroup label="Replicate">
-									<?php foreach ( $edit_rep as $m ) : ?>
-										<option value="<?php echo esc_attr( $m ); ?>" <?php selected( $opts['default_editor_model'], $m ); ?>><?php echo esc_html( $m ); ?></option>
-									<?php endforeach; ?>
-								</optgroup>
+								<?php
+								foreach ( $edit_groups as $provider_slug => $models ) :
+									if ( empty( $models ) || ! is_array( $models ) ) {
+										continue;
+									}
+									$label = $this->provider_label( (string) $provider_slug );
+									?>
+									<optgroup label="<?php echo esc_attr( $label ); ?>">
+										<?php foreach ( $models as $model_slug ) : ?>
+											<option value="<?php echo esc_attr( $model_slug ); ?>" <?php selected( $opts['default_editor_model'], $model_slug ); ?>><?php echo esc_html( $model_slug ); ?></option>
+										<?php endforeach; ?>
+									</optgroup>
+								<?php endforeach; ?>
 							</select>
 						</td>
 					</tr>
@@ -327,6 +341,29 @@ final class Settings_Page {
 	}
 
 	/**
+	 * Build a human-friendly label for provider slugs.
+	 *
+	 * @since 0.2.0
+	 *
+	 * @param string $provider Provider slug.
+	 * @return string
+	 */
+	private function provider_label( string $provider ): string {
+		$provider = strtolower( trim( $provider ) );
+		$map      = [
+			'gemini'    => __( 'Google', 'wp-banana' ),
+			'google'    => __( 'Google', 'wp-banana' ),
+			'openai'    => __( 'OpenAI', 'wp-banana' ),
+			'replicate' => __( 'Replicate', 'wp-banana' ),
+		];
+		if ( isset( $map[ $provider ] ) ) {
+			return $map[ $provider ];
+		}
+		$label = str_replace( [ '-', '_' ], ' ', $provider );
+		return ucwords( $label );
+	}
+
+	/**
 	 * Determine wp-config override state for a provider.
 	 *
 	 * @param string $provider Provider slug.
@@ -362,7 +399,8 @@ final class Settings_Page {
 			return;
 		}
 
-		echo '<p class="description">' . sprintf( esc_html__( 'Managed via constant in %s.', 'wp-banana' ), '<code>wp-config.php</code>' ) ;
+		// Translators: %s is "wp-config.php" in a code tag.
+		echo '<p class="description">' . sprintf( esc_html__( 'Managed via constant in %s.', 'wp-banana' ), '<code>wp-config.php</code>' );
 
 		if ( ! $has_value ) {
 			echo ' ' . esc_html__( 'The constant is currently empty.', 'wp-banana' );

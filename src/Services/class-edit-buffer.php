@@ -91,7 +91,20 @@ final class Edit_Buffer {
 			'created'       => time(),
 			'context'       => $sanitized_context,
 		];
-		set_transient( self::TRANSIENT_PREFIX . $key, $payload, HOUR_IN_SECONDS );
+		/**
+		 * Filter the TTL for stored edit buffers.
+		 *
+		 * @since 0.2.0
+		 *
+		 * @param int   $ttl            Buffer lifetime in seconds.
+		 * @param int   $attachment_id  Parent attachment ID.
+		 * @param array $context        Sanitized context metadata.
+		 */
+		$ttl = (int) apply_filters( 'wp_banana_edit_buffer_ttl', HOUR_IN_SECONDS, $attachment_id, $sanitized_context );
+		if ( $ttl <= 0 ) {
+			$ttl = HOUR_IN_SECONDS;
+		}
+		set_transient( self::TRANSIENT_PREFIX . $key, $payload, $ttl );
 
 		return [
 			'key'     => $key,

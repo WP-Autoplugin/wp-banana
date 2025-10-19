@@ -81,7 +81,15 @@ final class Gemini_Provider implements Provider_Interface {
 
 		$url     = trailingslashit( $this->api_url ) . rawurlencode( $model ) . ':generateContent';
 		$payload = $this->build_generate_payload( $p->prompt, $p->reference_images );
-		$data    = $this->perform_request( $url, $payload );
+		$data    = $this->perform_request(
+			$url,
+			$payload,
+			[
+				'operation' => 'generate',
+				'model'     => $model,
+				'prompt'    => $p->prompt,
+			]
+		);
 		$img     = $this->extract_inline_image( $data );
 		if ( ! $img ) {
 			throw new RuntimeException( 'Gemini response did not include image bytes.' );
@@ -123,7 +131,16 @@ final class Gemini_Provider implements Provider_Interface {
 		$ft      = wp_check_filetype( $p->source_file );
 		$mime    = is_array( $ft ) && ! empty( $ft['type'] ) ? $ft['type'] : 'image/png';
 		$payload = $this->build_edit_payload( $p->prompt, $mime, $bytes, $p->reference_images );
-		$data    = $this->perform_request( $url, $payload );
+		$data    = $this->perform_request(
+			$url,
+			$payload,
+			[
+				'operation'  => 'edit',
+				'model'      => $model,
+				'prompt'     => $p->prompt,
+				'sourceFile' => $p->source_file,
+			]
+		);
 		$img     = $this->extract_inline_image( $data );
 		if ( ! $img ) {
 			throw new RuntimeException( 'Gemini response did not include edited image bytes.' );
@@ -193,8 +210,10 @@ final class Gemini_Provider implements Provider_Interface {
 	/**
 	 * Build payload for image generation requests.
 	 *
-	 * @param string $prompt Prompt text.
+	 * @param string            $prompt Prompt text.
+	 * @param Reference_Image[] $references Reference images.
 	 * @return array
+	 * @throws RuntimeException If reference image reading/encoding fails.
 	 */
 	private function build_generate_payload( string $prompt, array $references = [] ): array {
 		$prompt = $this->normalize_prompt( $prompt );
@@ -243,10 +262,12 @@ final class Gemini_Provider implements Provider_Interface {
 	/**
 	 * Build payload for edit requests with inline image data.
 	 *
-	 * @param string $prompt Prompt text.
-	 * @param string $mime   Source MIME type.
-	 * @param string $bytes  Source image bytes.
+	 * @param string            $prompt Prompt text.
+	 * @param string            $mime   Source MIME type.
+	 * @param string            $bytes  Source image bytes.
+	 * @param Reference_Image[] $references Reference images.
 	 * @return array
+	 * @throws RuntimeException If reference image reading/encoding fails.
 	 */
 	private function build_edit_payload( string $prompt, string $mime, string $bytes, array $references ): array {
 		$prompt = $this->normalize_prompt( $prompt );
@@ -310,21 +331,13 @@ final class Gemini_Provider implements Provider_Interface {
 	 *
 	 * @param string $url     Endpoint.
 	 * @param array  $payload Request payload.
+	 * @param array  $context Additional context (operation, model, prompt... ).
 	 * @return array
+	 * @throws RuntimeException If the request fails or response is invalid.
 	 */
-	private function perform_request( string $url, array $payload ): array {
-		$res = Http::request(
-			$url,
-			[
-				'method'  => 'POST',
-				'timeout' => $this->timeout,
-				'headers' => [
-					'x-goog-api-key' => $this->api_key,
-					'Content-Type'   => 'application/json',
-				],
-				'body'    => wp_json_encode( $payload ),
-			]
-		);
+	private function perform_request( string $url, array $payload, array $context ): array {
+		list( $url, $args, $_payload, $request_context ) = $this->prepare_request( $url, $payload, $context );
+		$res = Http::request( $url, $args );
 
 		if ( is_wp_error( $res ) ) {
 			throw new RuntimeException( esc_html( $res->get_error_message() ) );
@@ -332,6 +345,18 @@ final class Gemini_Provider implements Provider_Interface {
 
 		$body = wp_remote_retrieve_body( $res );
 		$data = json_decode( $body, true );
+
+		/**
+		 * Filters the decoded Gemini response.
+		 *
+		 * @since 0.2.0
+		 *
+		 * @param mixed $data            Decoded response payload.
+		 * @param array $request_context Request context used for the call.
+		 * @param array $res             Raw HTTP response.
+		 */
+		$data = apply_filters( 'wp_banana_provider_decoded_response', $data, $request_context, $res );
+		$data = apply_filters( 'wp_banana_gemini_decoded_response', $data, $request_context, $res );
 		if ( ! is_array( $data ) ) {
 			throw new RuntimeException( 'Invalid response from Gemini.' );
 		}
@@ -340,6 +365,83 @@ final class Gemini_Provider implements Provider_Interface {
 		}
 
 		return $data;
+	}
+
+	/**
+	 * Apply provider request filters and build transport arguments.
+	 *
+	 * @param string $url      Endpoint URL.
+	 * @param mixed  $payload  Request payload prior to encoding.
+	 * @param array  $context  Additional context (operation, model, prompt... ).
+	 * @return array{0:string,1:array,2:mixed,3:array}
+	 */
+	private function prepare_request( string $url, $payload, array $context ): array {
+		$args        = [
+			'method'  => 'POST',
+			'timeout' => $this->timeout,
+			'headers' => [
+				'x-goog-api-key' => $this->api_key,
+				'Content-Type'   => 'application/json',
+			],
+		];
+		$context     = $this->normalize_request_context( $context, 'json' );
+			$request = [
+				'url'     => $url,
+				'args'    => $args,
+				'payload' => $payload,
+			];
+			/**
+			 * Filters the outbound Gemini request prior to dispatch.
+			 *
+			 * @since 0.2.0
+			 *
+			 * @param array $request Request data (URL, args, payload).
+			 * @param array $context Contextual metadata for the request.
+			 */
+			$request = apply_filters( 'wp_banana_provider_http_request', $request, $context );
+			$request = apply_filters( 'wp_banana_gemini_http_request', $request, $context );
+			$url     = isset( $request['url'] ) ? (string) $request['url'] : $url;
+			$args    = isset( $request['args'] ) && is_array( $request['args'] ) ? $request['args'] : $args;
+			$payload = array_key_exists( 'payload', $request ) ? $request['payload'] : $payload;
+			if ( ! isset( $args['body'] ) ) {
+				$args['body'] = $this->encode_payload( $payload );
+			}
+			return [ $url, $args, $payload, $context ];
+	}
+
+	/**
+	 * Normalize request context for hook consumers.
+	 *
+	 * @param array  $context Caller-provided context.
+	 * @param string $format  Transport format identifier.
+	 * @return array
+	 */
+	private function normalize_request_context( array $context, string $format ): array {
+		$context['provider']       = 'gemini';
+		$context['request_format'] = $format;
+		if ( ! isset( $context['operation'] ) ) {
+			$context['operation'] = '';
+		}
+		if ( ! isset( $context['model'] ) ) {
+			$context['model'] = '';
+		}
+		return $context;
+	}
+
+	/**
+	 * Encode payload for Gemini JSON endpoints.
+	 *
+	 * @param mixed $payload Request payload.
+	 * @return string|mixed
+	 */
+	private function encode_payload( $payload ) {
+		if ( is_string( $payload ) || null === $payload ) {
+			return $payload;
+		}
+		if ( is_array( $payload ) || is_object( $payload ) ) {
+			return wp_json_encode( $payload );
+		}
+		return wp_json_encode( $payload );
 	}
 
 	/**

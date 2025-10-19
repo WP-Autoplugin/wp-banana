@@ -91,7 +91,15 @@ final class Replicate_Provider implements Provider_Interface {
 		if ( ! empty( $p->reference_images ) ) {
 			$input = $this->apply_reference_images( $model, $input, $p->reference_images );
 		}
-		$data                 = $this->request_prediction( $model, $input );
+		$data                 = $this->request_prediction(
+			$model,
+			$input,
+			[
+				'operation' => 'generate',
+				'model'     => $model,
+				'prompt'    => $prompt,
+			]
+		);
 		$url                  = $this->extract_output_url( $data['output'] ?? null );
 		list( $bytes, $mime ) = $this->download_image( $url );
 
@@ -135,7 +143,16 @@ final class Replicate_Provider implements Provider_Interface {
 			);
 			$defaults = $this->apply_reference_images( $model, $defaults, $bundle );
 		}
-		$data                 = $this->request_prediction( $model, $defaults );
+		$data                 = $this->request_prediction(
+			$model,
+			$defaults,
+			[
+				'operation'  => 'edit',
+				'model'      => $model,
+				'prompt'     => $prompt,
+				'sourceFile' => $p->source_file,
+			]
+		);
 		$url                  = $this->extract_output_url( $data['output'] ?? null );
 		list( $bytes, $mime ) = $this->download_image( $url );
 
@@ -180,17 +197,18 @@ final class Replicate_Provider implements Provider_Interface {
 	/**
 	 * Perform Replicate prediction request and return decoded payload.
 	 *
-	 * @param string $model Model name.
-	 * @param array  $input Input payload.
+	 * @param string $model   Model name.
+	 * @param array  $input   Input payload.
+	 * @param array  $context Request context metadata.
 	 * @return array
 	 * @throws RuntimeException If the HTTP call fails or the response is invalid.
 	 */
-	private function request_prediction( string $model, array $input ): array {
+	private function request_prediction( string $model, array $input, array $context ): array {
 		if ( '' === $this->api_token ) {
 			throw new RuntimeException( 'Replicate API token missing.' );
 		}
-		$url      = trailingslashit( $this->api_url ) . $model . '/predictions';
-		$args     = [
+		$url     = trailingslashit( $this->api_url ) . $model . '/predictions';
+		$args    = [
 			'method'  => 'POST',
 			'timeout' => $this->timeout,
 			'headers' => [
@@ -198,9 +216,10 @@ final class Replicate_Provider implements Provider_Interface {
 				'Content-Type'  => 'application/json',
 				'Prefer'        => 'wait',
 			],
-			'body'    => wp_json_encode( [ 'input' => $input ] ),
 		];
-		$response = Http::request( $url, $args );
+		$payload = [ 'input' => $input ];
+		list( $url, $args, $_payload, $request_context ) = $this->prepare_request( $url, $args, $payload, $context, 'json' );
+		$response                                        = Http::request( $url, $args );
 
 		if ( is_wp_error( $response ) ) {
 			throw new RuntimeException( esc_html( $response->get_error_message() ) );
@@ -208,6 +227,17 @@ final class Replicate_Provider implements Provider_Interface {
 
 		$body = wp_remote_retrieve_body( $response );
 		$data = json_decode( $body, true );
+		/**
+		 * Filters the decoded Replicate response payload.
+		 *
+		 * @since 0.2.0
+		 *
+		 * @param mixed $data            Decoded response payload.
+		 * @param array $request_context Request context metadata.
+		 * @param array $response        Raw HTTP response.
+		 */
+		$data = apply_filters( 'wp_banana_provider_decoded_response', $data, $request_context, $response );
+		$data = apply_filters( 'wp_banana_replicate_decoded_response', $data, $request_context, $response );
 		if ( ! is_array( $data ) ) {
 			throw new RuntimeException( 'Invalid response from Replicate.' );
 		}
@@ -220,6 +250,88 @@ final class Replicate_Provider implements Provider_Interface {
 		}
 
 		return $data;
+	}
+
+	/**
+	 * Apply request filters and finish assembling HTTP arguments.
+	 *
+	 * @since 0.2.0
+	 *
+	 * @param string $url       Endpoint URL.
+	 * @param array  $args      Baseline HTTP arguments.
+	 * @param mixed  $payload   Raw payload before transport encoding.
+	 * @param array  $context   Request context metadata.
+	 * @param string $format    Transport format identifier.
+	 * @param bool   $auto_body Whether to set args['body'] automatically.
+	 * @return array{0:string,1:array,2:mixed,3:array}
+	 */
+	private function prepare_request( string $url, array $args, $payload, array $context, string $format, bool $auto_body = true ): array {
+		$context = $this->normalize_request_context( $context, $format );
+		$request = [
+			'url'     => $url,
+			'args'    => $args,
+			'payload' => $payload,
+		];
+		/**
+		 * Filters the outbound Replicate request before dispatch.
+		 *
+		 * @since 0.2.0
+		 *
+		 * @param array $request Request data (URL, args, payload).
+		 * @param array $context Request metadata.
+		 */
+		$request = apply_filters( 'wp_banana_provider_http_request', $request, $context );
+		$request = apply_filters( 'wp_banana_replicate_http_request', $request, $context );
+		$url     = isset( $request['url'] ) ? (string) $request['url'] : $url;
+		$args    = isset( $request['args'] ) && is_array( $request['args'] ) ? $request['args'] : $args;
+		$payload = array_key_exists( 'payload', $request ) ? $request['payload'] : $payload;
+		if ( $auto_body && ! isset( $args['body'] ) ) {
+			$args['body'] = $this->encode_body( $payload, $format );
+		}
+		return [ $url, $args, $payload, $context ];
+	}
+
+	/**
+	 * Normalise request context for hooks.
+	 *
+	 * @since 0.2.0
+	 *
+	 * @param array  $context Context supplied by caller.
+	 * @param string $format  Transport format.
+	 * @return array
+	 */
+	private function normalize_request_context( array $context, string $format ): array {
+		$context['provider']       = 'replicate';
+		$context['request_format'] = $format;
+		if ( ! isset( $context['operation'] ) ) {
+			$context['operation'] = '';
+		}
+		if ( ! isset( $context['model'] ) ) {
+			$context['model'] = '';
+		}
+		return $context;
+	}
+
+	/**
+	 * Encode payload for transport.
+	 *
+	 * @since 0.2.0
+	 *
+	 * @param mixed  $payload Payload prior to encoding.
+	 * @param string $format  Transport format identifier.
+	 * @return mixed
+	 */
+	private function encode_body( $payload, string $format ) {
+		if ( 'json' === $format ) {
+			if ( is_string( $payload ) || null === $payload ) {
+				return $payload;
+			}
+			if ( is_array( $payload ) || is_object( $payload ) ) {
+				return wp_json_encode( $payload );
+			}
+			return wp_json_encode( $payload );
+		}
+		return $payload;
 	}
 
 	/**
@@ -257,13 +369,22 @@ final class Replicate_Provider implements Provider_Interface {
 	 * @throws RuntimeException If the download fails.
 	 */
 	private function download_image( string $url ): array {
-		$res = wp_remote_get(
+		$args                                     = [
+			'timeout'   => $this->timeout,
+			'sslverify' => true,
+		];
+		list( $url, $args, $_payload, $_context ) = $this->prepare_request(
 			$url,
+			$args,
+			null,
 			[
-				'timeout'   => $this->timeout,
-				'sslverify' => true,
-			]
+				'operation' => 'download',
+				'model'     => '',
+			],
+			'get',
+			false
 		);
+		$res                                      = wp_remote_get( $url, $args );
 		if ( is_wp_error( $res ) ) {
 			throw new RuntimeException( esc_html( $res->get_error_message() ) );
 		}
@@ -327,6 +448,7 @@ final class Replicate_Provider implements Provider_Interface {
 	 * @param array<string,mixed>    $input      Existing input payload.
 	 * @param array<Reference_Image> $references Reference images.
 	 * @return array<string,mixed>
+	 * @throws RuntimeException If no valid reference images are provided.
 	 */
 	private function apply_reference_images( string $model, array $input, array $references ): array {
 		$data_uris = [];

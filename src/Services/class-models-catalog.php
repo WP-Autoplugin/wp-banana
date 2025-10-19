@@ -29,7 +29,7 @@ final class Models_Catalog {
 	 * @return array{generate:array{gemini:array<int,string>,openai:array<int,string>,replicate:array<int,string>},edit:array{gemini:array<int,string>,openai:array<int,string>,replicate:array<int,string>}}
 	 */
 	public static function all(): array {
-		return [
+		$catalog = [
 			'generate' => [
 				'gemini'    => [
 					'gemini-2.5-flash-image-preview',
@@ -46,6 +46,7 @@ final class Models_Catalog {
 					'black-forest-labs/flux-dev',
 					'black-forest-labs/flux-schnell',
 					'recraft-ai/recraft-v3',
+					'reve/create',
 					'ideogram-ai/ideogram-v3-turbo',
 					'ideogram-ai/ideogram-v3-quality',
 					'ideogram-ai/ideogram-v3-balanced',
@@ -70,6 +71,18 @@ final class Models_Catalog {
 				],
 			],
 		];
+		/**
+		 * Filter the full models catalog for both purposes and providers.
+		 *
+		 * @since 0.2.0
+		 *
+		 * @param array $catalog Complete catalog keyed by purpose => provider => models.
+		 */
+		$catalog = apply_filters( 'wp_banana_models_catalog_all', $catalog );
+		return is_array( $catalog ) ? $catalog : [
+			'generate' => [],
+			'edit'     => [],
+		];
 	}
 
 	/**
@@ -81,9 +94,24 @@ final class Models_Catalog {
 	 */
 	public static function get( string $purpose, string $provider ): array {
 		$catalog = self::all();
+		$models  = [];
 		if ( isset( $catalog[ $purpose ][ $provider ] ) && is_array( $catalog[ $purpose ][ $provider ] ) ) {
-			return $catalog[ $purpose ][ $provider ];
+			$models = $catalog[ $purpose ][ $provider ];
 		}
-		return [];
+		/**
+		 * Filter the models list for a given purpose and provider.
+		 *
+		 * @since 0.2.0
+		 *
+		 * @param array  $models   Model identifiers.
+		 * @param string $purpose  Purpose (generate|edit).
+		 * @param string $provider Provider slug.
+		 * @param array  $catalog  Full models catalog (post-filter).
+		 */
+		$models = apply_filters( 'wp_banana_models_catalog', $models, $purpose, $provider, $catalog );
+		if ( ! is_array( $models ) ) {
+			return [];
+		}
+		return array_values( array_map( 'strval', $models ) );
 	}
 }
