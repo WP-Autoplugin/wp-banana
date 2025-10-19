@@ -44,7 +44,7 @@ class Updater {
 			'zip_url'            => 'https://github.com/WP-Autoplugin/wp-banana/archive/refs/heads/main.zip',
 			'requires'           => '6.0',
 			'tested'             => '6.8',
-			'description'        => esc_html__( 'AI image generation and editing via Gemini and Replicate, right in your WordPress media library.', 'wp-banana' ),
+			'description'        => esc_html__( 'AI image generation and editing via Gemini, Replicate and OpenAI, right in your WordPress media library.', 'wp-banana' ),
 			'homepage'           => 'https://github.com/WP-Autoplugin/wp-banana',
 			'version'            => WP_BANANA_VERSION,
 		];

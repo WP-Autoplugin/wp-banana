@@ -3,7 +3,7 @@ Contributors: pbalazs
 Tags: ai, images, openai, replicate, google
 Requires at least: 6.0
 Tested up to: 6.8
-Stable tag: 0.2.0
+Stable tag: 0.2.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -126,6 +126,9 @@ All images are saved directly into your WordPress Media Library. You can use the
 ---
 
 == Changelog ==
+
+= 0.2.1 =
+* Fixed error handling reference images
 
 = 0.2.0 =
 * Improved UI for image editing

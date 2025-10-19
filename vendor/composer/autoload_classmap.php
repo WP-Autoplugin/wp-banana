@@ -37,4 +37,5 @@ return array(
     'WPBanana\\Services\\Options' => $baseDir . '/src/Services/class-options.php',
     'WPBanana\\Util\\Caps' => $baseDir . '/src/Util/class-caps.php',
     'WPBanana\\Util\\Http' => $baseDir . '/src/Util/class-http.php',
+    'WPBanana\\Util\\Mime' => $baseDir . '/src/Util/class-mime.php',
 );

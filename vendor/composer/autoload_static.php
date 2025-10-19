@@ -38,6 +38,7 @@ class ComposerStaticInitf1bfaf84312e744e7b9964884b4a0d41
         'WPBanana\\Services\\Options' => __DIR__ . '/../..' . '/src/Services/class-options.php',
         'WPBanana\\Util\\Caps' => __DIR__ . '/../..' . '/src/Util/class-caps.php',
         'WPBanana\\Util\\Http' => __DIR__ . '/../..' . '/src/Util/class-http.php',
+        'WPBanana\\Util\\Mime' => __DIR__ . '/../..' . '/src/Util/class-mime.php',
     );
 
     public static function getInitializer(ClassLoader $loader)
