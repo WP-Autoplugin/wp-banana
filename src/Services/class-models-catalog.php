@@ -50,8 +50,11 @@ final class Models_Catalog {
 					'ideogram-ai/ideogram-v3-turbo',
 					'ideogram-ai/ideogram-v3-quality',
 					'ideogram-ai/ideogram-v3-balanced',
+					'stability-ai/stable-diffusion-3.5-large',
 					'bytedance/seedream-4',
+					'tencent/hunyuan-image-3',
 					'qwen/qwen-image',
+					'minimax/image-01',
 				],
 			],
 			'edit'     => [

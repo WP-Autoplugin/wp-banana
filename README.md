@@ -149,9 +149,13 @@ WP Nano Banana supports a wide range of state-of-the-art AI image models for bot
 - **FLUX Schnell** (`black-forest-labs/flux-schnell`)
 - **FLUX Dev** (`black-forest-labs/flux-dev`)
 - **Recraft v3** (`recraft-ai/recraft-v3`)
+- **Reve Create** (`reve/create`)
 - **Ideogram v3** (`ideogram-ai/ideogram-v3-turbo`, `ideogram-ai/ideogram-v3-quality`, `ideogram-ai/ideogram-v3-balanced`)
 - **Bytedance Seedream 4** (`bytedance/seedream-4`)
 - **Bytedance Seededit 3.0** (`bytedance/seededit-3.0`)
+- **Tencent Hunyuan Image 3** (`tencent/hunyuan-image-3`)
+- **Stability AI Stable Diffusion 3.5 Large** (`stability-ai/stable-diffusion-3.5-large`)
+- **Minimax Image 01** (`minimax/image-01`)
 - **Qwen Image** (`qwen/qwen-image`, `qwen/qwen-image-edit`)
 - **Google Imagen 4** (`google/imagen-4`, `google/imagen-4-ultra`, `google/imagen-4-fast`)
 

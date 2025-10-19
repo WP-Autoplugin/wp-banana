@@ -56,7 +56,7 @@ WP Nano Banana supports a wide range of AI image models:
 - **OpenAI GPT-Image-1** (`gpt-image-1`) — same model ChatGPT uses for image generation
 - **Google Imagen 4** (`google/imagen-4`, `google/imagen-4-ultra`, `google/imagen-4-fast`)
 - **FLUX Models** (`flux-kontext-max`, `flux-1.1-pro`, `flux-schnell`, `flux-dev`)
-- **Recraft v3**, **Ideogram v3**, **Seedream 4.0**, **Seededit 3.0**, **Qwen Image** and more
+- **Recraft v3**, **Reve Create**, **Ideogram v3**, **Seedream 4.0**, **Qwen Image** and more
 
 ### External Services
 
@@ -129,7 +129,7 @@ All images are saved directly into your WordPress Media Library. You can use the
 
 = 0.2.0 =
 * Added support for Google Gemini 2.5 Flash Image (Nano Banana) model
-* Improved UI for image editing in Media Library
+* Improved UI for image editing
 * Added more AI models via Replicate API integration
 * Added option to set API keys via constants
 * Bug fixes and performance improvements
