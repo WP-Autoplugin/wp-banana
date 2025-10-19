@@ -128,10 +128,10 @@ All images are saved directly into your WordPress Media Library. You can use the
 == Changelog ==
 
 = 0.2.0 =
-* Added support for Google Gemini 2.5 Flash Image (Nano Banana) model
 * Improved UI for image editing
 * Added more AI models via Replicate API integration
 * Added option to set API keys via constants
+* Added various filter and action hooks for developers
 * Bug fixes and performance improvements
 
 = 0.1.0 =
