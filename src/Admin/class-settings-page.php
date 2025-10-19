@@ -302,7 +302,7 @@ final class Settings_Page {
 				<h2 class="title"><?php esc_html_e( 'Defaults', 'wp-banana' ); ?></h2>
 				<table class="form-table" role="presentation">
 					<tr>
-						<th scope="row"><?php esc_html_e( 'Preferred Aspect ratio', 'wp-banana' ); ?></th>
+						<th scope="row"><?php esc_html_e( 'Preferred Aspect Ratio', 'wp-banana' ); ?></th>
 						<td>
 							<select name="<?php echo esc_attr( Options::OPTION_NAME ); ?>[generation_defaults][aspect_ratio]">
 								<?php
