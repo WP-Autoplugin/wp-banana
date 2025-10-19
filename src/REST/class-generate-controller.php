@@ -21,11 +21,13 @@ use WPBanana\Domain\Image_Params;
 use WPBanana\Domain\Reference_Image;
 use WPBanana\Domain\Edit_Params;
 use WPBanana\Domain\Aspect_Ratios;
+use WPBanana\Domain\Binary_Image;
 use WPBanana\Provider\Gemini_Provider;
 use WPBanana\Provider\OpenAI_Provider;
 use WPBanana\Provider\Replicate_Provider;
 use WPBanana\Services\Convert_Service;
 use WPBanana\Services\Attachment_Service;
+use WPBanana\Util\Mime;
 
 use function get_current_user_id;
 use function time;
@@ -271,6 +273,29 @@ final class Generate_Controller {
 				}
 			}
 
+			/**
+			 * Filters the Binary_Image returned from the provider before normalization.
+			 *
+			 * @since 0.2.0
+			 *
+			 * @param Binary_Image $binary   Provider response.
+			 * @param array        $context  Request context.
+			 */
+			$binary = apply_filters(
+				'wp_banana_generate_binary',
+				$binary,
+				[
+					'provider'        => $provider,
+					'model'           => $model_eff,
+					'prompt'          => $prompt,
+					'operation'       => 1 === $reference_count ? 'edit' : 'generate',
+					'attachment_mode' => 1 === $reference_count ? 'single-reference' : 'prompt-only',
+				]
+			);
+			if ( ! ( $binary instanceof Binary_Image ) ) {
+				return new WP_Error( 'wp_banana_invalid_binary', __( 'Filtered provider output is invalid.', 'wp-banana' ) );
+			}
+
 			// Normalize to requested format/size when applicable.
 			try {
 				$conv = new Convert_Service();
@@ -307,13 +332,37 @@ final class Generate_Controller {
 				return new WP_Error( 'wp_banana_save_failed', $e->getMessage() );
 			}
 
-			return new WP_REST_Response(
+			$response_data = [
+				'attachment_id' => $saved['attachment_id'],
+				'url'           => $saved['url'],
+			];
+			/**
+			 * Filters the REST response data returned by the generate endpoint.
+			 *
+			 * @since 0.2.0
+			 *
+			 * @param array $response_data Default response data.
+			 * @param array $saved         Attachment save payload.
+			 * @param array $context       Request context metadata.
+			 */
+			$response_data = apply_filters(
+				'wp_banana_generate_response',
+				$response_data,
+				$saved,
 				[
-					'attachment_id' => $saved['attachment_id'],
-					'url'           => $saved['url'],
-				],
-				200
+					'provider'  => $provider,
+					'model'     => $model_eff,
+					'prompt'    => $prompt,
+					'user_id'   => $current_user,
+					'timestamp' => $timestamp,
+				]
 			);
+			$response_data = is_array( $response_data ) ? $response_data : [
+				'attachment_id' => $saved['attachment_id'],
+				'url'           => $saved['url'],
+			];
+
+			return new WP_REST_Response( $response_data, 200 );
 		} finally {
 			$this->cleanup_reference_images( $reference_images );
 		}
@@ -341,6 +390,19 @@ final class Generate_Controller {
 			return [];
 		}
 
+		$max_allowed   = (int) apply_filters( 'wp_banana_generate_max_reference_images', self::MAX_REFERENCE_IMAGES, $req );
+		$max_allowed   = $max_allowed >= 0 ? $max_allowed : self::MAX_REFERENCE_IMAGES;
+		$allowed_mimes = apply_filters( 'wp_banana_generate_supported_reference_mime_types', self::SUPPORTED_REFERENCE_MIME, $req );
+		if ( ! is_array( $allowed_mimes ) ) {
+			$allowed_mimes = self::SUPPORTED_REFERENCE_MIME;
+		}
+		$allowed_mimes = array_values( array_filter( array_map( 'strval', $allowed_mimes ) ) );
+		if ( empty( $allowed_mimes ) ) {
+			$allowed_mimes = self::SUPPORTED_REFERENCE_MIME;
+		}
+		$allowed_lookup = array_map( 'strtolower', $allowed_mimes );
+		$mime_overrides = Mime::build_sideload_overrides( $allowed_mimes );
+
 		$bucket  = $files['reference_images'];
 		$entries = [];
 		$names   = $bucket['name'] ?? [];
@@ -367,7 +429,7 @@ final class Generate_Controller {
 
 		$collected = [];
 		foreach ( $entries as $entry ) {
-			if ( count( $collected ) >= self::MAX_REFERENCE_IMAGES ) {
+			if ( $max_allowed >= 0 && count( $collected ) >= $max_allowed ) {
 				break;
 			}
 			$error = (int) ( $entry['error'] ?? UPLOAD_ERR_NO_FILE );
@@ -388,9 +450,10 @@ final class Generate_Controller {
 			$original   = sanitize_file_name( (string) ( $entry['name'] ?? 'reference.png' ) );
 			$file_check = wp_check_filetype_and_ext( $tmp_name, $original );
 			$mime       = is_array( $file_check ) && ! empty( $file_check['type'] ) ? $file_check['type'] : (string) ( $entry['type'] ?? '' );
-			if ( ! in_array( $mime, self::SUPPORTED_REFERENCE_MIME, true ) ) {
+			$mime_lower = strtolower( $mime );
+			if ( '' === $mime_lower || ! in_array( $mime_lower, $allowed_lookup, true ) ) {
 				$this->cleanup_reference_images( $collected );
-				return new WP_Error( 'wp_banana_reference_type', __( 'Reference images must be PNG, JPEG, or WebP.', 'wp-banana' ) );
+				return new WP_Error( 'wp_banana_reference_type', __( 'Reference image type is not allowed.', 'wp-banana' ) );
 			}
 
 			if ( ! function_exists( 'wp_handle_sideload' ) ) {
@@ -407,12 +470,7 @@ final class Generate_Controller {
 
 			$upload_overrides = [
 				'test_form' => false,
-				'mimes'     => [
-					'png'  => 'image/png',
-					'jpg'  => 'image/jpeg',
-					'jpeg' => 'image/jpeg',
-					'webp' => 'image/webp',
-				],
+				'mimes'     => $mime_overrides,
 			];
 
 			$handled = wp_handle_sideload( $sideload_file, $upload_overrides );

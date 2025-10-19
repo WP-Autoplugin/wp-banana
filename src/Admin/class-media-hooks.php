@@ -8,20 +8,6 @@
 
 namespace WPBanana\Admin;
 
-use function __;
-use function _n;
-use function esc_html;
-use function esc_html__;
-use function esc_url;
-use function get_option;
-use function get_post_type;
-use function number_format_i18n;
-use function sprintf;
-use function trailingslashit;
-use function wp_date;
-use function wp_script_is;
-use function wp_style_is;
-use function wp_trim_words;
 use WPBanana\Plugin;
 use WPBanana\Services\Options;
 use WPBanana\Services\Models_Catalog;

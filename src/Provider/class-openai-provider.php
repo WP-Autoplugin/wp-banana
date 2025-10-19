@@ -32,24 +32,28 @@ final class OpenAI_Provider implements Provider_Interface {
 	 * @var string
 	 */
 	private $generation_url = 'https://api.openai.com/v1/images/generations';
+
 	/**
 	 * OpenAI edit endpoint.
 	 *
 	 * @var string
 	 */
 	private $edit_url = 'https://api.openai.com/v1/images/edits';
+
 	/**
 	 * API key.
 	 *
 	 * @var string
 	 */
 	private $api_key;
+
 	/**
 	 * Default model.
 	 *
 	 * @var string
 	 */
 	private $default_model;
+
 	/**
 	 * Timeout seconds.
 	 *
@@ -74,6 +78,7 @@ final class OpenAI_Provider implements Provider_Interface {
 	 *
 	 * @param Image_Params $p Parameters.
 	 * @return Binary_Image
+	 * @throws RuntimeException If generation fails.
 	 */
 	public function generate( Image_Params $p ): Binary_Image {
 		$model = '' !== $p->model ? $p->model : $this->default_model;
@@ -98,7 +103,15 @@ final class OpenAI_Provider implements Provider_Interface {
 			$payload['size'] = $size;
 		}
 
-		$data = $this->perform_json_request( $this->generation_url, $payload );
+		$data = $this->perform_json_request(
+			$this->generation_url,
+			$payload,
+			[
+				'operation' => 'generate',
+				'model'     => $model,
+				'prompt'    => $p->prompt,
+			]
+		);
 		return $this->image_from_payload( $data );
 	}
 
@@ -107,6 +120,7 @@ final class OpenAI_Provider implements Provider_Interface {
 	 *
 	 * @param Edit_Params $p Parameters.
 	 * @return Binary_Image
+	 * @throws RuntimeException If edit fails.
 	 */
 	public function edit( Edit_Params $p ): Binary_Image {
 		$model = '' !== $p->model ? $p->model : $this->default_model;
@@ -148,7 +162,16 @@ final class OpenAI_Provider implements Provider_Interface {
 			$fields['image'] = $this->curl_file_for_path( $p->source_file );
 		}
 
-		$data = $this->perform_multipart_request( $this->edit_url, $fields );
+		$data = $this->perform_multipart_request(
+			$this->edit_url,
+			$fields,
+			[
+				'operation'  => 'edit',
+				'model'      => $model,
+				'prompt'     => $p->prompt,
+				'sourceFile' => $p->source_file,
+			]
+		);
 		return $this->image_from_payload( $data );
 	}
 
@@ -177,6 +200,7 @@ final class OpenAI_Provider implements Provider_Interface {
 	 * @param Image_Params $p     Parameters.
 	 * @param string       $model Model name.
 	 * @return Binary_Image
+	 * @throws RuntimeException If generation fails.
 	 */
 	private function generate_with_references( Image_Params $p, string $model ): Binary_Image {
 		$fields = [
@@ -206,30 +230,38 @@ final class OpenAI_Provider implements Provider_Interface {
 			throw new RuntimeException( 'No valid reference images provided.' );
 		}
 
-		$data = $this->perform_multipart_request( $this->edit_url, $fields );
+		$data = $this->perform_multipart_request(
+			$this->edit_url,
+			$fields,
+			[
+				'operation' => 'generate',
+				'model'     => $model,
+				'prompt'    => $p->prompt,
+			]
+		);
 		return $this->image_from_payload( $data );
 	}
 
 	/**
 	 * Perform JSON request and decode response.
 	 *
-	 * @param string $url     Endpoint.
-	 * @param array  $payload Payload data.
+	 * @param string $url      Endpoint.
+	 * @param array  $payload  Payload data.
+	 * @param array  $context  Request context metadata.
 	 * @return array
+	 * @throws RuntimeException If the request fails or response is invalid.
 	 */
-	private function perform_json_request( string $url, array $payload ): array {
-		$res = Http::request(
-			$url,
-			[
-				'method'  => 'POST',
-				'timeout' => $this->timeout,
-				'headers' => [
-					'Authorization' => 'Bearer ' . $this->api_key,
-					'Content-Type'  => 'application/json',
-				],
-				'body'    => wp_json_encode( $payload ),
-			]
-		);
+	private function perform_json_request( string $url, array $payload, array $context ): array {
+		$args = [
+			'method'  => 'POST',
+			'timeout' => $this->timeout,
+			'headers' => [
+				'Authorization' => 'Bearer ' . $this->api_key,
+				'Content-Type'  => 'application/json',
+			],
+		];
+		list( $url, $args, $_payload, $request_context ) = $this->prepare_request( $url, $args, $payload, $context, 'json', true );
+		$res = Http::request( $url, $args );
 
 		if ( is_wp_error( $res ) ) {
 			throw new RuntimeException( esc_html( $res->get_error_message() ) );
@@ -237,6 +269,17 @@ final class OpenAI_Provider implements Provider_Interface {
 
 		$body = wp_remote_retrieve_body( $res );
 		$data = json_decode( $body, true );
+		/**
+		 * Filters the decoded OpenAI response payload.
+		 *
+		 * @since 0.2.0
+		 *
+		 * @param mixed $data            Decoded response payload.
+		 * @param array $request_context Context used for the request.
+		 * @param array $res             Raw HTTP response.
+		 */
+		$data = apply_filters( 'wp_banana_provider_decoded_response', $data, $request_context, $res );
+		$data = apply_filters( 'wp_banana_openai_decoded_response', $data, $request_context, $res );
 		if ( ! is_array( $data ) ) {
 			throw new RuntimeException( 'Invalid response from OpenAI.' );
 		}
@@ -250,11 +293,13 @@ final class OpenAI_Provider implements Provider_Interface {
 	/**
 	 * Execute multipart request for edits.
 	 *
-	 * @param string $url    Endpoint.
-	 * @param array  $fields Multipart fields.
+	 * @param string $url      Endpoint.
+	 * @param array  $fields   Multipart fields.
+	 * @param array  $context  Request context metadata.
 	 * @return array
+	 * @throws RuntimeException If the request fails or response is invalid.
 	 */
-	private function perform_multipart_request( string $url, array $fields ): array {
+	private function perform_multipart_request( string $url, array $fields, array $context ): array {
 		if ( ! class_exists( '\\CURLFile' ) ) {
 			throw new RuntimeException( 'CURLFile support is required for OpenAI image edits.' );
 		}
@@ -262,9 +307,22 @@ final class OpenAI_Provider implements Provider_Interface {
 			throw new RuntimeException( 'The cURL transport is required for OpenAI image edits.' );
 		}
 
-		$hook = static function ( $handle ) use ( $fields ) {
+		$args = [
+			'method'  => 'POST',
+			'timeout' => $this->timeout,
+			'headers' => [
+				'Authorization' => 'Bearer ' . $this->api_key,
+			],
+		];
+		list( $url, $args, $fields, $request_context ) = $this->prepare_request( $url, $args, $fields, $context, 'multipart', true );
+		$body_payload                                  = $args['body'] ?? $fields;
+
+		$hook = static function ( $handle ) use ( $body_payload ) {
+			if ( ! is_array( $body_payload ) ) {
+				return;
+			}
 			$has_file = false;
-			foreach ( $fields as $value ) {
+			foreach ( $body_payload as $value ) {
 				if ( $value instanceof \CURLFile ) {
 					$has_file = true;
 					break;
@@ -274,24 +332,14 @@ final class OpenAI_Provider implements Provider_Interface {
 				return;
 			}
 			if ( is_resource( $handle ) || ( class_exists( '\\CurlHandle' ) && $handle instanceof \CurlHandle ) ) {
-				curl_setopt( $handle, CURLOPT_POSTFIELDS, $fields ); // phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_setopt -- Required to send multipart payload.
+				curl_setopt( $handle, CURLOPT_POSTFIELDS, $body_payload ); // phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_setopt -- Required to send multipart payload.
 			}
 		};
 
 		add_action( 'http_api_curl', $hook, 10, 3 );
 
 		try {
-			$res = Http::request(
-				$url,
-				[
-					'method'  => 'POST',
-					'timeout' => $this->timeout,
-					'headers' => [
-						'Authorization' => 'Bearer ' . $this->api_key,
-					],
-					'body'    => $fields,
-				]
-			);
+			$res = Http::request( $url, $args );
 		} finally {
 			remove_action( 'http_api_curl', $hook, 10 );
 		}
@@ -302,6 +350,17 @@ final class OpenAI_Provider implements Provider_Interface {
 
 		$body = wp_remote_retrieve_body( $res );
 		$data = json_decode( $body, true );
+		/**
+		 * Filters the decoded OpenAI response payload.
+		 *
+		 * @since 0.2.0
+		 *
+		 * @param mixed $data            Decoded response payload.
+		 * @param array $request_context Context used for the request.
+		 * @param array $res             Raw HTTP response.
+		 */
+		$data = apply_filters( 'wp_banana_provider_decoded_response', $data, $request_context, $res );
+		$data = apply_filters( 'wp_banana_openai_decoded_response', $data, $request_context, $res );
 		if ( ! is_array( $data ) ) {
 			throw new RuntimeException( 'Invalid response from OpenAI.' );
 		}
@@ -313,10 +372,93 @@ final class OpenAI_Provider implements Provider_Interface {
 	}
 
 	/**
+	 * Apply provider hooks and finish request preparation.
+	 *
+	 * @since 0.2.0
+	 *
+	 * @param string $url       Endpoint URL.
+	 * @param array  $args      Baseline HTTP arguments.
+	 * @param mixed  $payload   Raw payload before transport encoding.
+	 * @param array  $context   Request context metadata.
+	 * @param string $format    Transport format identifier.
+	 * @param bool   $auto_body Whether to populate args['body'] automatically.
+	 * @return array{0:string,1:array,2:mixed,3:array}
+	 */
+	private function prepare_request( string $url, array $args, $payload, array $context, string $format, bool $auto_body ): array {
+		$context = $this->normalize_request_context( $context, $format );
+		$request = [
+			'url'     => $url,
+			'args'    => $args,
+			'payload' => $payload,
+		];
+		/**
+		 * Filters the outbound OpenAI request before it is dispatched.
+		 *
+		 * @since 0.2.0
+		 *
+		 * @param array $request Request data (URL, args, payload).
+		 * @param array $context Request metadata.
+		 */
+		$request = apply_filters( 'wp_banana_provider_http_request', $request, $context );
+		$request = apply_filters( 'wp_banana_openai_http_request', $request, $context );
+		$url     = isset( $request['url'] ) ? (string) $request['url'] : $url;
+		$args    = isset( $request['args'] ) && is_array( $request['args'] ) ? $request['args'] : $args;
+		$payload = array_key_exists( 'payload', $request ) ? $request['payload'] : $payload;
+		if ( $auto_body && ! isset( $args['body'] ) ) {
+			$args['body'] = $this->encode_body( $payload, $format );
+		}
+		return [ $url, $args, $payload, $context ];
+	}
+
+	/**
+	 * Normalise request context passed to filters.
+	 *
+	 * @since 0.2.0
+	 *
+	 * @param array  $context Context provided by caller.
+	 * @param string $format  Transport format identifier.
+	 * @return array
+	 */
+	private function normalize_request_context( array $context, string $format ): array {
+		$context['provider']       = 'openai';
+		$context['request_format'] = $format;
+		if ( ! isset( $context['operation'] ) ) {
+			$context['operation'] = '';
+		}
+		if ( ! isset( $context['model'] ) ) {
+			$context['model'] = '';
+		}
+		return $context;
+	}
+
+	/**
+	 * Encode payload for the given transport format.
+	 *
+	 * @since 0.2.0
+	 *
+	 * @param mixed  $payload Payload before transport.
+	 * @param string $format  Transport format identifier.
+	 * @return mixed
+	 */
+	private function encode_body( $payload, string $format ) {
+		if ( 'json' === $format ) {
+			if ( is_string( $payload ) || null === $payload ) {
+				return $payload;
+			}
+			if ( is_array( $payload ) || is_object( $payload ) ) {
+				return wp_json_encode( $payload );
+			}
+			return wp_json_encode( $payload );
+		}
+		return $payload;
+	}
+
+	/**
 	 * Convert response payload to Binary_Image.
 	 *
 	 * @param array $data Response payload.
 	 * @return Binary_Image
+	 * @throws RuntimeException If generation fails.
 	 */
 	private function image_from_payload( array $data ): Binary_Image {
 		if ( empty( $data['data'] ) || ! isset( $data['data'][0] ) || ! is_array( $data['data'][0] ) ) {
@@ -356,15 +498,25 @@ final class OpenAI_Provider implements Provider_Interface {
 	 *
 	 * @param string $url Image URL.
 	 * @return array{0:string,1:string}
+	 * @throws RuntimeException If download fails.
 	 */
 	private function download_from_url( string $url ): array {
-		$res = wp_remote_get(
+		$args                                     = [
+			'timeout'   => $this->timeout,
+			'sslverify' => true,
+		];
+		list( $url, $args, $_payload, $_context ) = $this->prepare_request(
 			$url,
+			$args,
+			null,
 			[
-				'timeout'   => $this->timeout,
-				'sslverify' => true,
-			]
+				'operation' => 'download',
+				'model'     => '',
+			],
+			'get',
+			false
 		);
+		$res                                      = wp_remote_get( $url, $args );
 		if ( is_wp_error( $res ) ) {
 			throw new RuntimeException( esc_html( $res->get_error_message() ) );
 		}

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WP Nano Banana
  * Description: AI image generation and editing via Gemini and Replicate, right in your WordPress media library.
- * Version: 0.1.0
+ * Version: 0.2.0
  * Requires at least: 6.6
  * Requires PHP: 7.2
  * Author: Balázs Piller
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants.
-define( 'WP_BANANA_VERSION', '0.1.0' );
+define( 'WP_BANANA_VERSION', '0.2.0' );
 define( 'WP_BANANA_DIR', trailingslashit( plugin_dir_path( __FILE__ ) ) );
 define( 'WP_BANANA_URL', trailingslashit( plugin_dir_url( __FILE__ ) ) );
 define( 'WP_BANANA_FILE', __FILE__ );

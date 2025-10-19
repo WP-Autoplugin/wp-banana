@@ -30,6 +30,7 @@ use WPBanana\Services\Attachment_Service;
 use WPBanana\Services\Attachment_Metadata;
 use WPBanana\Util\Caps;
 use WPBanana\Services\Edit_Buffer;
+use WPBanana\Util\Mime;
 
 use function get_current_user_id;
 use function time;
@@ -296,6 +297,29 @@ final class Edit_Controller {
 				return new WP_Error( 'wp_banana_provider_error', $e->getMessage() );
 			}
 
+			/**
+			 * Filters the Binary_Image returned from the provider before normalization.
+			 *
+			 * @since 0.2.0
+			 *
+			 * @param Binary_Image $binary  Provider response.
+			 * @param array        $context Request context.
+			 */
+			$binary = apply_filters(
+				'wp_banana_edit_binary',
+				$binary,
+				[
+					'provider'      => $provider,
+					'model'         => $model_eff,
+					'prompt'        => $prompt,
+					'save_mode'     => $save_mode,
+					'attachment_id' => $id,
+				]
+			);
+			if ( ! ( $binary instanceof Binary_Image ) ) {
+				return new WP_Error( 'wp_banana_invalid_binary', __( 'Filtered provider output is invalid.', 'wp-banana' ) );
+			}
+
 			// Normalize to original size and chosen format.
 			try {
 				$conv = new Convert_Service();
@@ -322,19 +346,48 @@ final class Edit_Controller {
 				} catch ( \Throwable $e ) {
 					return new WP_Error( 'wp_banana_save_failed', $e->getMessage() );
 				}
-				return new WP_REST_Response(
+				$buffer_response = [
+					'buffer_key'    => $record['key'],
+					'width'         => $record['width'],
+					'height'        => $record['height'],
+					'mime'          => $record['mime'],
+					'attachment_id' => $id,
+					'provider'      => $provider,
+					'model'         => $model_eff,
+					'prompt'        => $prompt,
+				];
+				/**
+				 * Filters the response payload returned when buffering an AI edit.
+				 *
+				 * @since 0.2.0
+				 *
+				 * @param array $buffer_response Default response data.
+				 * @param array $record          Buffer record payload.
+				 * @param array $context         Request context metadata.
+				 */
+				$buffer_response = apply_filters(
+					'wp_banana_edit_buffer_response',
+					$buffer_response,
+					$record,
 					[
-						'buffer_key'    => $record['key'],
-						'width'         => $record['width'],
-						'height'        => $record['height'],
-						'mime'          => $record['mime'],
-						'attachment_id' => $id,
 						'provider'      => $provider,
 						'model'         => $model_eff,
 						'prompt'        => $prompt,
-					],
-					200
+						'save_mode'     => $save_mode,
+						'attachment_id' => $id,
+					]
 				);
+				$buffer_response = is_array( $buffer_response ) ? $buffer_response : [
+					'buffer_key'    => $record['key'],
+					'width'         => $record['width'],
+					'height'        => $record['height'],
+					'mime'          => $record['mime'],
+					'attachment_id' => $id,
+					'provider'      => $provider,
+					'model'         => $model_eff,
+					'prompt'        => $prompt,
+				];
+				return new WP_REST_Response( $buffer_response, 200 );
 			}
 
 			if ( 'replace' === $save_mode ) {
@@ -380,14 +433,38 @@ final class Edit_Controller {
 						'attachment_id' => $id,
 					]
 				);
-				return new WP_REST_Response(
+				$response_data = [
+					'attachment_id' => $id,
+					'url'           => wp_get_attachment_url( $id ),
+					'parent_id'     => $id,
+				];
+				/**
+				 * Filters the REST response returned after an AI edit saves.
+				 *
+				 * @since 0.2.0
+				 *
+				 * @param array $response_data Default response data.
+				 * @param array $context       Request context metadata.
+				 * @param int   $target_id     Target attachment ID.
+				 */
+				$response_data = apply_filters(
+					'wp_banana_edit_response',
+					$response_data,
 					[
+						'mode'          => 'replace',
+						'provider'      => $provider,
+						'model'         => $model_eff,
+						'prompt'        => $prompt,
 						'attachment_id' => $id,
-						'url'           => wp_get_attachment_url( $id ),
-						'parent_id'     => $id,
 					],
-					200
+					$id
 				);
+				$response_data = is_array( $response_data ) ? $response_data : [
+					'attachment_id' => $id,
+					'url'           => wp_get_attachment_url( $id ),
+					'parent_id'     => $id,
+				];
+				return new WP_REST_Response( $response_data, 200 );
 			}
 
 			$filename_base = Attachment_Service::filename_from_prompt( $prompt, 'ai-edit-' . $id );
@@ -416,14 +493,30 @@ final class Edit_Controller {
 				return new WP_Error( 'wp_banana_save_failed', $e->getMessage() );
 			}
 
-			return new WP_REST_Response(
+			$response_data = [
+				'attachment_id' => $saved['attachment_id'],
+				'url'           => $saved['url'],
+				'parent_id'     => $id,
+			];
+			$response_data = apply_filters(
+				'wp_banana_edit_response',
+				$response_data,
 				[
+					'mode'          => 'new',
+					'provider'      => $provider,
+					'model'         => $model_eff,
+					'prompt'        => $prompt,
 					'attachment_id' => $saved['attachment_id'],
-					'url'           => $saved['url'],
-					'parent_id'     => $id,
 				],
-				200
+				$saved['attachment_id']
 			);
+			$response_data = is_array( $response_data ) ? $response_data : [
+				'attachment_id' => $saved['attachment_id'],
+				'url'           => $saved['url'],
+				'parent_id'     => $id,
+			];
+
+			return new WP_REST_Response( $response_data, 200 );
 		} finally {
 			$this->cleanup_reference_images( $reference_images );
 		}
@@ -554,15 +647,32 @@ final class Edit_Controller {
 
 		wp_delete_file( $result['path'] );
 
-		return new WP_REST_Response(
+		$response_data = [
+			'attachment_id' => $attachment['attachment_id'],
+			'url'           => $attachment['url'],
+			'parent_id'     => $id,
+			'filename'      => basename( $attachment['url'] ),
+		];
+		$response_data = apply_filters(
+			'wp_banana_edit_response',
+			$response_data,
 			[
+				'mode'          => 'save_as',
+				'provider'      => isset( $last_context['provider'] ) ? (string) $last_context['provider'] : '',
+				'model'         => isset( $last_context['model'] ) ? (string) $last_context['model'] : '',
+				'prompt'        => isset( $last_context['prompt'] ) ? (string) $last_context['prompt'] : '',
 				'attachment_id' => $attachment['attachment_id'],
-				'url'           => $attachment['url'],
-				'parent_id'     => $id,
-				'filename'      => basename( $attachment['url'] ),
 			],
-			200
+			$attachment['attachment_id']
 		);
+		$response_data = is_array( $response_data ) ? $response_data : [
+			'attachment_id' => $attachment['attachment_id'],
+			'url'           => $attachment['url'],
+			'parent_id'     => $id,
+			'filename'      => basename( $attachment['url'] ),
+		];
+
+		return new WP_REST_Response( $response_data, 200 );
 	}
 
 	/**
@@ -576,6 +686,19 @@ final class Edit_Controller {
 		if ( empty( $files['reference_images'] ) || ! is_array( $files['reference_images'] ) ) {
 			return [];
 		}
+
+		$max_allowed   = (int) apply_filters( 'wp_banana_edit_max_reference_images', self::MAX_REFERENCE_IMAGES, $req );
+		$max_allowed   = $max_allowed >= 0 ? $max_allowed : self::MAX_REFERENCE_IMAGES;
+		$allowed_mimes = apply_filters( 'wp_banana_edit_supported_reference_mime_types', self::SUPPORTED_REFERENCE_MIME, $req );
+		if ( ! is_array( $allowed_mimes ) ) {
+			$allowed_mimes = self::SUPPORTED_REFERENCE_MIME;
+		}
+		$allowed_mimes = array_values( array_filter( array_map( 'strval', $allowed_mimes ) ) );
+		if ( empty( $allowed_mimes ) ) {
+			$allowed_mimes = self::SUPPORTED_REFERENCE_MIME;
+		}
+		$allowed_lookup = array_map( 'strtolower', $allowed_mimes );
+		$mime_overrides = Mime::build_sideload_overrides( $allowed_mimes );
 
 		$bucket  = $files['reference_images'];
 		$entries = [];
@@ -603,7 +726,7 @@ final class Edit_Controller {
 
 		$collected = [];
 		foreach ( $entries as $entry ) {
-			if ( count( $collected ) >= self::MAX_REFERENCE_IMAGES ) {
+			if ( $max_allowed >= 0 && count( $collected ) >= $max_allowed ) {
 				break;
 			}
 			$error = (int) ( $entry['error'] ?? UPLOAD_ERR_NO_FILE );
@@ -624,9 +747,10 @@ final class Edit_Controller {
 			$original   = sanitize_file_name( (string) ( $entry['name'] ?? 'reference.png' ) );
 			$file_check = wp_check_filetype_and_ext( $tmp_name, $original );
 			$mime       = is_array( $file_check ) && ! empty( $file_check['type'] ) ? $file_check['type'] : (string) ( $entry['type'] ?? '' );
-			if ( ! in_array( $mime, self::SUPPORTED_REFERENCE_MIME, true ) ) {
+			$mime_lower = strtolower( $mime );
+			if ( '' === $mime_lower || ! in_array( $mime_lower, $allowed_lookup, true ) ) {
 				$this->cleanup_reference_images( $collected );
-				return new WP_Error( 'wp_banana_reference_type', __( 'Reference images must be PNG, JPEG, or WebP.', 'wp-banana' ) );
+				return new WP_Error( 'wp_banana_reference_type', __( 'Reference image type is not allowed.', 'wp-banana' ) );
 			}
 
 			if ( ! function_exists( 'wp_handle_sideload' ) ) {
@@ -643,12 +767,7 @@ final class Edit_Controller {
 
 			$upload_overrides = [
 				'test_form' => false,
-				'mimes'     => [
-					'png'  => 'image/png',
-					'jpg'  => 'image/jpeg',
-					'jpeg' => 'image/jpeg',
-					'webp' => 'image/webp',
-				],
+				'mimes'     => $mime_overrides,
 			];
 
 			$handled = wp_handle_sideload( $sideload_file, $upload_overrides );

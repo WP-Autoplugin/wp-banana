@@ -35,3 +35,7 @@
 .wp-banana-generate-panel .components-notice {
 	margin-bottom: 1em;
 }
+
+.media-modal .imgedit-wrap {
+	position: relative;
+}

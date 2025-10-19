@@ -21,18 +21,46 @@ final class Options {
 	public const OPTION_NAME = 'wp_banana_options';
 
 	/**
-	 * Options array.
+	 * Provider secret overrides keyed by provider slug.
+	 *
+	 * @var array<string,array<string,string>>
+	 */
+	public const PROVIDER_SECRET_KEYS = [
+		'gemini'    => [
+			'constant'   => 'WP_BANANA_GOOGLE_API_KEY',
+			'option_key' => 'api_key',
+		],
+		'openai'    => [
+			'constant'   => 'WP_BANANA_OPENAI_API_KEY',
+			'option_key' => 'api_key',
+		],
+		'replicate' => [
+			'constant'   => 'WP_BANANA_REPLICATE_API_KEY',
+			'option_key' => 'api_token',
+		],
+	];
+
+	/**
+	 * Options array with environment overrides applied.
 	 *
 	 * @var array
 	 */
 	private $options;
 
 	/**
+	 * Raw stored options without environment overrides.
+	 *
+	 * @var array
+	 */
+	private $stored_options;
+
+	/**
 	 * Constructor.
 	 */
 	public function __construct() {
-		$stored        = get_option( self::OPTION_NAME, [] );
-		$this->options = $this->merge_defaults( is_array( $stored ) ? $stored : [] );
+		$stored = get_option( self::OPTION_NAME, [] );
+		$merged = $this->merge_defaults( is_array( $stored ) ? $stored : [] );
+		$this->hydrate( $merged );
 	}
 
 	/**
@@ -42,6 +70,15 @@ final class Options {
 	 */
 	public function get_all(): array {
 		return $this->options;
+	}
+
+	/**
+	 * Get stored options without environment overrides.
+	 *
+	 * @return array
+	 */
+	public function get_stored(): array {
+		return $this->stored_options;
 	}
 
 	/**
@@ -72,7 +109,7 @@ final class Options {
 	public function update( array $updates ): void {
 		$merged = $this->merge_defaults( $updates );
 		update_option( self::OPTION_NAME, $merged, false );
-		$this->options = $merged;
+		$this->hydrate( $merged );
 	}
 
 	/**
@@ -140,6 +177,45 @@ final class Options {
 		];
 
 		return $this->deep_merge( $defaults, $stored );
+	}
+
+	/**
+	 * Apply environment overrides and set runtime/stored state.
+	 *
+	 * @param array $stored Stored options merged with defaults.
+	 * @return void
+	 */
+	private function hydrate( array $stored ): void {
+		$this->stored_options = $stored;
+		$this->options        = $this->apply_env_overrides( $stored );
+	}
+
+	/**
+	 * Overlay wp-config defined constants onto stored options.
+	 *
+	 * @param array $options Options array.
+	 * @return array
+	 */
+	private function apply_env_overrides( array $options ): array {
+		foreach ( self::PROVIDER_SECRET_KEYS as $provider => $config ) {
+			if ( isset( $config['constant'], $config['option_key'] ) && defined( $config['constant'] ) ) {
+				$constant_value = constant( $config['constant'] );
+				$options['providers'][ $provider ][ $config['option_key'] ] = is_string( $constant_value ) ? $constant_value : strval( $constant_value );
+			}
+		}
+
+		return $options;
+	}
+
+	/**
+	 * Whether a provider secret constant is defined.
+	 *
+	 * @param string $provider Provider slug.
+	 * @return bool
+	 */
+	public function provider_constant_defined( string $provider ): bool {
+		return isset( self::PROVIDER_SECRET_KEYS[ $provider ]['constant'] )
+			&& defined( self::PROVIDER_SECRET_KEYS[ $provider ]['constant'] );
 	}
 
 	/**

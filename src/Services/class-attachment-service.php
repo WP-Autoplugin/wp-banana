@@ -47,7 +47,37 @@ final class Attachment_Service {
 		}
 
 		$ext      = $this->ext_from_mime( $bin->mime );
-		$filename = wp_unique_filename( $upload['path'], sanitize_file_name( $filename_base . '.' . $ext ) );
+		$proposed = sanitize_file_name( $filename_base . '.' . $ext );
+		/**
+		 * Filter the suggested filename before ensuring uniqueness.
+		 *
+		 * @since 0.2.0
+		 *
+		 * @param string       $proposed      Sanitized filename suggestion.
+		 * @param string       $filename_base Base filename (without extension).
+		 * @param string       $extension     File extension.
+		 * @param Binary_Image $bin           Image payload.
+		 * @param array        $context       Metadata context for the attachment.
+		 */
+		$proposed = apply_filters( 'wp_banana_attachment_pre_unique_filename', $proposed, $filename_base, $ext, $bin, $context );
+		$proposed = sanitize_file_name( (string) $proposed );
+		if ( '' === $proposed ) {
+			$proposed = sanitize_file_name( $filename_base . '.' . $ext );
+		}
+		$filename = wp_unique_filename( $upload['path'], $proposed );
+		/**
+		 * Filter the unique filename chosen for the attachment.
+		 *
+		 * @since 0.2.0
+		 *
+		 * @param string       $filename      Unique filename (with extension).
+		 * @param string       $filename_base Base filename prior to uniqueness.
+		 * @param string       $extension     File extension.
+		 * @param Binary_Image $bin           Image payload.
+		 * @param array        $context       Metadata context for the attachment.
+		 */
+		$filename = (string) apply_filters( 'wp_banana_attachment_unique_filename', $filename, $filename_base, $ext, $bin, $context );
+		$filename = '' !== $filename ? sanitize_file_name( $filename ) : wp_unique_filename( $upload['path'], $proposed );
 		$file     = trailingslashit( $upload['path'] ) . $filename;
 
 		// Use WP_Filesystem for file operations as per WP standards.
@@ -93,6 +123,19 @@ final class Attachment_Service {
 			update_post_meta( $attach_id, '_ai_history', wp_json_encode( $history ) );
 		}
 		$context['derived_from'] = $derived_from ? (int) $derived_from : 0;
+		/**
+		 * Filter the metadata context stored alongside generated attachments.
+		 *
+		 * @since 0.2.0
+		 *
+		 * @param array        $context      Context array (action, provider, model, etc).
+		 * @param int          $attachment_id Newly created attachment ID.
+		 * @param Binary_Image $bin          Image payload.
+		 * @param int|null     $derived_from Source attachment ID when applicable.
+		 */
+		$context                 = apply_filters( 'wp_banana_attachment_context', $context, $attach_id, $bin, $derived_from );
+		$context                 = is_array( $context ) ? $context : [];
+		$context['derived_from'] = $derived_from ? (int) $derived_from : 0;
 		Attachment_Metadata::update_generated_meta( $attach_id, $context );
 		Attachment_Metadata::append_event(
 			$attach_id,
@@ -108,10 +151,25 @@ final class Attachment_Service {
 			],
 		);
 
-		return [
+		$payload = [
 			'attachment_id' => $attach_id,
 			'url'           => wp_get_attachment_url( $attach_id ),
 		];
+
+		/**
+		 * Fires after an AI-generated attachment has been saved.
+		 *
+		 * @since 0.2.0
+		 *
+		 * @param int          $attachment_id Attachment ID.
+		 * @param string       $file_path     Absolute path to the file on disk.
+		 * @param array        $context       Context metadata stored with the attachment.
+		 * @param Binary_Image $bin           Image payload saved to disk.
+		 * @param array        $response      REST response payload data.
+		 */
+		do_action( 'wp_banana_attachment_saved', $attach_id, $file, $context, $bin, $payload );
+
+		return $payload;
 	}
 
 	/**
@@ -140,7 +198,22 @@ final class Attachment_Service {
 		if ( '' === $slug ) {
 			$slug = 'ai-image';
 		}
-		return $slug . '-' . self::random_suffix();
+		$base = $slug . '-' . self::random_suffix();
+		/**
+		 * Filter the generated filename base before persistence.
+		 *
+		 * @since 0.2.0
+		 *
+		 * @param string $base     Proposed filename base (without extension).
+		 * @param string $prompt   Original prompt text.
+		 * @param string $fallback Fallback slug used when prompt is empty.
+		 * @param string $slug     Sanitized slug derived from the prompt.
+		 */
+		$filtered = apply_filters( 'wp_banana_generated_filename_base', $base, $prompt, $fallback, $slug );
+		if ( is_string( $filtered ) && '' !== trim( $filtered ) ) {
+			$base = $filtered;
+		}
+		return $base;
 	}
 
 	/**
@@ -155,7 +228,22 @@ final class Attachment_Service {
 		if ( '' === $title ) {
 			$title = $fallback;
 		}
-		return sanitize_text_field( $title );
+		/**
+		 * Filter the generated attachment title.
+		 *
+		 * @since 0.2.0
+		 *
+		 * @param string $title    Proposed attachment title.
+		 * @param string $prompt   Original prompt text.
+		 * @param string $fallback Fallback label used when prompt is empty.
+		 */
+		$filtered = apply_filters( 'wp_banana_generated_attachment_title', $title, $prompt, $fallback );
+		$title    = is_string( $filtered ) && '' !== $filtered ? $filtered : $title;
+		$title    = sanitize_text_field( $title );
+		if ( '' === $title ) {
+			$title = sanitize_text_field( $fallback );
+		}
+		return $title;
 	}
 
 	/**

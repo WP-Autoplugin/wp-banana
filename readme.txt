@@ -3,7 +3,7 @@ Contributors: pbalazs
 Tags: ai, images, openai, replicate, google
 Requires at least: 6.0
 Tested up to: 6.8
-Stable tag: 0.1.0
+Stable tag: 0.2.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -56,7 +56,7 @@ WP Nano Banana supports a wide range of AI image models:
 - **OpenAI GPT-Image-1** (`gpt-image-1`) — same model ChatGPT uses for image generation
 - **Google Imagen 4** (`google/imagen-4`, `google/imagen-4-ultra`, `google/imagen-4-fast`)
 - **FLUX Models** (`flux-kontext-max`, `flux-1.1-pro`, `flux-schnell`, `flux-dev`)
-- **Recraft v3**, **Ideogram v3**, **Seedream 4.0**, **Seededit 3.0**, **Qwen Image** and more
+- **Recraft v3**, **Reve Create**, **Ideogram v3**, **Seedream 4.0**, **Qwen Image** and more
 
 ### External Services
 
@@ -127,7 +127,14 @@ All images are saved directly into your WordPress Media Library. You can use the
 
 == Changelog ==
 
-= 1.0.0 =
+= 0.2.0 =
+* Improved UI for image editing
+* Added more AI models via Replicate API integration
+* Added option to set API keys via constants
+* Added various filter and action hooks for developers
+* Bug fixes and performance improvements
+
+= 0.1.0 =
 * Initial release with AI image generation, editing, and Media Library integration
 * Support for OpenAI gpt-image-1, Google Gemini Nano Banana, and Replicate API models
 
