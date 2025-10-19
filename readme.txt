@@ -8,7 +8,7 @@ Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-A free WordPress plugin for generating and editing images with AI directly inside your WordPress dashboard. Works with OpenAI, Google Gemini (Nano Banana), Replicate API, Seedream 4.0, and more.
+Free plugin for generating and editing images with AI. Works with Google Nano Banana, Seedream 4.0, and others. Compatible with virtually all plugins.
 
 == Description ==
 
