@@ -177,7 +177,7 @@ final class Settings_Page {
 				<table class="form-table" role="presentation">
 					<tr>
 						<th scope="row">Gemini API Key</th>
-						<td><input type="password" style="width:420px" name="<?php echo esc_attr( Options::OPTION_NAME ); ?>[providers][gemini][api_key]" value="<?php echo esc_attr( $opts['providers']['gemini']['api_key'] ); ?>" placeholder="sk-..." /></td>
+						<td><input type="password" style="width:420px" name="<?php echo esc_attr( Options::OPTION_NAME ); ?>[providers][gemini][api_key]" value="<?php echo esc_attr( $opts['providers']['gemini']['api_key'] ); ?>" placeholder="AIza..." /></td>
 					</tr>
 					<tr>
 						<th scope="row">OpenAI API Key</th>
