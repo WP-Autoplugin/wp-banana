@@ -108,19 +108,31 @@ final class Settings_Page {
 	 */
 	public function sanitize_options( $input ): array {
 		// phpcs:disable Generic.Formatting.MultipleStatementAlignment
-		$current = $this->options->get_all();
+		$current = $this->options->get_stored();
 		$input   = is_array( $input ) ? $input : [];
 		// Sanitize critical fields minimally.
 		$providers = isset( $input['providers'] ) && is_array( $input['providers'] ) ? $input['providers'] : [];
 
-		$current['providers']['gemini']['api_key'] = isset( $providers['gemini']['api_key'] ) ? sanitize_text_field( $providers['gemini']['api_key'] ) : ( isset( $current['providers']['gemini']['api_key'] ) ? $current['providers']['gemini']['api_key'] : '' );
+		if ( $this->options->provider_constant_defined( 'gemini' ) ) {
+			$current['providers']['gemini']['api_key'] = '';
+		} else {
+			$current['providers']['gemini']['api_key'] = isset( $providers['gemini']['api_key'] ) ? sanitize_text_field( $providers['gemini']['api_key'] ) : ( isset( $current['providers']['gemini']['api_key'] ) ? $current['providers']['gemini']['api_key'] : '' );
+		}
 		// Keep legacy field if present (hidden in UI), but don't require it.
 		$current['providers']['gemini']['default_model'] = isset( $providers['gemini']['default_model'] ) ? sanitize_text_field( $providers['gemini']['default_model'] ) : ( isset( $current['providers']['gemini']['default_model'] ) ? $current['providers']['gemini']['default_model'] : 'gemini-2.5-flash-image-preview' );
 
-		$current['providers']['openai']['api_key'] = isset( $providers['openai']['api_key'] ) ? sanitize_text_field( $providers['openai']['api_key'] ) : ( isset( $current['providers']['openai']['api_key'] ) ? $current['providers']['openai']['api_key'] : '' );
+		if ( $this->options->provider_constant_defined( 'openai' ) ) {
+			$current['providers']['openai']['api_key'] = '';
+		} else {
+			$current['providers']['openai']['api_key'] = isset( $providers['openai']['api_key'] ) ? sanitize_text_field( $providers['openai']['api_key'] ) : ( isset( $current['providers']['openai']['api_key'] ) ? $current['providers']['openai']['api_key'] : '' );
+		}
 		$current['providers']['openai']['default_model'] = isset( $providers['openai']['default_model'] ) ? sanitize_text_field( $providers['openai']['default_model'] ) : ( isset( $current['providers']['openai']['default_model'] ) ? $current['providers']['openai']['default_model'] : 'gpt-image-1' );
 
-		$current['providers']['replicate']['api_token'] = isset( $providers['replicate']['api_token'] ) ? sanitize_text_field( $providers['replicate']['api_token'] ) : ( isset( $current['providers']['replicate']['api_token'] ) ? $current['providers']['replicate']['api_token'] : '' );
+		if ( $this->options->provider_constant_defined( 'replicate' ) ) {
+			$current['providers']['replicate']['api_token'] = '';
+		} else {
+			$current['providers']['replicate']['api_token'] = isset( $providers['replicate']['api_token'] ) ? sanitize_text_field( $providers['replicate']['api_token'] ) : ( isset( $current['providers']['replicate']['api_token'] ) ? $current['providers']['replicate']['api_token'] : '' );
+		}
 
 		$current['providers']['replicate']['default_model'] = isset( $providers['replicate']['default_model'] ) ? sanitize_text_field( $providers['replicate']['default_model'] ) : ( isset( $current['providers']['replicate']['default_model'] ) ? $current['providers']['replicate']['default_model'] : 'black-forest-labs/flux' );
 
@@ -162,7 +174,22 @@ final class Settings_Page {
 			wp_die( esc_html__( 'You do not have permission to access this page.', 'wp-banana' ) );
 		}
 
-		$opts = $this->options->get_all();
+		$opts             = $this->options->get_all();
+		$gemini_state     = $this->get_constant_state( 'gemini' );
+		$openai_state     = $this->get_constant_state( 'openai' );
+		$replicate_state  = $this->get_constant_state( 'replicate' );
+		$gemini_value     = $gemini_state['defined']
+			? ( $gemini_state['has_value'] ? '********' : '' )
+			: ( isset( $opts['providers']['gemini']['api_key'] ) ? (string) $opts['providers']['gemini']['api_key'] : '' );
+		$openai_value     = $openai_state['defined']
+			? ( $openai_state['has_value'] ? '********' : '' )
+			: ( isset( $opts['providers']['openai']['api_key'] ) ? (string) $opts['providers']['openai']['api_key'] : '' );
+		$replicate_value  = $replicate_state['defined']
+			? ( $replicate_state['has_value'] ? '********' : '' )
+			: ( isset( $opts['providers']['replicate']['api_token'] ) ? (string) $opts['providers']['replicate']['api_token'] : '' );
+		$gemini_disabled  = $gemini_state['defined'] ? ' disabled="disabled" aria-disabled="true"' : '';
+		$openai_disabled  = $openai_state['defined'] ? ' disabled="disabled" aria-disabled="true"' : '';
+		$replicate_disabled = $replicate_state['defined'] ? ' disabled="disabled" aria-disabled="true"' : '';
 		?>
 		<div class="wrap">
 			<h1><?php echo esc_html__( 'WP Nano Banana', 'wp-banana' ); ?></h1>
@@ -177,15 +204,30 @@ final class Settings_Page {
 				<table class="form-table" role="presentation">
 					<tr>
 						<th scope="row">Gemini API Key</th>
-						<td><input type="password" style="width:420px" name="<?php echo esc_attr( Options::OPTION_NAME ); ?>[providers][gemini][api_key]" value="<?php echo esc_attr( $opts['providers']['gemini']['api_key'] ); ?>" placeholder="AIza..." /></td>
+						<td>
+							<input type="password" style="width:420px" name="<?php echo esc_attr( Options::OPTION_NAME ); ?>[providers][gemini][api_key]" value="<?php echo esc_attr( $gemini_value ); ?>" placeholder="AIza..."<?php echo $gemini_disabled; ?> />
+							<?php if ( $gemini_state['defined'] ) : ?>
+								<?php $this->render_constant_notice( $gemini_state['constant'], $gemini_state['has_value'] ); ?>
+							<?php endif; ?>
+						</td>
 					</tr>
 					<tr>
 						<th scope="row">OpenAI API Key</th>
-						<td><input type="password" style="width:420px" name="<?php echo esc_attr( Options::OPTION_NAME ); ?>[providers][openai][api_key]" value="<?php echo esc_attr( $opts['providers']['openai']['api_key'] ); ?>" placeholder="sk-..." /></td>
+						<td>
+							<input type="password" style="width:420px" name="<?php echo esc_attr( Options::OPTION_NAME ); ?>[providers][openai][api_key]" value="<?php echo esc_attr( $openai_value ); ?>" placeholder="sk-..."<?php echo $openai_disabled; ?> />
+							<?php if ( $openai_state['defined'] ) : ?>
+								<?php $this->render_constant_notice( $openai_state['constant'], $openai_state['has_value'] ); ?>
+							<?php endif; ?>
+						</td>
 					</tr>
 					<tr>
 						<th scope="row">Replicate API Token</th>
-						<td><input type="password" style="width:420px" name="<?php echo esc_attr( Options::OPTION_NAME ); ?>[providers][replicate][api_token]" value="<?php echo esc_attr( $opts['providers']['replicate']['api_token'] ); ?>" placeholder="r8_..." /></td>
+						<td>
+							<input type="password" style="width:420px" name="<?php echo esc_attr( Options::OPTION_NAME ); ?>[providers][replicate][api_token]" value="<?php echo esc_attr( $replicate_value ); ?>" placeholder="r8_..."<?php echo $replicate_disabled; ?> />
+							<?php if ( $replicate_state['defined'] ) : ?>
+								<?php $this->render_constant_notice( $replicate_state['constant'], $replicate_state['has_value'] ); ?>
+							<?php endif; ?>
+						</td>
 					</tr>
 					<?php // phpcs:disable Generic.Formatting.MultipleStatementAlignment
 					$catalog     = Models_Catalog::all();
@@ -246,7 +288,7 @@ final class Settings_Page {
 				<h2 class="title"><?php esc_html_e( 'Defaults', 'wp-banana' ); ?></h2>
 				<table class="form-table" role="presentation">
 					<tr>
-						<th scope="row"><?php esc_html_e( 'Aspect ratio', 'wp-banana' ); ?></th>
+						<th scope="row"><?php esc_html_e( 'Preferred Aspect ratio', 'wp-banana' ); ?></th>
 						<td>
 							<select name="<?php echo esc_attr( Options::OPTION_NAME ); ?>[generation_defaults][aspect_ratio]">
 								<?php
@@ -259,7 +301,7 @@ final class Settings_Page {
 						</td>
 					</tr>
 					<tr>
-						<th scope="row"><?php esc_html_e( 'Format', 'wp-banana' ); ?></th>
+						<th scope="row"><?php esc_html_e( 'Preferred Output Format', 'wp-banana' ); ?></th>
 						<td>
 							<select name="<?php echo esc_attr( Options::OPTION_NAME ); ?>[generation_defaults][format]">
 								<option value="png" <?php selected( $opts['generation_defaults']['format'], 'png' ); ?>>PNG</option>
@@ -282,6 +324,51 @@ final class Settings_Page {
 			</form>
 		</div>
 		<?php
+	}
+
+	/**
+	 * Determine wp-config override state for a provider.
+	 *
+	 * @param string $provider Provider slug.
+	 * @return array{defined:bool,has_value:bool,constant:string}
+	 */
+	private function get_constant_state( string $provider ): array {
+		$constant_name = isset( Options::PROVIDER_SECRET_KEYS[ $provider ]['constant'] ) ? (string) Options::PROVIDER_SECRET_KEYS[ $provider ]['constant'] : '';
+		$defined       = ( '' !== $constant_name ) && defined( $constant_name );
+		$has_value     = false;
+
+		if ( $defined ) {
+			$raw_value = constant( $constant_name );
+			$value     = is_scalar( $raw_value ) ? (string) $raw_value : '';
+			$has_value = '' !== trim( $value );
+		}
+
+		return [
+			'defined'   => $defined,
+			'has_value' => $has_value,
+			'constant'  => $constant_name,
+		];
+	}
+
+	/**
+	 * Render a description highlighting wp-config provider overrides.
+	 *
+	 * @param string $constant_name Constant identifier.
+	 * @param bool   $has_value     Whether the constant currently has a non-empty value.
+	 * @return void
+	 */
+	private function render_constant_notice( string $constant_name, bool $has_value ): void {
+		if ( '' === $constant_name ) {
+			return;
+		}
+
+		echo '<p class="description">' . sprintf( esc_html__( 'Managed via constant in %s.', 'wp-banana' ), '<code>wp-config.php</code>' ) ;
+
+		if ( ! $has_value ) {
+			echo ' ' . esc_html__( 'The constant is currently empty.', 'wp-banana' );
+		}
+
+		echo '</p>';
 	}
 
 	/**

@@ -27,7 +27,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 final class Plugin {
 
-	public const VERSION = '0.1.0';
+	public const VERSION = WP_BANANA_VERSION;
 
 	/**
 	 * Main plugin file path.
@@ -35,12 +35,14 @@ final class Plugin {
 	 * @var string
 	 */
 	private static $plugin_file;
+
 	/**
 	 * Base plugin directory path.
 	 *
 	 * @var string
 	 */
 	private static $plugin_dir;
+
 	/**
 	 * Base plugin URL.
 	 *

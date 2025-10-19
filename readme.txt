@@ -3,7 +3,7 @@ Contributors: pbalazs
 Tags: ai, images, openai, replicate, google
 Requires at least: 6.0
 Tested up to: 6.8
-Stable tag: 0.1.0
+Stable tag: 0.2.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -127,7 +127,14 @@ All images are saved directly into your WordPress Media Library. You can use the
 
 == Changelog ==
 
-= 1.0.0 =
+= 0.2.0 =
+* Added support for Google Gemini 2.5 Flash Image (Nano Banana) model
+* Improved UI for image editing in Media Library
+* Added more AI models via Replicate API integration
+* Added option to set API keys via constants
+* Bug fixes and performance improvements
+
+= 0.1.0 =
 * Initial release with AI image generation, editing, and Media Library integration
 * Support for OpenAI gpt-image-1, Google Gemini Nano Banana, and Replicate API models
 
