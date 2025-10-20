@@ -135,6 +135,7 @@ https://github.com/user-attachments/assets/28a5ef2d-682e-4206-99e7-6eb1f141146d
 
 * WordPress 6.0+
 * PHP 7.4+
+* ImageMagick enabled on your server
 * API key for supported AI providers (OpenAI, Replicate API, Google AI Studio)
 
 ## Supported AI Models
