@@ -166,6 +166,8 @@ You can select from these models when generating or editing images, depending on
 
 Contributions are welcome! Please open an [issue](https://github.com/WP-Autoplugin/wp-banana/issues) or submit a pull request.
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/WP-Autoplugin/wp-banana)
+
 ## License
 
 GPL-2.0 or later — [https://www.gnu.org/licenses/gpl-2.0.html](https://www.gnu.org/licenses/gpl-2.0.html)

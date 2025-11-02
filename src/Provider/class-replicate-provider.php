@@ -473,6 +473,8 @@ final class Replicate_Provider implements Provider_Interface {
 		if ( false !== strpos( $needle, 'nano-banana' ) || false !== strpos( $needle, 'seedream' ) ) {
 			$input['image_input'] = $data_uris;
 			$input['image_input'] = array_reverse( $input['image_input'] );
+		} elseif ( $needle === 'reve/remix' ) {
+			$input['reference_images'] = $data_uris;
 		} else {
 			$input['image'] = $data_uris[0];
 		}
@@ -519,7 +521,11 @@ final class Replicate_Provider implements Provider_Interface {
 		];
 
 		$needle = strtolower( $model );
-		if ( false !== strpos( $needle, 'nano-banana' ) || false !== strpos( $needle, 'seedream' ) ) {
+		if ( $needle === 'reve/remix' ) {
+			$defaults['reference_images'] = [
+				$data_uri,
+			];
+		} elseif ( false !== strpos( $needle, 'nano-banana' ) || false !== strpos( $needle, 'seedream' ) ) {
 			$defaults['image_input'] = [ $data_uri ];
 		} elseif ( false !== strpos( $needle, 'flux-kontext' ) ) {
 			$defaults['input_image']   = $data_uri;

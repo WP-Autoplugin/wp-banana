@@ -563,6 +563,8 @@ final class Media_Hooks {
 				return __( 'Gemini', 'wp-banana' );
 			case 'replicate':
 				return __( 'Replicate', 'wp-banana' );
+			case 'openai':
+				return __( 'OpenAI', 'wp-banana' );
 		}
 		return $provider;
 	}

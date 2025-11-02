@@ -48,7 +48,7 @@ const REFERENCE_LIMIT = 4;
 const MULTI_IMAGE_MODEL_ALLOWLIST: Record<string, string[]> = {
 	gemini: [ 'gemini-2.5-flash-image-preview' ],
 	openai: [ 'gpt-image-1' ],
-	replicate: [ 'google/nano-banana', 'bytedance/seedream-4' ],
+	replicate: [ 'google/nano-banana', 'bytedance/seedream-4', 'reve/remix' ],
 };
 
 type ReferenceItem = {

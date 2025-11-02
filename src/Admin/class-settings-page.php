@@ -252,6 +252,10 @@ final class Settings_Page {
 							<?php endif; ?>
 						</td>
 					</tr>
+				</table>
+
+				<h2 class="title"><?php esc_html_e( 'Defaults', 'wp-banana' ); ?></h2>
+				<table class="form-table" role="presentation">
 					<?php
 					$catalog         = Models_Catalog::all();
 					$generate_groups = isset( $catalog['generate'] ) && is_array( $catalog['generate'] ) ? $catalog['generate'] : [];
@@ -297,10 +301,6 @@ final class Settings_Page {
 							</select>
 						</td>
 					</tr>
-				</table>
-
-				<h2 class="title"><?php esc_html_e( 'Defaults', 'wp-banana' ); ?></h2>
-				<table class="form-table" role="presentation">
 					<tr>
 						<th scope="row"><?php esc_html_e( 'Preferred Aspect Ratio', 'wp-banana' ); ?></th>
 						<td>

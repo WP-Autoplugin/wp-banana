@@ -829,7 +829,7 @@ final class Edit_Controller {
 			return 'gpt-image-1' === $model;
 		}
 		if ( 'replicate' === $provider ) {
-			return in_array( $model, [ 'google/nano-banana', 'bytedance/seedream-4' ], true );
+			return in_array( $model, [ 'google/nano-banana', 'bytedance/seedream-4', 'reve/remix' ], true );
 		}
 
 		return false;

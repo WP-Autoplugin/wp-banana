@@ -36,6 +36,7 @@ final class Models_Catalog {
 				],
 				'openai'    => [
 					'gpt-image-1',
+					'gpt-image-1-mini',
 				],
 				'replicate' => [
 					'google/gemini-2.5-flash-image',
@@ -63,6 +64,7 @@ final class Models_Catalog {
 				],
 				'openai'    => [
 					'gpt-image-1',
+					'gpt-image-1-mini',
 				],
 				'replicate' => [
 					'qwen/qwen-image-edit',
@@ -71,6 +73,8 @@ final class Models_Catalog {
 					'google/nano-banana',
 					'black-forest-labs/flux-kontext-max',
 					'black-forest-labs/flux-kontext-dev',
+					'reve/edit',
+					'reve/remix',
 				],
 			],
 		];

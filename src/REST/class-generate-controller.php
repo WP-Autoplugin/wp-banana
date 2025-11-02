@@ -515,23 +515,6 @@ final class Generate_Controller {
 	}
 
 	/**
-	 * Map MIME type to plugin-supported format slug.
-	 *
-	 * @param string $mime MIME type.
-	 * @return string
-	 */
-	private function format_from_mime( string $mime ): string {
-		$mime = strtolower( trim( $mime ) );
-		if ( 'image/jpeg' === $mime || 'image/jpg' === $mime ) {
-			return 'jpeg';
-		}
-		if ( 'image/webp' === $mime ) {
-			return 'webp';
-		}
-		return 'png';
-	}
-
-	/**
 	 * Determine whether selected provider/model allows multi-image references.
 	 *
 	 * @param string $provider Provider slug.
@@ -549,7 +532,7 @@ final class Generate_Controller {
 			return 'gpt-image-1' === $model;
 		}
 		if ( 'replicate' === $provider ) {
-			return in_array( $model, [ 'google/nano-banana', 'bytedance/seedream-4' ], true );
+			return in_array( $model, [ 'google/nano-banana', 'bytedance/seedream-4', 'reve/remix' ], true );
 		}
 
 		return false;
