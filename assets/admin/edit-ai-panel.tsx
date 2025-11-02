@@ -77,8 +77,8 @@ type NoticeState = {
 const MIN_PROMPT_LENGTH = 3;
 const REFERENCE_LIMIT = 4;
 const MULTI_IMAGE_MODEL_ALLOWLIST: Record<string, string[]> = {
-	gemini: [ 'gemini-2.5-flash-image-preview' ],
-	openai: [ 'gpt-image-1' ],
+	gemini: [ 'gemini-2.5-flash-image', 'gemini-2.5-flash-image-preview' ],
+	openai: [ 'gpt-image-1', 'gpt-image-1-mini' ],
 	replicate: [ 'google/nano-banana', 'bytedance/seedream-4', 'reve/remix' ],
 };
 
@@ -598,6 +598,34 @@ const EditPanel = ( {
 		[ provider, providers ]
 	);
 
+	const multiReferenceSupported = useMemo( () => {
+		if ( modelsLoading ) {
+			return false;
+		}
+		if ( ! provider ) {
+			return false;
+		}
+		const allowList = MULTI_IMAGE_MODEL_ALLOWLIST[ provider ] ?? [];
+		if ( allowList.length === 0 ) {
+			return false;
+		}
+		const candidates: string[] = [];
+		if ( model ) {
+			candidates.push( model );
+		} else if ( models.length === 0 ) {
+			if ( selectedProviderConfig?.default_model ) {
+				candidates.push( String( selectedProviderConfig.default_model ) );
+			}
+			if ( defaultEditorModel ) {
+				candidates.push( defaultEditorModel );
+			}
+		}
+		if ( candidates.length === 0 ) {
+			return false;
+		}
+		return candidates.some( ( value ) => allowList.includes( value ) );
+	}, [ provider, model, models, selectedProviderConfig, defaultEditorModel, modelsLoading ] );
+
 	const providerLabel = useMemo( () => {
 		if ( selectedProviderConfig?.label ) {
 			return selectedProviderConfig.label;
@@ -726,12 +754,19 @@ const EditPanel = ( {
 	}, [] );
 
 	const triggerReferenceDialog = useCallback( () => {
+		if ( ! multiReferenceSupported ) {
+			return;
+		}
 		if ( fileInputRef.current ) {
 			fileInputRef.current.click();
 		}
-	}, [] );
+	}, [ multiReferenceSupported ] );
 
 	const handleReferenceSelection = useCallback( ( event: ChangeEvent<HTMLInputElement> ) => {
+		if ( ! multiReferenceSupported ) {
+			event.target.value = '';
+			return;
+		}
 		const files = event.target.files;
 		if ( ! files || files.length === 0 ) {
 			return;
@@ -761,7 +796,7 @@ const EditPanel = ( {
 			setReferenceError( __( 'You can upload up to 4 reference images.', 'wp-banana' ) );
 		}
 		event.target.value = '';
-	}, [ referenceImages ] );
+	}, [ referenceImages, multiReferenceSupported ] );
 
 	const removeReference = useCallback( ( id: string ) => {
 		let removed = false;
@@ -955,24 +990,28 @@ const EditPanel = ( {
 						placeholder={ __( 'Add a glowing neon outline…', 'wp-banana' ) }
 						disabled={ isSubmitting }
 					/>
-					<button
-						type="button"
-						className="button button-secondary button-small"
-						onClick={ triggerReferenceDialog }
-						disabled={ isSubmitting }
-						aria-label={ __( 'Add reference images', 'wp-banana' ) }
-						style={ { position: 'absolute', top: '26px', right: '0', lineHeight: '20px', padding: '0 4px', border: 'none', borderRadius: 0, background: 'transparent' } }
-					>
-						<span className="dashicons dashicons-paperclip" aria-hidden="true" />
-					</button>
-					<input
-						ref={ fileInputRef }
-						type="file"
-						accept="image/png,image/jpeg,image/webp"
-						multiple
-						onChange={ handleReferenceSelection }
-						style={ { display: 'none' } }
-					/>
+					{ multiReferenceSupported && (
+						<>
+							<button
+								type="button"
+								className="button button-secondary button-small"
+								onClick={ triggerReferenceDialog }
+								disabled={ isSubmitting }
+								aria-label={ __( 'Add reference images', 'wp-banana' ) }
+								style={ { position: 'absolute', top: '26px', right: '0', lineHeight: '20px', padding: '0 4px', border: 'none', borderRadius: 0, background: 'transparent' } }
+							>
+								<span className="dashicons dashicons-paperclip" aria-hidden="true" />
+							</button>
+							<input
+								ref={ fileInputRef }
+								type="file"
+								accept="image/png,image/jpeg,image/webp"
+								multiple
+								onChange={ handleReferenceSelection }
+								style={ { display: 'none' } }
+							/>
+						</>
+					) }
 				</div>
 
 				{ referenceImages.length > 0 && (

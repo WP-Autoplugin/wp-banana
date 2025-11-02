@@ -46,8 +46,8 @@ type ApiError = {
 const MIN_PROMPT_LENGTH = 3;
 const REFERENCE_LIMIT = 4;
 const MULTI_IMAGE_MODEL_ALLOWLIST: Record<string, string[]> = {
-	gemini: [ 'gemini-2.5-flash-image-preview' ],
-	openai: [ 'gpt-image-1' ],
+	gemini: [ 'gemini-2.5-flash-image-preview', 'gemini-2.5-flash-image' ],
+	openai: [ 'gpt-image-1', 'gpt-image-1-mini' ],
 	replicate: [ 'google/nano-banana', 'bytedance/seedream-4', 'reve/remix' ],
 };
 

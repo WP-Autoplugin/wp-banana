@@ -526,10 +526,10 @@ final class Generate_Controller {
 		$model    = strtolower( trim( $model ) );
 
 		if ( 'gemini' === $provider ) {
-			return 'gemini-2.5-flash-image-preview' === $model;
+			return in_array( $model, [ 'gemini-2.5-flash-image', 'gemini-2.5-flash-image-preview' ], true );
 		}
 		if ( 'openai' === $provider ) {
-			return 'gpt-image-1' === $model;
+			return in_array( $model, [ 'gpt-image-1', 'gpt-image-1-mini' ], true );
 		}
 		if ( 'replicate' === $provider ) {
 			return in_array( $model, [ 'google/nano-banana', 'bytedance/seedream-4', 'reve/remix' ], true );
