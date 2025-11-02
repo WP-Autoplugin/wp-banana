@@ -144,13 +144,14 @@ WP Nano Banana supports a wide range of state-of-the-art AI image models for bot
 
 - **Google Gemini 2.5 Flash Image**, a.k.a. **Google Nano Banana** (`gemini-2.5-flash-image` / `google/nano-banana`)
 - **OpenAI GPT-Image-1** (`gpt-image-1`) - the same model used by ChatGPT for image generation and editing
-- **Google Imagen 4** (`google/imagen-4`, `google/imagen-4-ultra`, `google/imagen-4-fast`)
+- **OpenAI GPT-Image-1-Mini** (`gpt-image-1-mini`)
+- **Google Imagen 4** (`google/imagen-4`, `google/imagen-4-ultra`, `google/imagen-4-fast`) - through Google Gemini API or Replicate
 - **FLUX Kontext** (`black-forest-labs/flux-kontext-max`, `black-forest-labs/flux-kontext-dev`)
 - **FLUX 1.1 Pro** (`black-forest-labs/flux-1.1-pro`)
 - **FLUX Schnell** (`black-forest-labs/flux-schnell`)
 - **FLUX Dev** (`black-forest-labs/flux-dev`)
 - **Recraft v3** (`recraft-ai/recraft-v3`)
-- **Reve Create** (`reve/create`)
+- **Reve Create, Edit, Remix** (`reve/create`, `reve/edit`, `reve/remix`)
 - **Ideogram v3** (`ideogram-ai/ideogram-v3-turbo`, `ideogram-ai/ideogram-v3-quality`, `ideogram-ai/ideogram-v3-balanced`)
 - **Bytedance Seedream 4** (`bytedance/seedream-4`)
 - **Bytedance Seededit 3.0** (`bytedance/seededit-3.0`)
@@ -158,7 +159,6 @@ WP Nano Banana supports a wide range of state-of-the-art AI image models for bot
 - **Stability AI Stable Diffusion 3.5 Large** (`stability-ai/stable-diffusion-3.5-large`)
 - **Minimax Image 01** (`minimax/image-01`)
 - **Qwen Image** (`qwen/qwen-image`, `qwen/qwen-image-edit`)
-- **Google Imagen 4** (`google/imagen-4`, `google/imagen-4-ultra`, `google/imagen-4-fast`)
 
 You can select from these models when generating or editing images, depending on your connected provider and the task at hand.
 

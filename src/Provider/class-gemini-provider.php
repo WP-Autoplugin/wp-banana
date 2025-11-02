@@ -82,8 +82,19 @@ final class Gemini_Provider implements Provider_Interface {
 			throw new RuntimeException( 'Gemini model not configured.' );
 		}
 
-		$url     = trailingslashit( $this->api_url ) . rawurlencode( $model ) . ':generateContent';
-		$payload = $this->build_generate_payload( $p->prompt, $p->reference_images );
+		$is_imagen = $this->is_imagen_model( $model );
+		if ( $is_imagen && ! empty( $p->reference_images ) ) {
+			throw new RuntimeException( 'Imagen 4 models do not support reference images.' );
+		}
+
+		if ( $is_imagen ) {
+			$url     = trailingslashit( $this->api_url ) . rawurlencode( $model ) . ':predict';
+			$payload = $this->build_imagen_generate_payload( $p, $model );
+		} else {
+			$url     = trailingslashit( $this->api_url ) . rawurlencode( $model ) . ':generateContent';
+			$payload = $this->build_generate_payload( $p->prompt, $p->reference_images );
+		}
+
 		$data    = $this->perform_request(
 			$url,
 			$payload,
@@ -91,9 +102,10 @@ final class Gemini_Provider implements Provider_Interface {
 				'operation' => 'generate',
 				'model'     => $model,
 				'prompt'    => $p->prompt,
+				'endpoint'  => $is_imagen ? 'predict' : 'generateContent',
 			]
 		);
-		$img     = $this->extract_inline_image( $data );
+		$img     = $is_imagen ? $this->extract_imagen_image( $data ) : $this->extract_inline_image( $data );
 		if ( ! $img ) {
 			throw new RuntimeException( 'Gemini response did not include image bytes.' );
 		}
@@ -119,6 +131,9 @@ final class Gemini_Provider implements Provider_Interface {
 		}
 		if ( '' === $model ) {
 			throw new RuntimeException( 'Gemini model not configured.' );
+		}
+		if ( $this->is_imagen_model( $model ) ) {
+			throw new RuntimeException( 'Imagen 4 models do not support editing.' );
 		}
 
 		$url = trailingslashit( $this->api_url ) . rawurlencode( $model ) . ':generateContent';
@@ -211,6 +226,59 @@ final class Gemini_Provider implements Provider_Interface {
 	}
 
 	/**
+	 * Extract Imagen image bytes + mime from predict response.
+	 *
+	 * @param array|null $json Decoded JSON.
+	 * @return array{0:string,1:string}|null
+	 */
+	private function extract_imagen_image( $json ) {
+		if ( ! is_array( $json ) ) {
+			return null;
+		}
+		if ( empty( $json['predictions'] ) || ! is_array( $json['predictions'] ) ) {
+			return null;
+		}
+		$first = reset( $json['predictions'] );
+		if ( ! is_array( $first ) ) {
+			return null;
+		}
+
+		$b64_keys = [
+			'bytesBase64Encoded',
+			'bytes_base64_encoded',
+		];
+		$b64 = '';
+		foreach ( $b64_keys as $key ) {
+			if ( isset( $first[ $key ] ) && is_string( $first[ $key ] ) && '' !== $first[ $key ] ) {
+				$b64 = $first[ $key ];
+				break;
+			}
+		}
+		if ( '' === $b64 ) {
+			return null;
+		}
+
+		$mime_keys = [
+			'mimeType',
+			'mime_type',
+		];
+		$mime = 'image/png';
+		foreach ( $mime_keys as $key ) {
+			if ( isset( $first[ $key ] ) && is_string( $first[ $key ] ) && '' !== $first[ $key ] ) {
+				$mime = $first[ $key ];
+				break;
+			}
+		}
+
+		$bin = base64_decode( $b64 ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_decode -- Required for decoding API response.
+		if ( false === $bin ) {
+			return null;
+		}
+
+		return [ $bin, $mime ];
+	}
+
+	/**
 	 * Build payload for image generation requests.
 	 *
 	 * @param string            $prompt Prompt text.
@@ -260,6 +328,168 @@ final class Gemini_Provider implements Provider_Interface {
 				'responseModalities' => [ 'IMAGE' ],
 			],
 		];
+	}
+
+	/**
+	 * Build Imagen predict payload.
+	 *
+	 * @param Image_Params $params Image parameters.
+	 * @param string       $model  Model name.
+	 * @return array
+	 */
+	private function build_imagen_generate_payload( Image_Params $params, string $model ): array {
+		$prompt      = $this->normalize_prompt( $params->prompt );
+		$image_size  = $this->determine_imagen_image_size( $params, $model );
+		$aspect      = $this->determine_imagen_aspect_ratio( $params );
+		$parameters  = [
+			'sampleCount'      => 1,
+			'imageSize'        => $image_size,
+			'aspectRatio'      => $aspect,
+			'personGeneration' => 'dont_allow',
+		];
+		$context     = [
+			'model'  => $model,
+			'prompt' => $params->prompt,
+			'width'  => $params->width,
+			'height' => $params->height,
+		];
+		/**
+		 * Filters Imagen 4 generation parameters before the request.
+		 *
+		 * @since 0.2.2
+		 *
+		 * @param array $parameters Imagen request parameters.
+		 * @param array $context    Request context (model, dimensions, prompt).
+		 */
+		$parameters = apply_filters( 'wp_banana_gemini_imagen_parameters', $parameters, $context );
+		if ( ! is_array( $parameters ) ) {
+			$parameters = [];
+		}
+		$parameters = array_filter(
+			$parameters,
+			static function ( $value ) {
+				return null !== $value && '' !== $value;
+			}
+		);
+
+		$payload = [
+			'instances'  => [
+				[
+					'prompt' => $prompt,
+				],
+			],
+			'parameters' => $parameters,
+		];
+
+		/**
+		 * Filters the Imagen 4 request payload.
+		 *
+		 * @since 0.2.2
+		 *
+		 * @param array $payload Request payload prior to encoding.
+		 * @param array $context Request context (model, dimensions, prompt).
+		 */
+		$payload = apply_filters( 'wp_banana_gemini_imagen_request', $payload, $context );
+
+		return is_array( $payload ) ? $payload : [
+			'instances'  => [
+				[
+					'prompt' => $prompt,
+				],
+			],
+			'parameters' => $parameters,
+		];
+	}
+
+	/**
+	 * Determine Imagen image size hint from parameters.
+	 *
+	 * @param Image_Params $params Image parameters.
+	 * @param string       $model  Model name.
+	 * @return string
+	 */
+	private function determine_imagen_image_size( Image_Params $params, string $model ): string {
+		$width    = max( 0, (int) $params->width );
+		$height   = max( 0, (int) $params->height );
+		$longedge = max( $width, $height );
+
+		if ( false !== strpos( strtolower( $model ), 'fast' ) ) {
+			return '1K';
+		}
+		if ( $longedge >= 1536 || false !== strpos( strtolower( $model ), 'ultra' ) ) {
+			return '2K';
+		}
+		return '1K';
+	}
+
+	/**
+	 * Determine Imagen aspect ratio from parameters.
+	 *
+	 * @param Image_Params $params Image parameters.
+	 * @return string
+	 */
+	private function determine_imagen_aspect_ratio( Image_Params $params ): string {
+		$allowed = [
+			'1:1',
+			'3:4',
+			'4:3',
+			'9:16',
+			'16:9',
+		];
+
+		$ratio = '';
+		if ( is_string( $params->aspect_ratio ) && '' !== $params->aspect_ratio ) {
+			$ratio = strtoupper( str_replace( ' ', '', $params->aspect_ratio ) );
+		}
+		if ( '' === $ratio ) {
+			$ratio = $this->aspect_ratio_from_dimensions( (int) $params->width, (int) $params->height );
+		}
+		if ( in_array( $ratio, $allowed, true ) ) {
+			return $ratio;
+		}
+		return '1:1';
+	}
+
+	/**
+	 * Compute Imagen aspect ratio from width/height.
+	 *
+	 * @param int $width  Width in pixels.
+	 * @param int $height Height in pixels.
+	 * @return string
+	 */
+	private function aspect_ratio_from_dimensions( int $width, int $height ): string {
+		if ( $width <= 0 || $height <= 0 ) {
+			return '1:1';
+		}
+		$ratio = $width / max( 1, $height );
+		$map   = [
+			'1:1'  => 1.0,
+			'3:4'  => 0.75,
+			'4:3'  => 4.0 / 3.0,
+			'9:16' => 0.5625,
+			'16:9' => 16.0 / 9.0,
+		];
+		$closest_key = '1:1';
+		$closest_diff = null;
+		foreach ( $map as $key => $value ) {
+			$diff = abs( $ratio - $value );
+			if ( null === $closest_diff || $diff < $closest_diff ) {
+				$closest_diff = $diff;
+				$closest_key  = $key;
+			}
+		}
+		return $closest_key;
+	}
+
+	/**
+	 * Whether the provided model id is an Imagen 4 variant.
+	 *
+	 * @param string $model Model name.
+	 * @return bool
+	 */
+	private function is_imagen_model( string $model ): bool {
+		$model = strtolower( $model );
+		return 0 === strpos( $model, 'imagen-4.0-' );
 	}
 
 	/**
