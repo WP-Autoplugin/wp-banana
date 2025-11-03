@@ -12,6 +12,8 @@ use WPBanana\Domain\Aspect_Ratios;
 use WPBanana\Plugin;
 use WPBanana\Services\Models_Catalog;
 use WPBanana\Services\Options;
+use WPBanana\Services\Logging_Service;
+use WPBanana\Admin\Logs_Page;
 use WPBanana\Util\Http;
 use WP_Error;
 
@@ -152,6 +154,23 @@ final class Settings_Page {
 		$privacy = isset( $input['privacy'] ) && is_array( $input['privacy'] ) ? $input['privacy'] : [];
 		$current['privacy']['store_history'] = ! empty( $privacy['store_history'] );
 
+		$logging_input   = isset( $input['logging'] ) && is_array( $input['logging'] ) ? $input['logging'] : [];
+		$logging_enabled = ! empty( $logging_input['enabled'] );
+		$was_enabled     = ! empty( $current['logging']['enabled'] );
+		$current['logging']['enabled'] = $logging_enabled;
+
+		if ( $logging_enabled && ! $was_enabled ) {
+			if ( ! Logging_Service::create_table() ) {
+				$current['logging']['enabled'] = false;
+				add_settings_error(
+					'wp-banana',
+					'wp_banana_logging_init_failed',
+					__( 'Unable to initialize the logging table. The logging option has been disabled.', 'wp-banana' ),
+					'error'
+				);
+			}
+		}
+
 		// New: default model selections.
 		$catalog = Models_Catalog::all();
 
@@ -259,6 +278,7 @@ final class Settings_Page {
 
 		// Translators: %s is provider name.
 		$replicate_error_label = sprintf( esc_html__( 'Connection to %s failed.', 'wp-banana' ), $replicate_label );
+		$logs_url              = admin_url( 'admin.php?page=' . Logs_Page::SLUG );
 		?>
 		<div class="wrap">
 			<h1><?php echo esc_html__( 'WP Nano Banana', 'wp-banana' ); ?></h1>
@@ -460,7 +480,29 @@ final class Settings_Page {
 				<table class="form-table" role="presentation">
 					<tr>
 						<th scope="row"><?php esc_html_e( 'Store history', 'wp-banana' ); ?></th>
-						<td><label><input type="checkbox" name="<?php echo esc_attr( Options::OPTION_NAME ); ?>[privacy][store_history]" value="1" <?php checked( ! empty( $opts['privacy']['store_history'] ) ); ?> /> <?php esc_html_e( 'Enable attachment history metadata', 'wp-banana' ); ?></label></td>
+						<td>
+							<label>
+								<input type="checkbox" name="<?php echo esc_attr( Options::OPTION_NAME ); ?>[privacy][store_history]" value="1" <?php checked( ! empty( $opts['privacy']['store_history'] ) ); ?> /> <?php esc_html_e( 'Enable attachment history metadata', 'wp-banana' ); ?>
+							</label>
+							<p class="description"><?php esc_html_e( 'When enabled, information about generated images is stored in attachment metadata and displayed in the media UI.', 'wp-banana' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><?php esc_html_e( 'API logging', 'wp-banana' ); ?></th>
+						<td>
+							<label>
+								<input type="checkbox" name="<?php echo esc_attr( Options::OPTION_NAME ); ?>[logging][enabled]" value="1" <?php checked( ! empty( $opts['logging']['enabled'] ) ); ?> />
+								<?php esc_html_e( 'Record provider requests and responses for debugging', 'wp-banana' ); ?>
+							</label>
+							<p class="description">
+								<?php esc_html_e( 'When enabled, API calls are stored in a dedicated database table.', 'wp-banana' ); ?>
+								<?php if ( Logging_Service::table_exists() ) : ?>
+									<a href="<?php echo esc_url( $logs_url ); ?>"><?php esc_html_e( 'View logs', 'wp-banana' ); ?></a>
+								<?php else : ?>
+									<?php esc_html_e( 'The table is created the first time logging is enabled.', 'wp-banana' ); ?>
+								<?php endif; ?>
+							</p>
+						</td>
 					</tr>
 				</table>
 

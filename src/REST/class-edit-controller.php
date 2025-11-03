@@ -30,6 +30,7 @@ use WPBanana\Services\Attachment_Service;
 use WPBanana\Services\Attachment_Metadata;
 use WPBanana\Util\Caps;
 use WPBanana\Services\Edit_Buffer;
+use WPBanana\Services\Logging_Service;
 use WPBanana\Util\Mime;
 
 use function get_current_user_id;
@@ -66,14 +67,23 @@ final class Edit_Controller {
 	private $buffer;
 
 	/**
+	 * Logging service instance.
+	 *
+	 * @var Logging_Service
+	 */
+	private $logger;
+
+	/**
 	 * Constructor.
 	 *
-	 * @param Options     $options Options service.
-	 * @param Edit_Buffer $buffer  Edit buffer store.
+	 * @param Options         $options Options service.
+	 * @param Edit_Buffer     $buffer  Edit buffer store.
+	 * @param Logging_Service $logger  Logging service.
 	 */
-	public function __construct( Options $options, Edit_Buffer $buffer ) {
+	public function __construct( Options $options, Edit_Buffer $buffer, Logging_Service $logger ) {
 		$this->options = $options;
 		$this->buffer  = $buffer;
+		$this->logger  = $logger;
 	}
 
 	/**
@@ -226,6 +236,35 @@ final class Edit_Controller {
 		}
 		$reference_count = count( $reference_images );
 
+		$current_user    = get_current_user_id();
+		$log_context     = [
+			'operation'       => 'edit',
+			'user_id'         => $current_user,
+			'prompt_excerpt'  => $prompt,
+			'reference_count' => $reference_count,
+			'save_mode'       => $save_mode,
+		];
+		$reference_names = [];
+		if ( $reference_count > 0 ) {
+			foreach ( $reference_images as $img ) {
+				if ( $img instanceof Reference_Image && ! empty( $img->filename ) ) {
+					$reference_names[] = $img->filename;
+				}
+			}
+		}
+
+		$request_payload = [
+			'attachment_id'   => $id,
+			'save_mode'       => $save_mode,
+			'reference_count' => $reference_count,
+		];
+		if ( '' !== $base_buffer_key ) {
+			$request_payload['base_buffer_key'] = $base_buffer_key;
+		}
+		if ( ! empty( $reference_names ) ) {
+			$request_payload['reference_names'] = $reference_names;
+		}
+
 		try {
 			$provider = $req->get_param( 'provider' );
 			$provider = is_string( $provider ) ? sanitize_key( $provider ) : 'gemini';
@@ -264,9 +303,12 @@ final class Edit_Controller {
 				}
 			}
 
+			$request_payload['format']        = $format;
+			$request_payload['source_width']  = $orig_w;
+			$request_payload['source_height'] = $orig_h;
+
 			// Provider configuration.
 
-			$current_user    = get_current_user_id();
 			$event_timestamp = time();
 
 			if ( 'gemini' === $provider ) {
@@ -289,11 +331,28 @@ final class Edit_Controller {
 				$provider_inst = new OpenAI_Provider( $api_key, $model_eff );
 			}
 
+			$log_context['provider']        = $provider;
+			$log_context['model']           = $model_eff;
+			$log_context['request_payload'] = $request_payload;
+
+			$operation_start = microtime( true );
+
 			$dto = new Edit_DTO( $id, $prompt, $provider, $model_eff, $format, $file, $orig_w, $orig_h, $save_mode, $reference_images );
 
 			try {
 				$binary = $provider_inst->edit( $dto );
 			} catch ( \Throwable $e ) {
+				$this->record_log(
+					array_merge(
+						$log_context,
+						[
+							'status'           => 'error',
+							'response_time_ms' => (int) round( ( microtime( true ) - $operation_start ) * 1000 ),
+							'error_message'    => $e->getMessage(),
+							'error_code'       => $e->getCode() ? (string) $e->getCode() : '',
+						]
+					)
+				);
 				return new WP_Error( 'wp_banana_provider_error', $e->getMessage() );
 			}
 
@@ -317,7 +376,19 @@ final class Edit_Controller {
 				]
 			);
 			if ( ! ( $binary instanceof Binary_Image ) ) {
-				return new WP_Error( 'wp_banana_invalid_binary', __( 'Filtered provider output is invalid.', 'wp-banana' ) );
+				$message = __( 'Filtered provider output is invalid.', 'wp-banana' );
+				$this->record_log(
+					array_merge(
+						$log_context,
+						[
+							'status'           => 'error',
+							'response_time_ms' => (int) round( ( microtime( true ) - $operation_start ) * 1000 ),
+							'error_message'    => $message,
+							'error_code'       => 'invalid_binary',
+						]
+					)
+				);
+				return new WP_Error( 'wp_banana_invalid_binary', $message );
 			}
 
 			// Normalize to original size and chosen format.
@@ -325,6 +396,17 @@ final class Edit_Controller {
 				$conv = new Convert_Service();
 				$norm = $conv->normalize( $binary->bytes, $format, $orig_w, $orig_h );
 			} catch ( \Throwable $e ) {
+				$this->record_log(
+					array_merge(
+						$log_context,
+						[
+							'status'           => 'error',
+							'response_time_ms' => (int) round( ( microtime( true ) - $operation_start ) * 1000 ),
+							'error_message'    => $e->getMessage(),
+							'error_code'       => $e->getCode() ? (string) $e->getCode() : '',
+						]
+					)
+				);
 				return new WP_Error( 'wp_banana_convert_failed', $e->getMessage() );
 			}
 
@@ -344,6 +426,17 @@ final class Edit_Controller {
 						]
 					);
 				} catch ( \Throwable $e ) {
+					$this->record_log(
+						array_merge(
+							$log_context,
+							[
+								'status'           => 'error',
+								'response_time_ms' => (int) round( ( microtime( true ) - $operation_start ) * 1000 ),
+								'error_message'    => $e->getMessage(),
+								'error_code'       => $e->getCode() ? (string) $e->getCode() : '',
+							]
+						)
+					);
 					return new WP_Error( 'wp_banana_save_failed', $e->getMessage() );
 				}
 				$buffer_response = [
@@ -387,6 +480,22 @@ final class Edit_Controller {
 					'model'         => $model_eff,
 					'prompt'        => $prompt,
 				];
+				$this->record_log(
+					array_merge(
+						$log_context,
+						[
+							'status'           => 'success',
+							'response_time_ms' => (int) round( ( microtime( true ) - $operation_start ) * 1000 ),
+							'attachment_id'    => $id,
+							'response_payload' => [
+								'buffer_key' => $record['key'],
+								'mime'       => $record['mime'],
+								'width'      => $record['width'],
+								'height'     => $record['height'],
+							],
+						]
+					)
+				);
 				return new WP_REST_Response( $buffer_response, 200 );
 			}
 
@@ -398,6 +507,17 @@ final class Edit_Controller {
 					WP_Filesystem();
 				}
 				if ( ! $wp_filesystem->put_contents( $file, $norm->bytes, FS_CHMOD_FILE ) ) {
+					$this->record_log(
+						array_merge(
+							$log_context,
+							[
+								'status'           => 'error',
+								'response_time_ms' => (int) round( ( microtime( true ) - $operation_start ) * 1000 ),
+								'error_message'    => __( 'Failed to overwrite file.', 'wp-banana' ),
+								'error_code'       => 'filesystem_write_failed',
+							]
+						)
+					);
 					return new WP_Error( 'wp_banana_save_failed', __( 'Failed to overwrite file.', 'wp-banana' ) );
 				}
 				require_once ABSPATH . 'wp-admin/includes/image.php';
@@ -464,6 +584,21 @@ final class Edit_Controller {
 					'url'           => wp_get_attachment_url( $id ),
 					'parent_id'     => $id,
 				];
+				$this->record_log(
+					array_merge(
+						$log_context,
+						[
+							'status'           => 'success',
+							'response_time_ms' => (int) round( ( microtime( true ) - $operation_start ) * 1000 ),
+							'attachment_id'    => $id,
+							'response_payload' => [
+								'url'       => isset( $response_data['url'] ) ? $response_data['url'] : wp_get_attachment_url( $id ),
+								'mode'      => 'replace',
+								'parent_id' => isset( $response_data['parent_id'] ) ? $response_data['parent_id'] : $id,
+							],
+						]
+					)
+				);
 				return new WP_REST_Response( $response_data, 200 );
 			}
 
@@ -490,6 +625,17 @@ final class Edit_Controller {
 					$title
 				);
 			} catch ( \Throwable $e ) {
+				$this->record_log(
+					array_merge(
+						$log_context,
+						[
+							'status'           => 'error',
+							'response_time_ms' => (int) round( ( microtime( true ) - $operation_start ) * 1000 ),
+							'error_message'    => $e->getMessage(),
+							'error_code'       => $e->getCode() ? (string) $e->getCode() : '',
+						]
+					)
+				);
 				return new WP_Error( 'wp_banana_save_failed', $e->getMessage() );
 			}
 
@@ -515,6 +661,22 @@ final class Edit_Controller {
 				'url'           => $saved['url'],
 				'parent_id'     => $id,
 			];
+
+			$this->record_log(
+				array_merge(
+					$log_context,
+					[
+						'status'           => 'success',
+						'response_time_ms' => (int) round( ( microtime( true ) - $operation_start ) * 1000 ),
+						'attachment_id'    => $saved['attachment_id'],
+						'response_payload' => [
+							'attachment_id' => $saved['attachment_id'],
+							'url'           => $response_data['url'],
+							'parent_id'     => $response_data['parent_id'],
+						],
+					]
+				)
+			);
 
 			return new WP_REST_Response( $response_data, 200 );
 		} finally {
@@ -548,6 +710,23 @@ final class Edit_Controller {
 		if ( null === $changes || JSON_ERROR_NONE !== json_last_error() || ! is_array( $changes ) ) {
 			return new WP_Error( 'wp_banana_invalid_history', __( 'Invalid history payload.', 'wp-banana' ) );
 		}
+
+		$current_user    = get_current_user_id();
+		$operation_start = microtime( true );
+
+		$request_payload = [
+			'attachment_id' => $id,
+			'history_steps' => count( $changes ),
+		];
+
+		$log_context = [
+			'operation'       => 'edit-save-as',
+			'user_id'         => $current_user,
+			'prompt_excerpt'  => '',
+			'reference_count' => 0,
+			'save_mode'       => 'save_as',
+			'request_payload' => $request_payload,
+		];
 
 		require_once ABSPATH . 'wp-admin/includes/image-edit.php';
 		require_once ABSPATH . 'wp-admin/includes/image.php';
@@ -592,17 +771,51 @@ final class Edit_Controller {
 			$editor = \image_edit_apply_changes( $editor, $processed_changes );
 		}
 
+		if ( isset( $last_context['prompt'] ) && is_string( $last_context['prompt'] ) ) {
+			$log_context['prompt_excerpt'] = $last_context['prompt'];
+		}
+		if ( isset( $last_context['provider'] ) && is_string( $last_context['provider'] ) ) {
+			$log_context['provider'] = $last_context['provider'];
+		}
+		if ( isset( $last_context['model'] ) && is_string( $last_context['model'] ) ) {
+			$log_context['model'] = $last_context['model'];
+		}
+
 		// Make sure wp_tempnam is available.
 		if ( ! function_exists( 'wp_tempnam' ) ) {
 			require_once ABSPATH . 'wp-admin/includes/file.php';
 		}
 		$tmp = wp_tempnam( 'wp-banana-edit-' . $id );
 		if ( ! $tmp ) {
+			$log_context['request_payload'] = $request_payload;
+			$this->record_log(
+				array_merge(
+					$log_context,
+					[
+						'status'           => 'error',
+						'response_time_ms' => (int) round( ( microtime( true ) - $operation_start ) * 1000 ),
+						'error_message'    => __( 'Could not allocate temporary file.', 'wp-banana' ),
+						'error_code'       => 'tempnam_failure',
+					]
+				)
+			);
 			return new WP_Error( 'wp_banana_save_failed', __( 'Could not allocate temporary file.', 'wp-banana' ) );
 		}
 
 		$result = $editor->save( $tmp );
 		if ( is_wp_error( $result ) ) {
+			$log_context['request_payload'] = $request_payload;
+			$this->record_log(
+				array_merge(
+					$log_context,
+					[
+						'status'           => 'error',
+						'response_time_ms' => (int) round( ( microtime( true ) - $operation_start ) * 1000 ),
+						'error_message'    => $result->get_error_message(),
+						'error_code'       => 'editor_save_failed',
+					]
+				)
+			);
 			return new WP_Error( 'wp_banana_save_failed', $result->get_error_message() );
 		}
 
@@ -610,19 +823,38 @@ final class Edit_Controller {
 		$width  = isset( $result['width'] ) ? (int) $result['width'] : 0;
 		$height = isset( $result['height'] ) ? (int) $result['height'] : 0;
 
+		$request_payload['result_mime']   = $mime;
+		$request_payload['result_width']  = $width;
+		$request_payload['result_height'] = $height;
+		$log_context['request_payload']   = $request_payload;
+
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- local temp file read.
 		$bytes = file_get_contents( $result['path'] );
 		if ( false === $bytes ) {
 			wp_delete_file( $result['path'] );
+			$log_context['request_payload'] = $request_payload;
+			$this->record_log(
+				array_merge(
+					$log_context,
+					[
+						'status'           => 'error',
+						'response_time_ms' => (int) round( ( microtime( true ) - $operation_start ) * 1000 ),
+						'error_message'    => __( 'Failed to read rendered image.', 'wp-banana' ),
+						'error_code'       => 'read_failed',
+					]
+				)
+			);
 			return new WP_Error( 'wp_banana_save_failed', __( 'Failed to read rendered image.', 'wp-banana' ) );
 		}
 
-		$binary          = new Binary_Image( $bytes, $mime, $width, $height );
-		$current_user    = get_current_user_id();
-		$event_timestamp = time();
-		$context_prompt  = isset( $last_context['prompt'] ) ? (string) $last_context['prompt'] : '';
-		$filename_base   = Attachment_Service::filename_from_prompt( $context_prompt, 'ai-edit-' . $id );
-		$title           = Attachment_Service::title_from_prompt( $context_prompt, __( 'AI Edit', 'wp-banana' ) );
+		$binary                         = new Binary_Image( $bytes, $mime, $width, $height );
+		$current_user                   = get_current_user_id();
+		$event_timestamp                = time();
+		$context_prompt                 = isset( $last_context['prompt'] ) ? (string) $last_context['prompt'] : '';
+		$filename_base                  = Attachment_Service::filename_from_prompt( $context_prompt, 'ai-edit-' . $id );
+		$title                          = Attachment_Service::title_from_prompt( $context_prompt, __( 'AI Edit', 'wp-banana' ) );
+		$log_context['prompt_excerpt']  = $context_prompt;
+		$log_context['request_payload'] = $request_payload;
 		try {
 			$attachment = ( new Attachment_Service() )->save_new(
 				$binary,
@@ -642,6 +874,18 @@ final class Edit_Controller {
 			);
 		} catch ( \Throwable $e ) {
 			wp_delete_file( $result['path'] );
+			$log_context['request_payload'] = $request_payload;
+			$this->record_log(
+				array_merge(
+					$log_context,
+					[
+						'status'           => 'error',
+						'response_time_ms' => (int) round( ( microtime( true ) - $operation_start ) * 1000 ),
+						'error_message'    => $e->getMessage(),
+						'error_code'       => $e->getCode() ? (string) $e->getCode() : '',
+					]
+				)
+			);
 			return new WP_Error( 'wp_banana_save_failed', $e->getMessage() );
 		}
 
@@ -672,7 +916,43 @@ final class Edit_Controller {
 			'filename'      => basename( $attachment['url'] ),
 		];
 
+		$log_context['request_payload'] = $request_payload;
+		$this->record_log(
+			array_merge(
+				$log_context,
+				[
+					'status'           => 'success',
+					'response_time_ms' => (int) round( ( microtime( true ) - $operation_start ) * 1000 ),
+					'attachment_id'    => $attachment['attachment_id'],
+					'response_payload' => [
+						'attachment_id' => $attachment['attachment_id'],
+						'url'           => isset( $response_data['url'] ) ? $response_data['url'] : $attachment['url'],
+						'parent_id'     => isset( $response_data['parent_id'] ) ? $response_data['parent_id'] : $id,
+						'filename'      => isset( $response_data['filename'] ) ? $response_data['filename'] : basename( $attachment['url'] ),
+					],
+				]
+			)
+		);
+
 		return new WP_REST_Response( $response_data, 200 );
+	}
+
+	/**
+	 * Record a log entry without affecting the REST response.
+	 *
+	 * @param array $payload Log payload.
+	 * @return void
+	 */
+	private function record_log( array $payload ): void {
+		if ( ! ( $this->logger instanceof Logging_Service ) ) {
+			return;
+		}
+
+		try {
+			$this->logger->record( $payload );
+		} catch ( \Throwable $ignored ) {
+			// Logging failures should be silent.
+		}
 	}
 
 	/**

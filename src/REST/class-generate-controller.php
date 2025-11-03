@@ -27,6 +27,7 @@ use WPBanana\Provider\OpenAI_Provider;
 use WPBanana\Provider\Replicate_Provider;
 use WPBanana\Services\Convert_Service;
 use WPBanana\Services\Attachment_Service;
+use WPBanana\Services\Logging_Service;
 use WPBanana\Util\Mime;
 
 use function get_current_user_id;
@@ -55,14 +56,22 @@ final class Generate_Controller {
 	 * @var Options
 	 */
 	private $options;
+	/**
+	 * Logging service instance.
+	 *
+	 * @var Logging_Service
+	 */
+	private $logger;
 
 	/**
 	 * Constructor.
 	 *
-	 * @param Options $options Options service.
+	 * @param Options         $options Options service.
+	 * @param Logging_Service $logger  Logging service.
 	 */
-	public function __construct( Options $options ) {
+	public function __construct( Options $options, Logging_Service $logger ) {
 		$this->options = $options;
+		$this->logger  = $logger;
 	}
 
 	/**
@@ -208,6 +217,36 @@ final class Generate_Controller {
 				$aspect_ratio = $this->aspect_ratio_from_dimensions( $width, $height ) ?: '';
 			}
 
+			$operation = 'generate';
+			if ( $reference_count > 1 ) {
+				$operation = 'generate-reference-multi';
+			} elseif ( 1 === $reference_count ) {
+				$operation = 'generate-reference';
+			}
+
+			$current_user = get_current_user_id();
+			$log_context  = [
+				'operation'       => $operation,
+				'user_id'         => $current_user,
+				'prompt_excerpt'  => $prompt,
+				'reference_count' => $reference_count,
+				'save_mode'       => 'new',
+			];
+
+			$reference_names = [];
+			if ( $reference_count > 0 ) {
+				foreach ( $reference_images as $img ) {
+					if ( $img instanceof Reference_Image && ! empty( $img->filename ) ) {
+						$reference_names[] = $img->filename;
+					}
+				}
+			}
+
+			$request_payload = [
+				'reference_count' => $reference_count,
+				'reference_names' => $reference_names,
+			];
+
 			$format_param = $req->get_param( 'format' );
 			$format       = (string) ( $format_param ? $format_param : $this->options->get( 'generation_defaults.format', 'png' ) );
 			$format       = in_array( $format, [ 'png', 'webp', 'jpeg' ], true ) ? $format : 'png';
@@ -255,6 +294,20 @@ final class Generate_Controller {
 				}
 			}
 
+			$log_context['provider'] = $provider;
+			$log_context['model']    = $model_eff;
+
+			$request_payload['width']            = $dto_width;
+			$request_payload['height']           = $dto_height;
+			$request_payload['aspect_ratio']     = $dto_aspect_ratio ?: null;
+			$request_payload['normalize_width']  = $normalize_width;
+			$request_payload['normalize_height'] = $normalize_height;
+			$request_payload['format']           = $format;
+
+			$log_context['request_payload'] = $request_payload;
+
+			$operation_start = microtime( true );
+
 			if ( 1 === $reference_count && isset( $primary ) ) {
 				$normalize_width  = (int) $primary->width;
 				$normalize_height = (int) $primary->height;
@@ -262,6 +315,17 @@ final class Generate_Controller {
 				try {
 					$binary = $provider_inst->edit( $edit_dto );
 				} catch ( \Throwable $e ) {
+					$this->record_log(
+						array_merge(
+							$log_context,
+							[
+								'status'           => 'error',
+								'response_time_ms' => (int) round( ( microtime( true ) - $operation_start ) * 1000 ),
+								'error_message'    => $e->getMessage(),
+								'error_code'       => $e->getCode() ? (string) $e->getCode() : '',
+							]
+						)
+					);
 					return new WP_Error( 'wp_banana_provider_error', $e->getMessage() );
 				}
 			} else {
@@ -269,6 +333,17 @@ final class Generate_Controller {
 				try {
 					$binary = $provider_inst->generate( $dto );
 				} catch ( \Throwable $e ) {
+					$this->record_log(
+						array_merge(
+							$log_context,
+							[
+								'status'           => 'error',
+								'response_time_ms' => (int) round( ( microtime( true ) - $operation_start ) * 1000 ),
+								'error_message'    => $e->getMessage(),
+								'error_code'       => $e->getCode() ? (string) $e->getCode() : '',
+							]
+						)
+					);
 					return new WP_Error( 'wp_banana_provider_error', $e->getMessage() );
 				}
 			}
@@ -293,6 +368,18 @@ final class Generate_Controller {
 				]
 			);
 			if ( ! ( $binary instanceof Binary_Image ) ) {
+				$message = __( 'Filtered provider output is invalid.', 'wp-banana' );
+				$this->record_log(
+					array_merge(
+						$log_context,
+						[
+							'status'           => 'error',
+							'response_time_ms' => (int) round( ( microtime( true ) - $operation_start ) * 1000 ),
+							'error_message'    => $message,
+							'error_code'       => 'invalid_binary',
+						]
+					)
+				);
 				return new WP_Error( 'wp_banana_invalid_binary', __( 'Filtered provider output is invalid.', 'wp-banana' ) );
 			}
 
@@ -301,11 +388,21 @@ final class Generate_Controller {
 				$conv = new Convert_Service();
 				$norm = $conv->normalize( $binary->bytes, $format, $normalize_width, $normalize_height );
 			} catch ( \Throwable $e ) {
+				$this->record_log(
+					array_merge(
+						$log_context,
+						[
+							'status'           => 'error',
+							'response_time_ms' => (int) round( ( microtime( true ) - $operation_start ) * 1000 ),
+							'error_message'    => $e->getMessage(),
+							'error_code'       => $e->getCode() ? (string) $e->getCode() : '',
+						]
+					)
+				);
 				return new WP_Error( 'wp_banana_convert_failed', $e->getMessage() );
 			}
 
-			$current_user = get_current_user_id();
-			$timestamp    = time();
+			$timestamp = time();
 
 			$filename_base = Attachment_Service::filename_from_prompt( $prompt, 'ai-image' );
 			$title         = Attachment_Service::title_from_prompt( $prompt, __( 'AI Image', 'wp-banana' ) );
@@ -329,6 +426,17 @@ final class Generate_Controller {
 					$title
 				);
 			} catch ( \Throwable $e ) {
+				$this->record_log(
+					array_merge(
+						$log_context,
+						[
+							'status'           => 'error',
+							'response_time_ms' => (int) round( ( microtime( true ) - $operation_start ) * 1000 ),
+							'error_message'    => $e->getMessage(),
+							'error_code'       => $e->getCode() ? (string) $e->getCode() : '',
+						]
+					)
+				);
 				return new WP_Error( 'wp_banana_save_failed', $e->getMessage() );
 			}
 
@@ -362,9 +470,45 @@ final class Generate_Controller {
 				'url'           => $saved['url'],
 			];
 
+			$this->record_log(
+				array_merge(
+					$log_context,
+					[
+						'status'           => 'success',
+						'response_time_ms' => (int) round( ( microtime( true ) - $operation_start ) * 1000 ),
+						'attachment_id'    => (int) $saved['attachment_id'],
+						'response_payload' => [
+							'attachment_id' => $saved['attachment_id'],
+							'url'           => $saved['url'],
+							'width'         => $norm->width,
+							'height'        => $norm->height,
+							'mime'          => $norm->mime,
+						],
+					]
+				)
+			);
+
 			return new WP_REST_Response( $response_data, 200 );
 		} finally {
 			$this->cleanup_reference_images( $reference_images );
+		}
+	}
+
+	/**
+	 * Record a log entry while swallowing logging failures.
+	 *
+	 * @param array $payload Log payload.
+	 * @return void
+	 */
+	private function record_log( array $payload ): void {
+		if ( ! ( $this->logger instanceof Logging_Service ) ) {
+			return;
+		}
+
+		try {
+			$this->logger->record( $payload );
+		} catch ( \Throwable $ignored ) {
+			// Logging should never block the API; swallow unexpected failures.
 		}
 	}
 
