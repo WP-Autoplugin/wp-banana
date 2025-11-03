@@ -383,29 +383,30 @@ class Logs_List_Table extends \WP_List_Table {
 			return '—';
 		}
 
-		ob_start();
-		?>
-		<details class="wp-banana-log-details">
-			<summary><?php esc_html_e( 'View', 'wp-banana' ); ?></summary>
-			<div class="wp-banana-log-details__body">
-				<?php if ( '' !== $request ) : ?>
-					<p><strong><?php esc_html_e( 'Request', 'wp-banana' ); ?></strong></p>
-					<pre><?php echo esc_html( $request ); ?></pre>
-				<?php endif; ?>
+		$log_id     = isset( $item['id'] ) ? (int) $item['id'] : 0;
+		$details_id = 'wp-banana-log-details-' . ( $log_id > 0 ? $log_id : wp_generate_uuid4() );
 
-				<?php if ( '' !== $response ) : ?>
-					<p><strong><?php esc_html_e( 'Response', 'wp-banana' ); ?></strong></p>
-					<pre><?php echo esc_html( $response ); ?></pre>
-				<?php endif; ?>
+		$payload = [
+			'request'  => $request,
+			'response' => $response,
+			'error'    => $error,
+		];
 
-				<?php if ( '' !== $error ) : ?>
-					<p><strong><?php esc_html_e( 'Error', 'wp-banana' ); ?></strong></p>
-					<pre><?php echo esc_html( $error ); ?></pre>
-				<?php endif; ?>
-			</div>
-		</details>
-		<?php
-		return (string) ob_get_clean();
+		$encoded = wp_json_encode(
+			$payload,
+			JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
+		);
+		if ( false === $encoded ) {
+			return '—';
+		}
+
+		return sprintf(
+			'<button type="button" class="button-link wp-banana-log-toggle" data-log-id="%1$s" data-open-label="%2$s" data-close-label="%3$s" aria-expanded="false">%2$s</button><script type="application/json" id="%1$s">%4$s</script>',
+			esc_attr( $details_id ),
+			esc_html__( 'View details', 'wp-banana' ),
+			esc_html__( 'Hide details', 'wp-banana' ),
+			$encoded
+		);
 	}
 
 	/**
@@ -427,4 +428,3 @@ class Logs_List_Table extends \WP_List_Table {
 		return $json;
 	}
 }
-

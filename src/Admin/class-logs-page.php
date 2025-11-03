@@ -142,9 +142,9 @@ final class Logs_Page {
 			return;
 		}
 
-		$handle = 'wp-banana-logs-styles';
-		wp_register_style( $handle, false, [], false );
-		wp_enqueue_style( $handle );
+		$style_handle = 'wp-banana-logs-styles';
+		wp_register_style( $style_handle, false, [], false );
+		wp_enqueue_style( $style_handle );
 
 		$css = <<<CSS
 .wp-banana-log-status {
@@ -167,21 +167,154 @@ final class Logs_Page {
 	background: #eef5ff;
 	color: #1d4ed8;
 }
-.wp-banana-log-details summary {
-	cursor: pointer;
-	font-weight: 600;
-}
-.wp-banana-log-details__body {
-	margin-top: 10px;
-}
-.wp-banana-log-details pre {
-	max-height: 220px;
-	overflow: auto;
+.wp-banana-log-expanded td {
 	background: #f6f7f7;
+	border-top: none;
+	padding: 20px;
+}
+.wp-banana-log-expanded__sections {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+	gap: 16px;
+}
+.wp-banana-log-expanded__section {
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	padding: 16px;
+	box-shadow: inset 0 0 0 1px rgba(255,255,255,0.6);
+}
+.wp-banana-log-expanded__section h4 {
+	margin: 0 0 8px;
+	font-size: 14px;
+}
+.wp-banana-log-expanded__section pre {
+	background: #f3f4f6;
 	padding: 12px;
 	border-radius: 4px;
+	max-height: 420px;
+	overflow: auto;
+	font-size: 12px;
+	line-height: 1.45;
+}
+.wp-banana-log-toggle {
+	white-space: nowrap;
 }
 CSS;
-		wp_add_inline_style( $handle, $css );
+		wp_add_inline_style( $style_handle, $css );
+
+		$script_handle = 'wp-banana-logs-script';
+		wp_register_script( $script_handle, '', [], false, true );
+		wp_enqueue_script( $script_handle );
+
+		wp_localize_script(
+			$script_handle,
+			'wpBananaLogs',
+			[
+				'labels' => [
+					'request'  => __( 'Input', 'wp-banana' ),
+					'response' => __( 'Output', 'wp-banana' ),
+					'error'    => __( 'Error', 'wp-banana' ),
+				],
+			]
+		);
+
+		$js = <<<JS
+(function() {
+	const table = document.querySelector('.wp-list-table');
+	if (!table) {
+		return;
+	}
+
+	const escapeHtml = function(value) {
+		if (typeof value !== 'string') {
+			return '';
+		}
+		return value
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;');
+	};
+
+	const buildSection = function(title, content) {
+		if (!content) {
+			return '';
+		}
+		return '<div class="wp-banana-log-expanded__section">' +
+			'<h4>' + escapeHtml(title) + '</h4>' +
+			'<pre>' + escapeHtml(content) + '</pre>' +
+		'</div>';
+	};
+
+	table.addEventListener('click', function(event) {
+		const button = event.target.closest('.wp-banana-log-toggle');
+		if (!button) {
+			return;
+		}
+		event.preventDefault();
+
+		const row = button.closest('tr');
+		if (!row) {
+			return;
+		}
+
+		const existing = row.nextElementSibling;
+		if (existing && existing.classList.contains('wp-banana-log-expanded')) {
+			existing.remove();
+			button.setAttribute('aria-expanded', 'false');
+			button.textContent = button.dataset.openLabel || button.textContent;
+			return;
+		}
+
+		const targetId = button.dataset.logId;
+		if (!targetId) {
+			return;
+		}
+
+		const container = document.getElementById(targetId);
+		if (!container) {
+			return;
+		}
+
+		let data;
+		try {
+			data = JSON.parse(container.textContent);
+		} catch (error) {
+			return;
+		}
+
+		const sections = [];
+		const labels = (window.wpBananaLogs && window.wpBananaLogs.labels) ? window.wpBananaLogs.labels : {};
+
+		if (data && data.request) {
+			sections.push(buildSection(labels.request || 'Request', data.request));
+		}
+		if (data && data.response) {
+			sections.push(buildSection(labels.response || 'Response', data.response));
+		}
+		if (data && data.error) {
+			sections.push(buildSection(labels.error || 'Error', data.error));
+		}
+
+		if (!sections.length) {
+			return;
+		}
+
+		const expandedRow = document.createElement('tr');
+		expandedRow.className = 'wp-banana-log-expanded';
+
+		const cell = document.createElement('td');
+		cell.colSpan = row.children.length;
+		cell.innerHTML = '<div class="wp-banana-log-expanded__sections">' + sections.join('') + '</div>';
+
+		expandedRow.appendChild(cell);
+		row.parentNode.insertBefore(expandedRow, row.nextSibling);
+
+		button.setAttribute('aria-expanded', 'true');
+		button.textContent = button.dataset.closeLabel || button.textContent;
+	});
+})();
+JS;
+		wp_add_inline_script( $script_handle, $js );
 	}
 }

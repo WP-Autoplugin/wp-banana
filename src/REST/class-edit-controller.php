@@ -711,23 +711,6 @@ final class Edit_Controller {
 			return new WP_Error( 'wp_banana_invalid_history', __( 'Invalid history payload.', 'wp-banana' ) );
 		}
 
-		$current_user    = get_current_user_id();
-		$operation_start = microtime( true );
-
-		$request_payload = [
-			'attachment_id' => $id,
-			'history_steps' => count( $changes ),
-		];
-
-		$log_context = [
-			'operation'       => 'edit-save-as',
-			'user_id'         => $current_user,
-			'prompt_excerpt'  => '',
-			'reference_count' => 0,
-			'save_mode'       => 'save_as',
-			'request_payload' => $request_payload,
-		];
-
 		require_once ABSPATH . 'wp-admin/includes/image-edit.php';
 		require_once ABSPATH . 'wp-admin/includes/image.php';
 
@@ -771,51 +754,17 @@ final class Edit_Controller {
 			$editor = \image_edit_apply_changes( $editor, $processed_changes );
 		}
 
-		if ( isset( $last_context['prompt'] ) && is_string( $last_context['prompt'] ) ) {
-			$log_context['prompt_excerpt'] = $last_context['prompt'];
-		}
-		if ( isset( $last_context['provider'] ) && is_string( $last_context['provider'] ) ) {
-			$log_context['provider'] = $last_context['provider'];
-		}
-		if ( isset( $last_context['model'] ) && is_string( $last_context['model'] ) ) {
-			$log_context['model'] = $last_context['model'];
-		}
-
 		// Make sure wp_tempnam is available.
 		if ( ! function_exists( 'wp_tempnam' ) ) {
 			require_once ABSPATH . 'wp-admin/includes/file.php';
 		}
 		$tmp = wp_tempnam( 'wp-banana-edit-' . $id );
 		if ( ! $tmp ) {
-			$log_context['request_payload'] = $request_payload;
-			$this->record_log(
-				array_merge(
-					$log_context,
-					[
-						'status'           => 'error',
-						'response_time_ms' => (int) round( ( microtime( true ) - $operation_start ) * 1000 ),
-						'error_message'    => __( 'Could not allocate temporary file.', 'wp-banana' ),
-						'error_code'       => 'tempnam_failure',
-					]
-				)
-			);
 			return new WP_Error( 'wp_banana_save_failed', __( 'Could not allocate temporary file.', 'wp-banana' ) );
 		}
 
 		$result = $editor->save( $tmp );
 		if ( is_wp_error( $result ) ) {
-			$log_context['request_payload'] = $request_payload;
-			$this->record_log(
-				array_merge(
-					$log_context,
-					[
-						'status'           => 'error',
-						'response_time_ms' => (int) round( ( microtime( true ) - $operation_start ) * 1000 ),
-						'error_message'    => $result->get_error_message(),
-						'error_code'       => 'editor_save_failed',
-					]
-				)
-			);
 			return new WP_Error( 'wp_banana_save_failed', $result->get_error_message() );
 		}
 
@@ -823,38 +772,19 @@ final class Edit_Controller {
 		$width  = isset( $result['width'] ) ? (int) $result['width'] : 0;
 		$height = isset( $result['height'] ) ? (int) $result['height'] : 0;
 
-		$request_payload['result_mime']   = $mime;
-		$request_payload['result_width']  = $width;
-		$request_payload['result_height'] = $height;
-		$log_context['request_payload']   = $request_payload;
-
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- local temp file read.
 		$bytes = file_get_contents( $result['path'] );
 		if ( false === $bytes ) {
 			wp_delete_file( $result['path'] );
-			$log_context['request_payload'] = $request_payload;
-			$this->record_log(
-				array_merge(
-					$log_context,
-					[
-						'status'           => 'error',
-						'response_time_ms' => (int) round( ( microtime( true ) - $operation_start ) * 1000 ),
-						'error_message'    => __( 'Failed to read rendered image.', 'wp-banana' ),
-						'error_code'       => 'read_failed',
-					]
-				)
-			);
 			return new WP_Error( 'wp_banana_save_failed', __( 'Failed to read rendered image.', 'wp-banana' ) );
 		}
 
-		$binary                         = new Binary_Image( $bytes, $mime, $width, $height );
-		$current_user                   = get_current_user_id();
-		$event_timestamp                = time();
-		$context_prompt                 = isset( $last_context['prompt'] ) ? (string) $last_context['prompt'] : '';
-		$filename_base                  = Attachment_Service::filename_from_prompt( $context_prompt, 'ai-edit-' . $id );
-		$title                          = Attachment_Service::title_from_prompt( $context_prompt, __( 'AI Edit', 'wp-banana' ) );
-		$log_context['prompt_excerpt']  = $context_prompt;
-		$log_context['request_payload'] = $request_payload;
+		$binary         = new Binary_Image( $bytes, $mime, $width, $height );
+		$current_user   = get_current_user_id();
+		$event_timestamp = time();
+		$context_prompt = isset( $last_context['prompt'] ) ? (string) $last_context['prompt'] : '';
+		$filename_base  = Attachment_Service::filename_from_prompt( $context_prompt, 'ai-edit-' . $id );
+		$title          = Attachment_Service::title_from_prompt( $context_prompt, __( 'AI Edit', 'wp-banana' ) );
 		try {
 			$attachment = ( new Attachment_Service() )->save_new(
 				$binary,
@@ -874,18 +804,6 @@ final class Edit_Controller {
 			);
 		} catch ( \Throwable $e ) {
 			wp_delete_file( $result['path'] );
-			$log_context['request_payload'] = $request_payload;
-			$this->record_log(
-				array_merge(
-					$log_context,
-					[
-						'status'           => 'error',
-						'response_time_ms' => (int) round( ( microtime( true ) - $operation_start ) * 1000 ),
-						'error_message'    => $e->getMessage(),
-						'error_code'       => $e->getCode() ? (string) $e->getCode() : '',
-					]
-				)
-			);
 			return new WP_Error( 'wp_banana_save_failed', $e->getMessage() );
 		}
 
@@ -915,24 +833,6 @@ final class Edit_Controller {
 			'parent_id'     => $id,
 			'filename'      => basename( $attachment['url'] ),
 		];
-
-		$log_context['request_payload'] = $request_payload;
-		$this->record_log(
-			array_merge(
-				$log_context,
-				[
-					'status'           => 'success',
-					'response_time_ms' => (int) round( ( microtime( true ) - $operation_start ) * 1000 ),
-					'attachment_id'    => $attachment['attachment_id'],
-					'response_payload' => [
-						'attachment_id' => $attachment['attachment_id'],
-						'url'           => isset( $response_data['url'] ) ? $response_data['url'] : $attachment['url'],
-						'parent_id'     => isset( $response_data['parent_id'] ) ? $response_data['parent_id'] : $id,
-						'filename'      => isset( $response_data['filename'] ) ? $response_data['filename'] : basename( $attachment['url'] ),
-					],
-				]
-			)
-		);
 
 		return new WP_REST_Response( $response_data, 200 );
 	}
