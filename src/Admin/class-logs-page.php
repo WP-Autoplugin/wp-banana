@@ -83,6 +83,7 @@ final class Logs_Page {
 	public function prepare_table(): void {
 		$this->table = new Logs_List_Table( $this->logger );
 		$this->table->prepare_items();
+		add_filter( 'admin_title', [ $this, 'filter_admin_title' ], 10, 2 );
 	}
 
 	/**
@@ -212,8 +213,8 @@ CSS;
 			'wpBananaLogs',
 			[
 				'labels' => [
-					'request'  => __( 'Input', 'wp-banana' ),
-					'response' => __( 'Output', 'wp-banana' ),
+					'request'  => __( 'Input (normalized)', 'wp-banana' ),
+					'response' => __( 'Output (normalized)', 'wp-banana' ),
 					'error'    => __( 'Error', 'wp-banana' ),
 				],
 			]
@@ -316,5 +317,29 @@ CSS;
 })();
 JS;
 		wp_add_inline_script( $script_handle, $js );
+	}
+
+	/**
+	 * Inject meaningful document title for the hidden logs page.
+	 *
+	 * @param string $admin_title Existing admin title.
+	 * @param string $title       Original page title.
+	 * @return string
+	 */
+	public function filter_admin_title( string $admin_title, string $title ): string {
+		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+		if ( ! $screen || 'admin_page_' . self::SLUG !== $screen->id ) {
+			return $admin_title;
+		}
+
+		$page_title = __( 'WP Nano Banana Logs', 'wp-banana' );
+		$site_title = get_bloginfo( 'name', 'display' );
+
+		return sprintf(
+			/* translators: 1: Page title, 2: Site name. */
+			__( '%1$s ‹ %2$s — WordPress', 'wp-banana' ),
+			$page_title,
+			$site_title
+		);
 	}
 }
