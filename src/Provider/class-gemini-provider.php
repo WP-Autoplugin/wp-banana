@@ -95,7 +95,7 @@ final class Gemini_Provider implements Provider_Interface {
 			$payload = $this->build_generate_payload( $p->prompt, $p->reference_images );
 		}
 
-		$data    = $this->perform_request(
+		$data = $this->perform_request(
 			$url,
 			$payload,
 			[
@@ -105,7 +105,7 @@ final class Gemini_Provider implements Provider_Interface {
 				'endpoint'  => $is_imagen ? 'predict' : 'generateContent',
 			]
 		);
-		$img     = $is_imagen ? $this->extract_imagen_image( $data ) : $this->extract_inline_image( $data );
+		$img  = $is_imagen ? $this->extract_imagen_image( $data ) : $this->extract_inline_image( $data );
 		if ( ! $img ) {
 			throw new RuntimeException( 'Gemini response did not include image bytes.' );
 		}
@@ -247,7 +247,7 @@ final class Gemini_Provider implements Provider_Interface {
 			'bytesBase64Encoded',
 			'bytes_base64_encoded',
 		];
-		$b64 = '';
+		$b64      = '';
 		foreach ( $b64_keys as $key ) {
 			if ( isset( $first[ $key ] ) && is_string( $first[ $key ] ) && '' !== $first[ $key ] ) {
 				$b64 = $first[ $key ];
@@ -262,7 +262,7 @@ final class Gemini_Provider implements Provider_Interface {
 			'mimeType',
 			'mime_type',
 		];
-		$mime = 'image/png';
+		$mime      = 'image/png';
 		foreach ( $mime_keys as $key ) {
 			if ( isset( $first[ $key ] ) && is_string( $first[ $key ] ) && '' !== $first[ $key ] ) {
 				$mime = $first[ $key ];
@@ -338,16 +338,16 @@ final class Gemini_Provider implements Provider_Interface {
 	 * @return array
 	 */
 	private function build_imagen_generate_payload( Image_Params $params, string $model ): array {
-		$prompt      = $this->normalize_prompt( $params->prompt );
-		$image_size  = $this->determine_imagen_image_size( $params, $model );
-		$aspect      = $this->determine_imagen_aspect_ratio( $params );
-		$parameters  = [
+		$prompt     = $this->normalize_prompt( $params->prompt );
+		$image_size = $this->determine_imagen_image_size( $params, $model );
+		$aspect     = $this->determine_imagen_aspect_ratio( $params );
+		$parameters = [
 			'sampleCount'      => 1,
 			'imageSize'        => $image_size,
 			'aspectRatio'      => $aspect,
 			'personGeneration' => 'dont_allow',
 		];
-		$context     = [
+		$context    = [
 			'model'  => $model,
 			'prompt' => $params->prompt,
 			'width'  => $params->width,
@@ -461,15 +461,15 @@ final class Gemini_Provider implements Provider_Interface {
 		if ( $width <= 0 || $height <= 0 ) {
 			return '1:1';
 		}
-		$ratio = $width / max( 1, $height );
-		$map   = [
+		$ratio        = $width / max( 1, $height );
+		$map          = [
 			'1:1'  => 1.0,
 			'3:4'  => 0.75,
 			'4:3'  => 4.0 / 3.0,
 			'9:16' => 0.5625,
 			'16:9' => 16.0 / 9.0,
 		];
-		$closest_key = '1:1';
+		$closest_key  = '1:1';
 		$closest_diff = null;
 		foreach ( $map as $key => $value ) {
 			$diff = abs( $ratio - $value );
