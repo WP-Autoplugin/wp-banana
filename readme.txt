@@ -3,7 +3,7 @@ Contributors: pbalazs
 Tags: ai, images, openai, replicate, google
 Requires at least: 6.0
 Tested up to: 6.8
-Stable tag: 0.2.1
+Stable tag: 0.3
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -127,6 +127,12 @@ All images are saved directly into your WordPress Media Library. You can use the
 ---
 
 == Changelog ==
+
+= 0.3 =
+* Added Reve Create, Edit, and Remix models via Replicate API
+* Added Imagen 4 models via Gemini API
+* Added API key test buttons in settings page
+* UI tweaks and bug fixes
 
 = 0.2.1 =
 * Fixed error handling reference images

@@ -81,7 +81,7 @@ final class Settings_Page {
 	public function add_menu(): void {
 		add_options_page(
 			__( 'WP Nano Banana', 'wp-banana' ),
-			__( 'WP Nano Banana (AI Images)', 'wp-banana' ),
+			__( 'WP Nano Banana', 'wp-banana' ),
 			'manage_options',
 			'wp-banana',
 			[ $this, 'render' ]
