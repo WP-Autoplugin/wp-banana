@@ -298,6 +298,42 @@ final class Logging_Service {
 	}
 
 	/**
+	 * Remove all rows from the logs table.
+	 *
+	 * @return bool
+	 */
+	public static function truncate(): bool {
+		if ( ! self::table_exists() ) {
+			return false;
+		}
+
+		global $wpdb;
+
+		$table = self::table_name();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Required for log maintenance.
+		return false !== $wpdb->query( "TRUNCATE TABLE {$table}" );
+	}
+
+	/**
+	 * Whether any log entries exist.
+	 *
+	 * @return bool
+	 */
+	public static function has_logs(): bool {
+		if ( ! self::table_exists() ) {
+			return false;
+		}
+
+		global $wpdb;
+
+		$table = self::table_name();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Lightweight existence check.
+		$value = $wpdb->get_var( "SELECT 1 FROM {$table} LIMIT 1" );
+
+		return ! empty( $value );
+	}
+
+	/**
 	 * Determine if the logs table exists.
 	 *
 	 * @return bool

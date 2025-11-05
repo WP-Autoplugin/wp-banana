@@ -45,13 +45,12 @@ final class Settings_Page {
 	 * @var string
 	 */
 	private $plugin_url;
-
 	/**
 	 * Constructor.
 	 *
 	 * @param Options $options     Options service.
-	 * @param string  $plugin_file  Main plugin file.
-	 * @param string  $plugin_url   Base plugin URL.
+	 * @param string  $plugin_file Main plugin file.
+	 * @param string  $plugin_url  Base plugin URL.
 	 */
 	public function __construct( Options $options, string $plugin_file, string $plugin_url ) {
 		$this->options     = $options;
@@ -69,6 +68,8 @@ final class Settings_Page {
 		add_action( 'admin_init', [ $this, 'register_settings' ] );
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_assets' ] );
 		add_action( 'wp_ajax_wp_banana_test_provider', [ $this, 'ajax_test_provider' ] );
+		add_action( 'admin_post_wp_banana_clear_logs', [ $this, 'handle_clear_logs' ] );
+		add_action( 'admin_notices', [ $this, 'maybe_render_logging_notice' ] );
 		add_filter(
 			'plugin_action_links_' . plugin_basename( $this->plugin_file ),
 			[ self::class, 'plugin_action_link' ]
@@ -222,6 +223,8 @@ final class Settings_Page {
 		}
 
 		$opts            = $this->options->get_all();
+		$logging_enabled = ! empty( $opts['logging']['enabled'] );
+		$logs_exist      = $logging_enabled && Logging_Service::table_exists() && Logging_Service::has_logs();
 		$gemini_state    = $this->get_constant_state( 'gemini' );
 		$openai_state    = $this->get_constant_state( 'openai' );
 		$replicate_state = $this->get_constant_state( 'replicate' );
@@ -491,7 +494,7 @@ final class Settings_Page {
 						<th scope="row"><?php esc_html_e( 'API logging', 'wp-banana' ); ?></th>
 						<td>
 							<label>
-								<input type="checkbox" name="<?php echo esc_attr( Options::OPTION_NAME ); ?>[logging][enabled]" value="1" <?php checked( ! empty( $opts['logging']['enabled'] ) ); ?> />
+								<input type="checkbox" name="<?php echo esc_attr( Options::OPTION_NAME ); ?>[logging][enabled]" value="1" <?php checked( $logging_enabled ); ?> />
 								<?php esc_html_e( 'Record provider requests and responses for debugging', 'wp-banana' ); ?>
 							</label>
 							<p class="description">
@@ -504,12 +507,108 @@ final class Settings_Page {
 							</p>
 						</td>
 					</tr>
+					<?php if ( $logs_exist ) : ?>
+						<tr class="wp-banana-clear-logs-row">
+							<th scope="row"><?php esc_html_e( 'Clear logs', 'wp-banana' ); ?></th>
+							<td>
+								<button
+									type="submit"
+									class="button"
+									form="wp-banana-clear-logs-form"
+									onclick="return confirm('<?php echo esc_js( __( 'Are you sure you want to delete all stored logs?', 'wp-banana' ) ); ?>');"
+								><?php esc_html_e( 'Clear logs', 'wp-banana' ); ?></button>
+								<p class="description"><?php esc_html_e( 'Remove all stored API log entries from the database.', 'wp-banana' ); ?></p>
+							</td>
+						</tr>
+					<?php endif; ?>
 				</table>
 
 				<?php submit_button(); ?>
 			</form>
+			<?php if ( $logs_exist ) : ?>
+				<form id="wp-banana-clear-logs-form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="wp-banana-clear-logs-hidden">
+					<?php wp_nonce_field( 'wp_banana_clear_logs' ); ?>
+					<input type="hidden" name="action" value="wp_banana_clear_logs" />
+				</form>
+			<?php endif; ?>
 		</div>
 		<?php
+	}
+
+	/**
+	 * Determine if the current screen is the plugin settings screen.
+	 *
+	 * @return bool
+	 */
+	private function is_settings_screen(): bool {
+		if ( ! function_exists( 'get_current_screen' ) ) {
+			return false;
+		}
+		$screen = get_current_screen();
+		return $screen && 'settings_page_wp-banana' === $screen->id;
+	}
+
+	/**
+	 * Handle log clearing requests.
+	 *
+	 * @return void
+	 */
+	public function handle_clear_logs(): void {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'You do not have permission to perform this action.', 'wp-banana' ) );
+		}
+
+		check_admin_referer( 'wp_banana_clear_logs' );
+
+		$redirect = admin_url( 'options-general.php?page=wp-banana' );
+
+		if ( ! Logging_Service::table_exists() ) {
+			wp_safe_redirect( add_query_arg( 'wp-banana-logs', 'missing', $redirect ) );
+			exit;
+		}
+
+		$result = Logging_Service::truncate();
+		$flag   = $result ? 'cleared' : 'failed';
+
+		wp_safe_redirect( add_query_arg( 'wp-banana-logs', $flag, $redirect ) );
+		exit;
+	}
+
+	/**
+	 * Render admin notices after log maintenance actions.
+	 *
+	 * @return void
+	 */
+	public function maybe_render_logging_notice(): void {
+		if ( ! $this->is_settings_screen() ) {
+			return;
+		}
+
+		if ( empty( $_GET['wp-banana-logs'] ) ) {
+			return;
+		}
+
+		$status = sanitize_key( wp_unslash( (string) $_GET['wp-banana-logs'] ) );
+
+		if ( 'cleared' === $status ) {
+			?>
+			<div class="notice notice-success is-dismissible">
+				<p><?php echo esc_html__( 'All WP Nano Banana logs were cleared.', 'wp-banana' ); ?></p>
+			</div>
+			<?php
+		} elseif ( 'failed' === $status ) {
+			?>
+			<div class="notice notice-error">
+				<p><?php echo esc_html__( 'Failed to clear the WP Nano Banana logs. Please try again.', 'wp-banana' ); ?></p>
+			</div>
+			<?php
+		} elseif ( 'missing' === $status ) {
+			?>
+			<div class="notice notice-warning is-dismissible">
+				<p><?php echo esc_html__( 'No logging table was found to clear.', 'wp-banana' ); ?></p>
+			</div>
+			<?php
+		}
 	}
 
 	/**
