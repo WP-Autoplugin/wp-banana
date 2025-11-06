@@ -47,6 +47,7 @@ WP Nano Banana is a free WordPress plugin that lets you generate and edit images
 - Preview edits before saving
 - Undo/redo individual changes or revert to the original image
 - Save edits as a new image or overwrite the original
+- Detailed API usage logs with a review table
 
 ### Developer-Friendly
 - Built with hooks and filters for extensibility
