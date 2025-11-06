@@ -217,6 +217,8 @@ final class Logging_Service {
 
 		$table = self::table_name();
 
+		$orderby = esc_sql( $orderby );
+		$order   = esc_sql( $order );
 		$sql        = "SELECT * FROM {$table} {$where_sql} ORDER BY {$orderby} {$order} LIMIT %d OFFSET %d";
 		$query_args = array_merge( $where_args, [ $per_page, max( 0, (int) $offset ) ] );
 
