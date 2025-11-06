@@ -10,6 +10,7 @@ namespace WPBanana\Services;
 
 use WP_Post;
 use function delete_post_meta;
+use function delete_post_meta_by_key;
 use function get_attachment_link;
 use function get_current_user_id;
 use function get_edit_post_link;
@@ -199,6 +200,42 @@ final class Attachment_Metadata {
 	public static function should_store_history(): bool {
 		$options = new Options();
 		return (bool) $options->get( 'privacy.store_history', false );
+	}
+
+	/**
+	 * Whether any attachments currently store AI metadata.
+	 *
+	 * @return bool
+	 */
+	public static function has_records(): bool {
+		global $wpdb;
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Lightweight existence check.
+		$result = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT meta_id FROM {$wpdb->postmeta} WHERE meta_key IN (%s,%s) LIMIT 1",
+				self::META_KEY,
+				self::HISTORY_KEY
+			)
+		);
+
+		return ! empty( $result );
+	}
+
+	/**
+	 * Remove all stored AI metadata and history from attachments.
+	 *
+	 * @return bool True when rows were deleted or none existed, false on failure.
+	 */
+	public static function clear_all(): bool {
+		if ( ! self::has_records() ) {
+			return true;
+		}
+
+		$meta_deleted    = delete_post_meta_by_key( self::META_KEY );
+		$history_deleted = delete_post_meta_by_key( self::HISTORY_KEY );
+
+		return ( false !== $meta_deleted ) || ( false !== $history_deleted );
 	}
 
 	/**
