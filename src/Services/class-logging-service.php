@@ -271,10 +271,9 @@ final class Logging_Service {
 			save_mode VARCHAR(20) NOT NULL DEFAULT '',
 			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			PRIMARY KEY (id),
-			KEY provider_idx (provider),
-			KEY model_idx (model),
-			KEY status_idx (status),
-			KEY created_idx (created_at)
+			KEY filter_created_idx (provider, operation, status, created_at),
+			KEY user_created_idx (user_id, created_at),
+			KEY attachment_idx (attachment_id)
 		) {$charset_collate};";
 
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
