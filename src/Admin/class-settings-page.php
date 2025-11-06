@@ -502,7 +502,7 @@ final class Settings_Page {
 							class="button"
 							form="wp-banana-clear-meta-form"
 							onclick="return confirm('<?php echo esc_js( __( 'Are you sure you want to delete all attachment metadata?', 'wp-banana' ) ); ?>');"
-						><?php esc_html_e( 'Clear metadata', 'wp-banana' ); ?></button>
+						><?php esc_html_e( 'Clear history', 'wp-banana' ); ?></button>
 						<p class="description"><?php esc_html_e( 'Delete all AI metadata and history stored on attachments.', 'wp-banana' ); ?></p>
 					</td>
 				</tr>
