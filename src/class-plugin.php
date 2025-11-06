@@ -11,11 +11,13 @@ namespace WPBanana;
 use WPBanana\Admin\Media_Hooks;
 use WPBanana\Admin\Settings_Page;
 use WPBanana\Admin\Generate_Page;
+use WPBanana\Admin\Logs_Page;
 use WPBanana\Admin\AI_Editor_Integration;
 use WPBanana\Admin\Updater;
 use WPBanana\REST\Routes;
 use WPBanana\Services\Options;
 use WPBanana\Services\Edit_Buffer;
+use WPBanana\Services\Logging_Service;
 
 // Prevent direct access.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -63,12 +65,13 @@ final class Plugin {
 
 		$options = new Options();
 		$buffer  = new Edit_Buffer();
+		$logger  = new Logging_Service( $options );
 
 		// Register REST routes.
 		add_action(
 			'rest_api_init',
-			static function () use ( $options, $buffer ) {
-				( new Routes( $options, $buffer ) )->register();
+			static function () use ( $options, $buffer, $logger ) {
+				( new Routes( $options, $buffer, $logger ) )->register();
 			}
 		);
 
@@ -77,6 +80,7 @@ final class Plugin {
 			( new Settings_Page( $options, self::$plugin_file, self::$plugin_url ) )->register();
 			( new Media_Hooks( $options, self::$plugin_url ) )->register();
 			( new Generate_Page( $options, self::$plugin_url ) )->register();
+			( new Logs_Page( $logger ) )->register();
 			( new AI_Editor_Integration( $buffer ) )->register();
 
 			// GitHub plugin updater.
@@ -134,5 +138,8 @@ final class Plugin {
 				$transient_timeout_like
 			)
 		);
+
+		// Remove logging table.
+		Logging_Service::drop_table();
 	}
 }

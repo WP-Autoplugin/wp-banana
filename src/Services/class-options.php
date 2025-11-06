@@ -173,6 +173,9 @@ final class Options {
 			'privacy'                 => [
 				'store_history' => false,
 			],
+			'logging'                 => [
+				'enabled' => false,
+			],
 			'option_version'          => 1,
 		];
 
