@@ -11,7 +11,7 @@
 	padding: 16px;
 	box-sizing: border-box;
 	max-height: calc(100vh - 220px);
-	overflow-y: auto;
+	overflow-y: visible;
 	background: #fff;
 }
 
@@ -38,4 +38,12 @@
 
 .media-modal .imgedit-wrap {
 	position: relative;
+}
+
+.wp-banana-variations-open .components-modal__screen-overlay {
+	z-index: 200000;
+}
+
+.wp-banana-variations-open .components-modal__frame {
+	z-index: 200001;
 }

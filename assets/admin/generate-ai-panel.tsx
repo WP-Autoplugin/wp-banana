@@ -11,6 +11,8 @@ import apiFetch from '@wordpress/api-fetch';
 import {
 	Card,
 	CardBody,
+	Button,
+	Modal,
 	Notice,
 	SelectControl,
 	Spinner,
@@ -73,11 +75,62 @@ type ReferenceInjectionEvent = CustomEvent< {
 	references?: ReferenceInjection[];
 } >;
 
-declare global {
-	interface Window {
-		wpBananaReferenceQueue?: ReferenceInjection[][];
-	}
-}
+type PreviewContext = {
+	provider: string;
+	model?: string;
+	format: string;
+	prompt: string;
+	filenameBase: string;
+	title: string;
+};
+
+type VariationPreviewStatus = 'queued' | 'loading' | 'complete' | 'error' | 'saving' | 'saved';
+
+type VariationPreview = {
+	id: string;
+	index: number;
+	status: VariationPreviewStatus;
+	data?: string;
+	mime?: string;
+	width?: number;
+	height?: number;
+	bytes?: number;
+	error?: string;
+	context?: PreviewContext;
+	attachmentId?: number;
+	url?: string;
+};
+
+type PreviewAction = {
+	message: string;
+	type: 'success' | 'warning' | 'error';
+	undo?: VariationPreview;
+};
+
+type PreviewResponsePayload = {
+	preview?: {
+		data?: string;
+		mime?: string;
+		width?: number;
+		height?: number;
+		bytes?: number;
+	};
+	context?: {
+		provider?: string;
+		model?: string;
+		prompt?: string;
+		format?: string;
+		filename_base?: string;
+		filenameBase?: string;
+		title?: string;
+		timestamp?: number;
+	};
+};
+
+type SavePreviewResponse = {
+	attachment_id?: number;
+	url?: string;
+};
 
 const MIME_EXTENSION_MAP: Record<string, string> = {
 	'image/jpeg': 'jpg',
@@ -85,6 +138,10 @@ const MIME_EXTENSION_MAP: Record<string, string> = {
 	'image/png': 'png',
 	'image/webp': 'webp',
 };
+
+const VARIATION_MIN = 1;
+const VARIATION_MAX = 4;
+const VARIATION_OPTIONS: number[] = [ 1, 2, 3, 4 ];
 
 const normaliseFilename = ( candidate: string | undefined, fallbackIndex: number, mime: string ): string => {
 	const fallback = `reference-${ fallbackIndex }`;
@@ -102,6 +159,32 @@ const normaliseFilename = ( candidate: string | undefined, fallbackIndex: number
 		return `${ safeName.slice( 0, lastDot ) }.${ extensionKey }`;
 	}
 	return `${ safeName }.${ extensionKey }`;
+};
+
+const formatFromMime = ( mime?: string ): string => {
+	if ( ! mime ) {
+		return 'png';
+	}
+	const mapped = MIME_EXTENSION_MAP[ mime.toLowerCase() ];
+	return mapped ?? 'png';
+};
+
+const previewStatusLabel = ( status: VariationPreviewStatus ): string => {
+	switch ( status ) {
+		case 'queued':
+		case 'loading':
+			return __( 'Generating…', 'wp-banana' );
+		case 'complete':
+			return __( 'Ready', 'wp-banana' );
+		case 'saving':
+			return __( 'Saving…', 'wp-banana' );
+		case 'saved':
+			return __( 'Saved', 'wp-banana' );
+		case 'error':
+			return __( 'Failed', 'wp-banana' );
+		default:
+			return '';
+	}
 };
 
 const GeneratePanel = ( {
@@ -179,6 +262,23 @@ const GeneratePanel = ( {
 	const fileInputRef = useRef< HTMLInputElement | null >( null );
 	const referenceImagesRef = useRef< ReferenceItem[] >( referenceImages );
 	const dragDepthRef = useRef( 0 );
+	const [ isVariationMenuOpen, setIsVariationMenuOpen ] = useState( false );
+	const [ previewModalOpen, setPreviewModalOpen ] = useState( false );
+	const [ previewItems, setPreviewItems ] = useState< VariationPreview[] >( [] );
+	const [ activePreviewId, setActivePreviewId ] = useState< string | null >( null );
+	const [ previewAction, setPreviewAction ] = useState< PreviewAction | null >( null );
+	const variationMenuRef = useRef< HTMLDivElement | null >( null );
+	const previewItemsRef = useRef< VariationPreview[] >( [] );
+	const variationTimeoutsRef = useRef< number[] >( [] );
+	const variationAbortRef = useRef( false );
+	const variationStatsRef = useRef<{ successes: number; errors: string[] }>( { successes: 0, errors: [] } );
+	const clearVariationTimeouts = useCallback( () => {
+		if ( variationTimeoutsRef.current.length === 0 ) {
+			return;
+		}
+		variationTimeoutsRef.current.forEach( ( token ) => window.clearTimeout( token ) );
+		variationTimeoutsRef.current = [];
+	}, [] );
 	const referenceCount = referenceImages.length;
 	const multiReferenceMode = referenceCount > 1;
 	const modelOptions = useMemo( () => {
@@ -193,10 +293,61 @@ const GeneratePanel = ( {
 		return models.filter( ( value ) => allowSet.has( value ) );
 	}, [ models, multiReferenceMode, provider ] );
 	const aspectRatioEnabled = referenceCount === 0 && aspectOptions.length > 0;
+	const selectedPreview = useMemo( () => {
+		if ( previewItems.length === 0 ) {
+			return null;
+		}
+		const found = previewItems.find( ( item ) => item.id === activePreviewId );
+		return found ?? previewItems[ 0 ];
+	}, [ previewItems, activePreviewId ] );
+	const selectedPreviewSrc =
+		selectedPreview && selectedPreview.data && selectedPreview.mime
+			? `data:${ selectedPreview.mime };base64,${ selectedPreview.data }`
+			: '';
+	const canSaveSelected =
+		!! selectedPreview &&
+		( selectedPreview.status === 'complete' || selectedPreview.status === 'error' );
+	const canDiscardSelected =
+		!! selectedPreview && selectedPreview.status !== 'saving' && selectedPreview.status !== 'saved';
 
 	useEffect( () => {
 		referenceImagesRef.current = referenceImages;
 	}, [ referenceImages ] );
+
+	useEffect( () => {
+		previewItemsRef.current = previewItems;
+	}, [ previewItems ] );
+
+	useEffect( () => {
+		if ( previewItems.length === 0 ) {
+			if ( activePreviewId !== null ) {
+				setActivePreviewId( null );
+			}
+			return;
+		}
+		const activeExists = previewItems.some( ( item ) => item.id === activePreviewId );
+		if ( ! activeExists ) {
+			setActivePreviewId( previewItems[ 0 ].id );
+		}
+	}, [ previewItems, activePreviewId ] );
+
+	useEffect( () => {
+		if ( ! isVariationMenuOpen ) {
+			return;
+		}
+		const handleClickOutside = ( event: MouseEvent ) => {
+			if ( ! variationMenuRef.current ) {
+				return;
+			}
+			if ( event.target instanceof Node && ! variationMenuRef.current.contains( event.target ) ) {
+				setIsVariationMenuOpen( false );
+			}
+		};
+		document.addEventListener( 'mousedown', handleClickOutside );
+		return () => {
+			document.removeEventListener( 'mousedown', handleClickOutside );
+		};
+	}, [ isVariationMenuOpen ] );
 
 	useEffect( () => () => {
 		referenceImagesRef.current.forEach( ( item ) => {
@@ -522,6 +673,108 @@ const GeneratePanel = ( {
 		setReferenceError( null );
 	}, [ referenceImages ] );
 
+	const prepareReferenceFiles = useCallback( async (): Promise< File[] > => {
+		const updated = Array.isArray( referenceImagesRef.current ) ? [ ...referenceImagesRef.current ] : [];
+		const prepared: File[] = [];
+		let mutated = false;
+		for ( let index = 0; index < updated.length; index += 1 ) {
+			const item = updated[ index ];
+			if ( item.file instanceof File ) {
+				prepared.push( item.file );
+				continue;
+			}
+			if ( ! item.sourceUrl ) {
+				throw new Error( __( 'Could not load the selected images.', 'wp-banana' ) );
+			}
+			let response: Response;
+			try {
+				response = await window.fetch( item.sourceUrl, { credentials: 'same-origin' } );
+			} catch ( fetchError ) {
+				throw new Error( __( 'Could not load the selected images.', 'wp-banana' ) );
+			}
+			if ( ! response.ok ) {
+				throw new Error( __( 'Could not load the selected images.', 'wp-banana' ) );
+			}
+			const blob = await response.blob();
+			const inferredMime = blob.type || item.mimeType || 'image/png';
+			const filename = normaliseFilename( item.filename, index + 1, inferredMime );
+			const file = new File( [ blob ], filename, { type: inferredMime } );
+			updated[ index ] = {
+				...item,
+				file,
+				mimeType: inferredMime,
+			};
+			prepared.push( file );
+			mutated = true;
+		}
+		if ( mutated ) {
+			setReferenceImages( updated );
+		}
+		referenceImagesRef.current = updated;
+		return prepared;
+	}, [ setReferenceImages ] );
+
+	const sendGenerateRequest = useCallback(
+		async ( targetPrompt: string, previewOnly: boolean ) => {
+			if ( referenceCount > 0 ) {
+				let referenceFiles: File[] = [];
+				try {
+					referenceFiles = await prepareReferenceFiles();
+				} catch ( prepareError ) {
+					setReferenceError( __( 'Could not load the selected images.', 'wp-banana' ) );
+					throw prepareError;
+				}
+
+				const formData = new window.FormData();
+				formData.append( 'prompt', targetPrompt );
+				formData.append( 'provider', provider );
+				if ( model ) {
+					formData.append( 'model', model );
+				}
+				if ( previewOnly ) {
+					formData.append( 'preview_only', '1' );
+				}
+				referenceFiles.forEach( ( file ) => {
+					formData.append( 'reference_images[]', file, file.name );
+				} );
+				return apiFetch( {
+					path: `${ restNamespace }/generate`,
+					method: 'POST',
+					body: formData,
+				} );
+			}
+
+			const payload: Record<string, string> = {
+				prompt: targetPrompt,
+				provider,
+			};
+			if ( model ) {
+				payload.model = model;
+			}
+			if ( aspectRatioEnabled && aspectRatio ) {
+				payload.aspect_ratio = aspectRatio;
+			}
+			if ( previewOnly ) {
+				payload.preview_only = '1';
+			}
+			return apiFetch( {
+				path: `${ restNamespace }/generate`,
+				method: 'POST',
+				data: payload,
+			} );
+		},
+		[
+			referenceCount,
+			prepareReferenceFiles,
+			setReferenceError,
+			provider,
+			model,
+			restNamespace,
+			aspectRatioEnabled,
+			aspectRatio,
+		]
+	);
+
 	useEffect( () => {
 		if ( ! enableReferenceDragDrop ) {
 			return;
@@ -619,6 +872,27 @@ const GeneratePanel = ( {
 		};
 	}, [ addReferenceFiles, enableReferenceDragDrop ] );
 
+	useEffect( () => () => {
+		variationAbortRef.current = true;
+		clearVariationTimeouts();
+	}, [ clearVariationTimeouts ] );
+
+	useEffect( () => {
+		if ( typeof document === 'undefined' ) {
+			return undefined;
+		}
+		const target = document.body;
+		const className = 'wp-banana-variations-open';
+		if ( previewModalOpen ) {
+			target.classList.add( className );
+		} else {
+			target.classList.remove( className );
+		}
+		return () => {
+			target.classList.remove( className );
+		};
+	}, [ previewModalOpen ] );
+
 
 	const handleSubmit = async () => {
 		const trimmedPrompt = prompt.trim();
@@ -634,87 +908,7 @@ const GeneratePanel = ( {
 		setReferenceError( null );
 		setIsSubmitting( true );
 		try {
-			if ( referenceCount > 0 ) {
-				const prepareReferenceFiles = async (): Promise< File[] > => {
-					const updated = [ ...referenceImages ];
-					const prepared: File[] = [];
-					let mutated = false;
-					for ( let index = 0; index < updated.length; index += 1 ) {
-						const item = updated[ index ];
-						if ( item.file instanceof File ) {
-							prepared.push( item.file );
-							continue;
-						}
-						if ( ! item.sourceUrl ) {
-							throw new Error( __( 'Could not load the selected images.', 'wp-banana' ) );
-						}
-						let response: Response;
-						try {
-							response = await window.fetch( item.sourceUrl, { credentials: 'same-origin' } );
-						} catch ( fetchError ) {
-							throw new Error( __( 'Could not load the selected images.', 'wp-banana' ) );
-						}
-						if ( ! response.ok ) {
-							throw new Error( __( 'Could not load the selected images.', 'wp-banana' ) );
-						}
-						const blob = await response.blob();
-						const inferredMime = blob.type || item.mimeType || 'image/png';
-						const filename = normaliseFilename( item.filename, index + 1, inferredMime );
-						const file = new File( [ blob ], filename, { type: inferredMime } );
-						updated[ index ] = {
-							...item,
-							file,
-							mimeType: inferredMime,
-						};
-						prepared.push( file );
-						mutated = true;
-					}
-					if ( mutated ) {
-						setReferenceImages( updated );
-					}
-					referenceImagesRef.current = updated;
-					return prepared;
-				};
-
-				let referenceFiles: File[] = [];
-				try {
-					referenceFiles = await prepareReferenceFiles();
-				} catch ( prepareError ) {
-					setReferenceError( __( 'Could not load the selected images.', 'wp-banana' ) );
-					throw prepareError;
-				}
-
-				const formData = new window.FormData();
-				formData.append( 'prompt', trimmedPrompt );
-				formData.append( 'provider', provider );
-				if ( model ) {
-					formData.append( 'model', model );
-				}
-				referenceFiles.forEach( ( file ) => {
-					formData.append( 'reference_images[]', file, file.name );
-				} );
-				await apiFetch( {
-					path: `${ restNamespace }/generate`,
-					method: 'POST',
-					body: formData,
-				} );
-			} else {
-				const payload: Record<string, string> = {
-					prompt: trimmedPrompt,
-					provider,
-				};
-				if ( model ) {
-					payload.model = model;
-				}
-				if ( aspectRatioEnabled && aspectRatio ) {
-					payload.aspect_ratio = aspectRatio;
-				}
-				await apiFetch( {
-					path: `${ restNamespace }/generate`,
-					method: 'POST',
-					data: payload,
-				} );
-			}
+			await sendGenerateRequest( trimmedPrompt, false );
 			setPrompt( '' );
 			if ( aspectRatioEnabled ) {
 				setAspectRatio( preferredAspectRatio );
@@ -724,11 +918,359 @@ const GeneratePanel = ( {
 			onComplete();
 		} catch ( error ) {
 			const apiError = error as ApiError;
-			setSubmitError( apiError?.message ?? __( 'Failed to generate image.', 'wp-banana' ) );
+			if ( apiError?.message ) {
+				setSubmitError( apiError.message );
+			} else if ( error instanceof Error && error.message ) {
+				setSubmitError( error.message );
+			} else {
+				setSubmitError( __( 'Failed to generate image.', 'wp-banana' ) );
+			}
 		} finally {
 			setIsSubmitting( false );
 		}
 	};
+
+	const closePreviewModal = useCallback( () => {
+		variationAbortRef.current = true;
+		clearVariationTimeouts();
+		setPreviewModalOpen( false );
+		setPreviewItems( [] );
+		setActivePreviewId( null );
+		setPreviewAction( null );
+		variationStatsRef.current = { successes: 0, errors: [] };
+		if ( isSubmitting ) {
+			setIsSubmitting( false );
+		}
+	}, [ clearVariationTimeouts, isSubmitting ] );
+
+	const finalizeModalIfDone = useCallback(
+		( nextItems: VariationPreview[] ) => {
+			if ( nextItems.length === 0 ) {
+				closePreviewModal();
+				return;
+			}
+			const allSaved = nextItems.every( ( item ) => item.status === 'saved' );
+			if ( allSaved ) {
+				closePreviewModal();
+			}
+		},
+		[ closePreviewModal ]
+	);
+
+	const handleGenerateVariations = useCallback(
+		( count: number ) => {
+			const bounded = Math.max( VARIATION_MIN, Math.min( VARIATION_MAX, count ) );
+			const trimmedPrompt = prompt.trim();
+			if ( trimmedPrompt.length < MIN_PROMPT_LENGTH ) {
+				setSubmitError( __( 'Please enter a longer prompt.', 'wp-banana' ) );
+				return;
+			}
+			if ( multiReferenceMode && modelOptions.length === 0 ) {
+				setSubmitError( __( 'Choose a model that supports multiple reference images.', 'wp-banana' ) );
+				return;
+			}
+
+			variationAbortRef.current = false;
+			clearVariationTimeouts();
+			setSubmitError( null );
+			setReferenceError( null );
+			setPreviewAction( null );
+			variationStatsRef.current = { successes: 0, errors: [] };
+
+			const createdAt = Date.now();
+			const seeds: VariationPreview[] = Array.from( { length: bounded } ).map( ( _value, index ) => ( {
+				id: `${ createdAt }-${ index }-${ Math.random().toString( 36 ).slice( 2, 10 ) }`,
+				index,
+				status: 'queued' as VariationPreviewStatus,
+			} ) );
+
+			setPreviewItems( seeds );
+			setActivePreviewId( seeds[ 0 ]?.id ?? null );
+			setPreviewModalOpen( false );
+			setIsSubmitting( true );
+			setIsVariationMenuOpen( false );
+
+			const promptForRun = trimmedPrompt;
+
+			const tasks = seeds.map(
+				( seed, index ) =>
+					new Promise<void>( ( resolve ) => {
+						const execute = async () => {
+							if ( variationAbortRef.current ) {
+								resolve();
+								return;
+							}
+							setPreviewItems( ( prev: VariationPreview[] ) =>
+								prev.map( ( item: VariationPreview ): VariationPreview =>
+									item.id === seed.id
+										? {
+												...item,
+												status: 'loading',
+											}
+										: item
+								)
+							);
+							try {
+								const response = ( await sendGenerateRequest( promptForRun, true ) ) as PreviewResponsePayload;
+								if ( variationAbortRef.current ) {
+									resolve();
+									return;
+								}
+								const previewPayload = response?.preview;
+								const contextPayload = response?.context ?? {};
+								if ( ! previewPayload?.data ) {
+									throw new Error( __( 'Failed to generate image.', 'wp-banana' ) );
+								}
+								const context: PreviewContext = {
+									provider: contextPayload.provider ?? provider,
+									model: contextPayload.model,
+									format: contextPayload.format ?? formatFromMime( previewPayload.mime ),
+									prompt: contextPayload.prompt ?? promptForRun,
+									filenameBase:
+										contextPayload.filename_base ??
+										contextPayload.filenameBase ??
+										'',
+									title: contextPayload.title ?? '',
+								};
+
+								setPreviewItems( ( prev: VariationPreview[] ) =>
+									prev.map( ( item: VariationPreview ): VariationPreview =>
+										item.id === seed.id
+											? {
+													...item,
+													status: 'complete',
+													data: previewPayload.data ?? '',
+													mime: previewPayload.mime ?? 'image/png',
+													width: previewPayload.width,
+													height: previewPayload.height,
+													bytes: previewPayload.bytes,
+													context,
+													error: undefined,
+												}
+											: item
+									)
+								);
+								variationStatsRef.current.successes += 1;
+								setActivePreviewId( ( current ) => current ?? seed.id );
+								setPreviewModalOpen( ( current ) => current || true );
+							} catch ( runError ) {
+								if ( variationAbortRef.current ) {
+									resolve();
+									return;
+								}
+								const apiError = runError as ApiError;
+								const message = apiError?.message ?? __( 'Failed to generate image.', 'wp-banana' );
+								variationStatsRef.current.errors.push( message );
+								setPreviewItems( ( prev: VariationPreview[] ) =>
+									prev.map( ( item: VariationPreview ): VariationPreview =>
+										item.id === seed.id
+											? {
+													...item,
+													status: 'error',
+													error: message,
+												}
+											: item
+									)
+								);
+								setPreviewAction( { message, type: 'error' } );
+							} finally {
+								resolve();
+							}
+						};
+
+						const timeout = window.setTimeout( execute, index * 1000 );
+						variationTimeoutsRef.current.push( timeout );
+					} )
+			);
+
+			Promise.all( tasks ).then( () => {
+				clearVariationTimeouts();
+				if ( variationAbortRef.current ) {
+					return;
+				}
+				if ( variationStatsRef.current.successes > 0 ) {
+					setPrompt( '' );
+					if ( aspectRatioEnabled ) {
+						setAspectRatio( preferredAspectRatio );
+					}
+					resetReferenceImages();
+					setShowOptions( false );
+				} else {
+					setPreviewModalOpen( false );
+					setPreviewItems( [] );
+					setActivePreviewId( null );
+					if ( variationStatsRef.current.errors.length > 0 ) {
+						setSubmitError( variationStatsRef.current.errors[ 0 ] );
+					}
+				}
+				setIsSubmitting( false );
+			} );
+		},
+		[
+			prompt,
+			setSubmitError,
+			multiReferenceMode,
+			modelOptions,
+			clearVariationTimeouts,
+			sendGenerateRequest,
+			aspectRatioEnabled,
+			preferredAspectRatio,
+			resetReferenceImages,
+			setShowOptions,
+			setReferenceError,
+			provider,
+		]
+	);
+
+	const handleVariationSelect = useCallback(
+		( count: number ) => {
+			setIsVariationMenuOpen( false );
+			if ( isSubmitting ) {
+				return;
+			}
+			handleGenerateVariations( count );
+		},
+		[ handleGenerateVariations, isSubmitting ]
+	);
+
+	const handlePreviewSave = useCallback(
+		async ( itemId: string ) => {
+			const target = previewItemsRef.current.find( ( item ) => item.id === itemId );
+			if ( ! target ) {
+				return;
+			}
+			if ( ( target.status !== 'complete' && target.status !== 'error' ) || ! target.data || ! target.context ) {
+				return;
+			}
+
+			setPreviewAction( null );
+			setPreviewItems( ( prev: VariationPreview[] ) =>
+				prev.map( ( item ): VariationPreview =>
+					item.id === itemId
+						? {
+								...item,
+								status: 'saving',
+								error: undefined,
+							}
+						: item
+				)
+			);
+
+			try {
+				const response = ( await apiFetch( {
+					path: `${ restNamespace }/generate/save-preview`,
+					method: 'POST',
+					data: {
+						data: target.data,
+						provider: target.context.provider,
+						model: target.context.model ?? '',
+						format: target.context.format,
+						mime: target.mime,
+						prompt: target.context.prompt,
+						filename_base: target.context.filenameBase,
+						title: target.context.title,
+					},
+				} ) ) as SavePreviewResponse;
+
+				setPreviewItems( ( prev: VariationPreview[] ) => {
+					const next = prev.map( ( item ): VariationPreview =>
+						item.id === itemId
+							? {
+									...item,
+									status: 'saved',
+									attachmentId: response?.attachment_id,
+									url: response?.url,
+									error: undefined,
+								}
+							: item
+					);
+					finalizeModalIfDone( next );
+					return next;
+				} );
+
+				setPreviewAction( {
+					message: __( 'Image saved to Media Library.', 'wp-banana' ),
+					type: 'success',
+				} );
+			} catch ( saveError ) {
+				const apiError = saveError as ApiError;
+				const message = apiError?.message ?? __( 'Failed to save image.', 'wp-banana' );
+				setPreviewItems( ( prev: VariationPreview[] ) =>
+					prev.map( ( item ): VariationPreview =>
+						item.id === itemId
+							? {
+									...item,
+									status: 'error',
+									error: message,
+								}
+							: item
+					)
+				);
+				setPreviewAction( { message, type: 'error' } );
+			}
+		},
+		[ restNamespace, finalizeModalIfDone ]
+	);
+
+	const handlePreviewDiscard = useCallback(
+		( itemId: string ) => {
+			let removed: VariationPreview | null = null;
+			let nextItems: VariationPreview[] = [];
+			setPreviewItems( ( prev: VariationPreview[] ) => {
+				nextItems = prev.filter( ( item: VariationPreview ) => {
+					if ( item.id === itemId ) {
+						removed = item;
+						return false;
+					}
+					return true;
+				} );
+				if ( nextItems.length === 0 ) {
+					setActivePreviewId( null );
+				} else if ( activePreviewId === itemId ) {
+					setActivePreviewId( nextItems[ 0 ].id );
+				}
+				return nextItems;
+			} );
+			finalizeModalIfDone( nextItems );
+			const removedItem = removed;
+			if ( removedItem ) {
+				const restored: VariationPreview = {
+					...( removedItem as VariationPreview ),
+					status: 'complete',
+				};
+				setPreviewAction( {
+					message: __( 'Deleted.', 'wp-banana' ),
+					type: 'warning',
+					undo: restored,
+				} );
+			} else {
+				setPreviewAction( {
+					message: __( 'Deleted.', 'wp-banana' ),
+					type: 'warning',
+				} );
+			}
+		},
+		[ activePreviewId, finalizeModalIfDone ]
+	);
+
+	const handlePreviewUndo = useCallback( () => {
+		const undoItem = previewAction?.undo;
+		if ( ! undoItem ) {
+			return;
+		}
+		setPreviewItems( ( prev: VariationPreview[] ) => {
+			const existing = prev.some( ( item: VariationPreview ) => item.id === undoItem.id );
+			if ( existing ) {
+				return prev;
+			}
+			const next: VariationPreview[] = [ undoItem, ...prev ];
+			next.sort( ( a, b ) => a.index - b.index );
+			return next;
+		} );
+		setActivePreviewId( undoItem.id );
+		setPreviewModalOpen( true );
+		setPreviewAction( null );
+	}, [ previewAction ] );
 
 	const handlePromptKeyDown = useCallback(
 		( event: KeyboardEvent<HTMLTextAreaElement> ) => {
@@ -933,17 +1475,89 @@ const GeneratePanel = ( {
 						justifyContent: 'space-between',
 					} }
 				>
-					<div style={ { display: 'flex', alignItems: 'center', gap: '12px' } }>
-						<button
-							type="button"
-							className="button button-primary wp-banana-generate-panel__submit"
-							onClick={ handleSubmit }
-							disabled={ ! canSubmit || isSubmitting }
-						>
-							{ __( 'Generate Image', 'wp-banana' ) }
-						</button>
+					<div
+						ref={ variationMenuRef }
+						style={ { display: 'flex', alignItems: 'center', gap: '12px', position: 'relative' } }
+					>
+						<div className="button-group">
+							<button
+								type="button"
+								className="button button-primary wp-banana-generate-panel__submit"
+								onClick={ handleSubmit }
+								disabled={ ! canSubmit || isSubmitting }
+							>
+								{ __( 'Generate Image', 'wp-banana' ) }
+							</button>
+							<button
+								type="button"
+								className="button button-primary"
+								onClick={ () => {
+									if ( isSubmitting ) {
+										return;
+									}
+									setIsVariationMenuOpen( ( open ) => ! open );
+								} }
+								disabled={ isSubmitting || ! canSubmit }
+								aria-haspopup="menu"
+								aria-expanded={ isVariationMenuOpen }
+								aria-label={ __( 'Generate multiple variations', 'wp-banana' ) }
+								style={ { padding: '0 4px' } }
+							>
+								<span
+									className="dashicons dashicons-arrow-down-alt2"
+									aria-hidden="true"
+									style={ { lineHeight: '30px' } }
+								/>
+							</button>
+						</div>
 						{ isSubmitting && (
 							<span className="spinner is-active" aria-hidden="true" />
+						) }
+						{ isVariationMenuOpen && (
+							<div
+								className="wp-banana-generate-panel__variation-menu"
+								role="menu"
+								style={ {
+									position: 'absolute',
+									top: '100%',
+									right: 0,
+									marginTop: '4px',
+									background: '#fff',
+									border: '1px solid #dcdcde',
+									borderRadius: '4px',
+									boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+									zIndex: 10,
+									minWidth: '180px',
+									padding: '4px 0',
+								} }
+							>
+								{ VARIATION_OPTIONS.map( ( option ) => (
+									<button
+										key={ option }
+										type="button"
+										role="menuitem"
+										className="button button-link"
+										style={ {
+											display: 'flex',
+											width: '100%',
+											justifyContent: 'space-between',
+											alignItems: 'center',
+											padding: '6px 12px',
+											boxSizing: 'border-box',
+											textDecoration: 'none',
+										} }
+										onClick={ () => handleVariationSelect( option ) }
+									>
+										<span>
+											{ sprintf(
+												_n( '%d image', '%d images', option, 'wp-banana' ),
+												option
+											) }
+										</span>
+										{ option > 1 && <span className="dashicons dashicons-image-filter" aria-hidden="true" /> }
+									</button>
+								) ) }
+							</div>
 						) }
 					</div>
 					<div style={ { display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', textAlign: 'right' } }>
@@ -968,7 +1582,217 @@ const GeneratePanel = ( {
 				</div>
 			</CardBody>
 		</Card>
-		</>
+		{ previewModalOpen && (
+			<Modal
+				className="wp-banana-generate-variations-modal"
+				title={ __( 'Generated Variations', 'wp-banana' ) }
+				onRequestClose={ closePreviewModal }
+			>
+				{ previewAction && (
+					<Notice
+						status={
+							previewAction.type === 'success'
+								? 'success'
+								: previewAction.type === 'warning'
+								? 'warning'
+								: 'error'
+						}
+						isDismissible={ false }
+						style={ { marginBottom: '16px' } }
+					>
+						<span>{ previewAction.message }</span>
+						{ previewAction.undo && (
+							<Button variant="link" onClick={ handlePreviewUndo } style={ { marginLeft: '8px' } }>
+								{ __( 'Undo', 'wp-banana' ) }
+							</Button>
+						) }
+					</Notice>
+				) }
+				<div
+					className="wp-banana-generate-variations-modal__layout"
+					style={ {
+						display: 'flex',
+						gap: '16px',
+						flexWrap: 'wrap',
+					} }
+				>
+					<div
+						className="wp-banana-generate-variations-modal__list"
+						style={ {
+							width: '200px',
+							maxHeight: '420px',
+							overflowY: 'auto',
+							display: 'flex',
+							flexDirection: 'column',
+							gap: '8px',
+						} }
+					>
+						{ previewItems.map( ( item ) => {
+							const isActive = item.id === selectedPreview?.id;
+							const thumbSrc =
+								item.data && item.mime ? `data:${ item.mime };base64,${ item.data }` : '';
+							return (
+								<button
+									key={ item.id }
+									type="button"
+									onClick={ () => setActivePreviewId( item.id ) }
+									className="button button-link"
+									style={ {
+										display: 'flex',
+										flexDirection: 'column',
+										alignItems: 'stretch',
+										gap: '6px',
+										padding: '6px',
+										border: isActive ? '2px solid #007cba' : '1px solid #dcdcde',
+										borderRadius: '4px',
+										background: isActive ? '#f0f6fc' : '#fff',
+										textAlign: 'left',
+									} }
+								>
+									<div
+										style={ {
+											position: 'relative',
+											height: '64px',
+											background: '#f6f7f7',
+											display: 'flex',
+											alignItems: 'center',
+											justifyContent: 'center',
+											overflow: 'hidden',
+											borderRadius: '3px',
+										} }
+									>
+										{ item.status === 'complete' || item.status === 'saved' || item.status === 'error' ? (
+											thumbSrc ? (
+												<img
+													src={ thumbSrc }
+													alt=""
+													style={ { width: '100%', height: '100%', objectFit: 'cover' } }
+												/>
+											) : (
+												<span>{ __( 'Preview unavailable', 'wp-banana' ) }</span>
+											)
+										) : (
+											<Spinner />
+										) }
+										{ item.status === 'saved' && (
+											<span
+												style={ {
+													position: 'absolute',
+													top: '4px',
+													right: '4px',
+													background: '#007cba',
+													color: '#fff',
+													padding: '2px 6px',
+													borderRadius: '3px',
+													fontSize: '11px',
+													fontWeight: 600,
+												} }
+											>
+												{ __( 'Saved', 'wp-banana' ) }
+											</span>
+										) }
+									</div>
+									<div style={ { display: 'flex', flexDirection: 'column', gap: '2px' } }>
+										<strong>
+											{ sprintf(
+												__( 'Variation %d', 'wp-banana' ),
+												item.index + 1
+											) }
+										</strong>
+										<span style={ { fontSize: '12px', color: '#555' } }>
+											{ previewStatusLabel( item.status ) }
+										</span>
+									</div>
+								</button>
+							);
+						} ) }
+					</div>
+					<div
+						className="wp-banana-generate-variations-modal__preview"
+						style={ {
+							flex: 1,
+							minWidth: '260px',
+							display: 'flex',
+							flexDirection: 'column',
+							gap: '16px',
+						} }
+					>
+						<div
+							style={ {
+								position: 'relative',
+								background: '#f6f7f7',
+								border: '1px solid #dcdcde',
+								borderRadius: '4px',
+								minHeight: '300px',
+								display: 'flex',
+								alignItems: 'center',
+								justifyContent: 'center',
+								padding: '12px',
+							} }
+						>
+							{ ! selectedPreview ? (
+								<span>{ __( 'No preview selected.', 'wp-banana' ) }</span>
+							) : selectedPreview.status === 'loading' || selectedPreview.status === 'queued' ? (
+								<Spinner />
+							) : selectedPreview.status === 'error' ? (
+								<Notice status="error" isDismissible={ false }>
+									{ selectedPreview.error ?? __( 'Failed to generate image.', 'wp-banana' ) }
+								</Notice>
+							) : (
+								<>
+									{ selectedPreviewSrc ? (
+										<img
+											src={ selectedPreviewSrc }
+											alt=""
+											style={ {
+												maxWidth: '100%',
+												maxHeight: '360px',
+												borderRadius: '4px',
+												objectFit: 'contain',
+											} }
+										/>
+									) : (
+										<span>{ __( 'Preview unavailable', 'wp-banana' ) }</span>
+									) }
+									{ selectedPreview.status === 'saving' && (
+										<div
+											style={ {
+												position: 'absolute',
+												inset: 0,
+												background: 'rgba(255,255,255,0.7)',
+												display: 'flex',
+												alignItems: 'center',
+												justifyContent: 'center',
+												gap: '8px',
+											} }
+										>
+											<Spinner /> { __( 'Saving…', 'wp-banana' ) }
+										</div>
+									) }
+								</>
+							) }
+						</div>
+						<div style={ { display: 'flex', gap: '8px' } }>
+							<Button
+								isPrimary
+								onClick={ selectedPreview ? () => handlePreviewSave( selectedPreview.id ) : undefined }
+								disabled={ ! canSaveSelected || selectedPreview?.status === 'saving' }
+							>
+								{ __( 'Save', 'wp-banana' ) }
+							</Button>
+							<Button
+								variant="secondary"
+								onClick={ selectedPreview ? () => handlePreviewDiscard( selectedPreview.id ) : undefined }
+								disabled={ ! canDiscardSelected || selectedPreview?.status === 'saving' }
+							>
+								{ __( 'Discard', 'wp-banana' ) }
+							</Button>
+						</div>
+					</div>
+				</div>
+			</Modal>
+		) }
+	</>
 	);
 };
 

@@ -1,8 +1,9 @@
 declare module '@wordpress/element' {
-  // Minimal hook/type shims used in this project
-  export function useState<T = any>(initial: T): [T, (val: T) => void];
+  export function useState<T = any>(initial: T): [T, (val: T | ((prev: T) => T)) => void];
   export function useEffect(effect: () => void | (() => void), deps?: any[]): void;
   export function useMemo<T = any>(factory: () => T, deps?: any[]): T;
+  export function useRef<T = any>(initial?: T): { current: T };
+  export function useCallback<T extends (...args: any[]) => any>(callback: T, deps?: any[]): T;
   export const Fragment: any;
   export function createElement(type: any, props?: any, ...children: any[]): any;
   export function render(node: any, container: Element | DocumentFragment): void;
@@ -45,16 +46,37 @@ declare module '@wordpress/components' {
       isSecondary?: boolean;
       isBusy?: boolean;
       disabled?: boolean;
-      variant?: 'primary' | 'secondary' | string;
+      variant?: 'primary' | 'secondary' | 'tertiary' | 'link' | string;
     }
   >;
   export const TextControl: React.FC<{ label?: string; value?: string; onChange?: (val: string) => void; placeholder?: string; help?: string; type?: string; disabled?: boolean }>;
-  export const TextareaControl: React.FC<{ label?: string; value?: string; onChange?: (val: string) => void; placeholder?: string; help?: string; rows?: number; disabled?: boolean }>;
+  export const TextareaControl: React.FC<{
+    label?: string;
+    value?: string;
+    onChange?: (val: string) => void;
+    placeholder?: string;
+    help?: string;
+    rows?: number;
+    disabled?: boolean;
+    onKeyDown?: (event: React.KeyboardEvent<HTMLTextAreaElement>) => void;
+  }>;
   export const SelectControl: React.FC<{ label?: string; value?: string; options?: Array<{ label: string; value: string }>; onChange?: (val: string) => void; disabled?: boolean }>;
   export const Panel: React.FC<{ header?: string; children?: React.ReactNode }>;
   export const PanelBody: React.FC<{ title?: string; initialOpen?: boolean; children?: React.ReactNode }>;
   export const Spinner: React.FC<{}>;
-  export const Notice: React.FC<{ status?: 'error' | 'warning' | 'success' | 'info'; children?: React.ReactNode; isDismissible?: boolean }>;
+  export const Notice: React.FC<{
+    status?: 'error' | 'warning' | 'success' | 'info';
+    children?: React.ReactNode;
+    isDismissible?: boolean;
+    onRemove?: () => void;
+    style?: React.CSSProperties;
+  }>;
   export const Card: React.FC<{ children?: React.ReactNode }>;
   export const CardBody: React.FC<{ children?: React.ReactNode }>;
+  export const Modal: React.FC<{
+    title?: string;
+    onRequestClose?: () => void;
+    className?: string;
+    children?: React.ReactNode;
+  }>;
 }
