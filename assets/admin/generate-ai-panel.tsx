@@ -1549,6 +1549,18 @@ const GeneratePanel = ( {
 										{ option > 1 && <span className="dashicons dashicons-images-alt2" aria-hidden="true" /> }
 									</button>
 								) ) }
+								<span
+									style={ {
+										display: 'block',
+										padding: '4px 12px 2px',
+										fontSize: '11px',
+										fontWeight: '400',
+										color: '#555d66',
+										borderTop: '1px solid #e1e1e1',
+									} }
+								>
+									{ __( 'Generate and Preview Images', 'wp-banana' ) }
+								</span>
 							</div>
 						) }
 					</div>
