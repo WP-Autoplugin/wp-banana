@@ -6,7 +6,8 @@
 
 import { render } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
-import GeneratePanel, { ProviderInfo } from './generate-ai-panel';
+import GeneratePanel from './generate-ai-panel';
+import type { ProviderInfo } from './types/generate';
 
 type MediaData = {
 	restNamespace: string;

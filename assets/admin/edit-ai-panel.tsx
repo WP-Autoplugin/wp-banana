@@ -17,7 +17,7 @@ import {
 	Spinner,
 	TextareaControl,
 } from '@wordpress/components';
-import type { ProviderInfo } from './generate-ai-panel';
+import type { ProviderInfo } from './types/generate';
 
 declare global {
 	interface Window {
