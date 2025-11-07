@@ -152,6 +152,12 @@ const refreshMediaLibrary = () => {
 	}
 };
 
+if ( typeof document !== 'undefined' ) {
+	document.addEventListener( 'wp-banana:media-refresh', () => {
+		refreshMediaLibrary();
+	} );
+}
+
 const enhanceMediaModal = ( modal: HTMLElement, data: MediaData ) => {
 	// If we've already injected our generate tab into this modal, skip.
 	const existingTab = modal.querySelector< HTMLButtonElement >( '.media-menu-item.wp-banana-media-tab' );

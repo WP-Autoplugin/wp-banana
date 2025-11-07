@@ -111,10 +111,33 @@ const mountGeneratePanel = (
 	);
 };
 
+let mediaRefreshListenerBound = false;
+const triggerAttachmentFilterChange = () => {
+	const selects = document.querySelectorAll<HTMLSelectElement>( 'select.attachment-filters' );
+	let triggered = false;
+	selects.forEach( ( select ) => {
+		const event = new Event( 'change', { bubbles: true } );
+		select.dispatchEvent( event );
+		triggered = true;
+	} );
+
+	if ( ! triggered ) {
+		const refreshButton = document.querySelector<HTMLButtonElement>( '.media-toolbar-secondary button' );
+		if ( refreshButton ) {
+			refreshButton.click();
+		}
+	}
+};
+
 const init = () => {
 	const pageNow = ( ( window as unknown ) as { pagenow?: string } ).pagenow;
 	if ( pageNow !== 'upload' ) {
 		return;
+	}
+
+	if ( ! mediaRefreshListenerBound ) {
+		document.addEventListener( 'wp-banana:media-refresh', triggerAttachmentFilterChange );
+		mediaRefreshListenerBound = true;
 	}
 
 	const data = window.wpBananaMedia;

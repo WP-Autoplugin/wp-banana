@@ -11,7 +11,6 @@ import apiFetch from '@wordpress/api-fetch';
 import {
 	Card,
 	CardBody,
-	Button,
 	Notice,
 	SelectControl,
 	Spinner,
@@ -270,6 +269,9 @@ const GeneratePanel = ( {
 	const variationTimeoutsRef = useRef< number[] >( [] );
 	const variationAbortRef = useRef( false );
 	const variationStatsRef = useRef<{ successes: number; errors: string[] }>( { successes: 0, errors: [] } );
+	const dispatchMediaRefresh = useCallback( () => {
+		document.dispatchEvent( new CustomEvent( 'wp-banana:media-refresh' ) );
+	}, [] );
 	const clearVariationTimeouts = useCallback( () => {
 		if ( variationTimeoutsRef.current.length === 0 ) {
 			return;
@@ -1166,6 +1168,7 @@ const GeneratePanel = ( {
 					message: __( 'Image saved to Media Library.', 'wp-banana' ),
 					type: 'success',
 				} );
+				dispatchMediaRefresh();
 			} catch ( saveError ) {
 				const apiError = saveError as ApiError;
 				const message = apiError?.message ?? __( 'Failed to save image.', 'wp-banana' );
@@ -1183,7 +1186,7 @@ const GeneratePanel = ( {
 				setPreviewAction( { message, type: 'error' } );
 			}
 		},
-		[ restNamespace, finalizeModalIfDone ]
+		[ restNamespace, finalizeModalIfDone, dispatchMediaRefresh ]
 	);
 
 	const handlePreviewDiscard = useCallback(
@@ -1581,9 +1584,13 @@ const GeneratePanel = ( {
 							} }
 						>
 							<h3 style={ { margin: 0 } }>{ __( 'Generated Variations', 'wp-banana' ) }</h3>
-							<Button variant="secondary" onClick={ resetPreviewArea }>
+							<button
+								type="button"
+								className="button"
+								onClick={ resetPreviewArea }
+							>
 								{ __( 'Clear previews', 'wp-banana' ) }
-							</Button>
+							</button>
 						</div>
 						{ previewAction && previewAction.type !== 'success' && (
 							<Notice
@@ -1597,9 +1604,13 @@ const GeneratePanel = ( {
 								>
 									<span>{ previewAction.message }</span>
 									{ previewAction.undo ? (
-										<Button variant="link" onClick={ handlePreviewUndo }>
+										<button
+											type="button"
+											className="button-link"
+											onClick={ handlePreviewUndo }
+										>
 											{ __( 'Undo', 'wp-banana' ) }
-										</Button>
+										</button>
 									) : null }
 								</div>
 							</Notice>
@@ -1616,7 +1627,7 @@ const GeneratePanel = ( {
 								className="wp-banana-generate-variations-list"
 								style={ {
 									width: '200px',
-									maxHeight: '360px',
+									maxHeight: '440px',
 									overflowY: 'auto',
 									display: 'flex',
 									flexDirection: 'column',
@@ -1642,6 +1653,8 @@ const GeneratePanel = ( {
 												borderRadius: '4px',
 												background: isActive ? '#f0f6fc' : '#fff',
 												textAlign: 'left',
+												textDecoration: 'none',
+												boxShadow: 'none',
 											} }
 										>
 											<div
@@ -1736,7 +1749,7 @@ const GeneratePanel = ( {
 													alt=""
 													style={ {
 														maxWidth: '100%',
-														maxHeight: '360px',
+														maxHeight: '500px',
 														borderRadius: '4px',
 														objectFit: 'contain',
 													} }
@@ -1763,20 +1776,22 @@ const GeneratePanel = ( {
 									) }
 								</div>
 								<div style={ { display: 'flex', gap: '8px' } }>
-									<Button
-										isPrimary
+									<button
+										type="button"
+										className="button button-primary"
 										onClick={ selectedPreview ? () => handlePreviewSave( selectedPreview.id ) : undefined }
 										disabled={ ! canSaveSelected || selectedPreview?.status === 'saving' }
 									>
 										{ __( 'Save', 'wp-banana' ) }
-									</Button>
-									<Button
-										variant="secondary"
+									</button>
+									<button
+										type="button"
+										className="button"
 										onClick={ selectedPreview ? () => handlePreviewDiscard( selectedPreview.id ) : undefined }
 										disabled={ ! canDiscardSelected || selectedPreview?.status === 'saving' }
 									>
 										{ __( 'Discard', 'wp-banana' ) }
-									</Button>
+									</button>
 								</div>
 							</div>
 						</div>
