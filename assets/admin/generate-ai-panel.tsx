@@ -947,11 +947,6 @@ const GeneratePanel = ( {
 		( nextItems: VariationPreview[] ) => {
 			if ( nextItems.length === 0 ) {
 				closePreviewModal();
-				return;
-			}
-			const allSaved = nextItems.every( ( item ) => item.status === 'saved' );
-			if ( allSaved ) {
-				closePreviewModal();
 			}
 		},
 		[ closePreviewModal ]
@@ -1214,28 +1209,22 @@ const GeneratePanel = ( {
 
 	const handlePreviewDiscard = useCallback(
 		( itemId: string ) => {
-			let removed: VariationPreview | null = null;
-			let nextItems: VariationPreview[] = [];
-			setPreviewItems( ( prev: VariationPreview[] ) => {
-				nextItems = prev.filter( ( item: VariationPreview ) => {
-					if ( item.id === itemId ) {
-						removed = item;
-						return false;
-					}
-					return true;
-				} );
-				if ( nextItems.length === 0 ) {
-					setActivePreviewId( null );
-				} else if ( activePreviewId === itemId ) {
-					setActivePreviewId( nextItems[ 0 ].id );
-				}
-				return nextItems;
-			} );
+			const currentItems: VariationPreview[] = Array.isArray( previewItemsRef.current ) ? previewItemsRef.current : [];
+			const removedItem = currentItems.find( ( item ) => item.id === itemId ) || null;
+			const nextItems = currentItems.filter( ( item ) => item.id !== itemId );
+			setPreviewItems( nextItems );
+			previewItemsRef.current = nextItems;
+
+			if ( nextItems.length === 0 ) {
+				setActivePreviewId( null );
+			} else if ( activePreviewId === itemId ) {
+				setActivePreviewId( nextItems[ 0 ].id );
+			}
+
 			finalizeModalIfDone( nextItems );
-			const removedItem = removed;
 			if ( removedItem ) {
 				const restored: VariationPreview = {
-					...( removedItem as VariationPreview ),
+					...removedItem,
 					status: 'complete',
 				};
 				setPreviewAction( {
@@ -1477,7 +1466,7 @@ const GeneratePanel = ( {
 				>
 					<div
 						ref={ variationMenuRef }
-						style={ { display: 'flex', alignItems: 'center', gap: '12px', position: 'relative' } }
+						style={ { display: 'flex', alignItems: 'center', gap: '12px', position: 'relative', zIndex: 1000 } }
 					>
 						<div className="button-group">
 							<button
@@ -1485,6 +1474,7 @@ const GeneratePanel = ( {
 								className="button button-primary wp-banana-generate-panel__submit"
 								onClick={ handleSubmit }
 								disabled={ ! canSubmit || isSubmitting }
+								title={ __( 'Generate one image and save to Media Library', 'wp-banana' ) }
 							>
 								{ __( 'Generate Image', 'wp-banana' ) }
 							</button>
@@ -1502,6 +1492,7 @@ const GeneratePanel = ( {
 								aria-expanded={ isVariationMenuOpen }
 								aria-label={ __( 'Generate multiple variations', 'wp-banana' ) }
 								style={ { padding: '0 4px' } }
+								title={ __( 'Generate multiple variations and preview before saving', 'wp-banana' ) }
 							>
 								<span
 									className="dashicons dashicons-arrow-down-alt2"
@@ -1554,7 +1545,8 @@ const GeneratePanel = ( {
 												option
 											) }
 										</span>
-										{ option > 1 && <span className="dashicons dashicons-image-filter" aria-hidden="true" /> }
+										{ option === 1 && <span className="dashicons dashicons-format-image" aria-hidden="true" /> }
+										{ option > 1 && <span className="dashicons dashicons-images-alt2" aria-hidden="true" /> }
 									</button>
 								) ) }
 							</div>
@@ -1588,25 +1580,25 @@ const GeneratePanel = ( {
 				title={ __( 'Generated Variations', 'wp-banana' ) }
 				onRequestClose={ closePreviewModal }
 			>
-				{ previewAction && (
-					<Notice
-						status={
-							previewAction.type === 'success'
-								? 'success'
-								: previewAction.type === 'warning'
-								? 'warning'
-								: 'error'
-						}
-						isDismissible={ false }
-						style={ { marginBottom: '16px' } }
-					>
-						<span>{ previewAction.message }</span>
-						{ previewAction.undo && (
-							<Button variant="link" onClick={ handlePreviewUndo } style={ { marginLeft: '8px' } }>
-								{ __( 'Undo', 'wp-banana' ) }
-							</Button>
-						) }
-					</Notice>
+				{ previewAction && previewAction.type !== 'success' && (
+					<div style={ { marginBottom: '16px' } }>
+						<Notice
+							status={ previewAction.type === 'warning' ? 'warning' : 'error' }
+							isDismissible={ false }
+						>
+							<div
+								className="wp-banana-generate-variations-modal__notice"
+								style={ { display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' } }
+							>
+								<span>{ previewAction.message }</span>
+								{ previewAction.undo ? (
+									<Button variant="link" onClick={ handlePreviewUndo }>
+										{ __( 'Undo', 'wp-banana' ) }
+									</Button>
+								) : null }
+							</div>
+						</Notice>
+					</div>
 				) }
 				<div
 					className="wp-banana-generate-variations-modal__layout"
@@ -1647,6 +1639,8 @@ const GeneratePanel = ( {
 										borderRadius: '4px',
 										background: isActive ? '#f0f6fc' : '#fff',
 										textAlign: 'left',
+										textDecoration: 'none',
+										boxShadow: 'none',
 									} }
 								>
 									<div
