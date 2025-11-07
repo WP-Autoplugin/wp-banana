@@ -83,6 +83,7 @@ Constants (if present) take priority over saved settings.
 2. Click **Generate Image**.
 3. Enter your text prompt (e.g. *"banana-shaped rocket flying through space in retro 90s neon style"*).
 4. Click **Generate Image** to create the image in a few seconds.
+5. Want variations? Use the split button to queue 1–4 images at once, preview them in the modal, and decide which ones to save or discard before they hit the Media Library.
 
 ### Combine Images
 
