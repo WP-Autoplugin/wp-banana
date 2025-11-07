@@ -803,13 +803,14 @@ const EditPanel = ( {
 					promptPlaceholder={ __( 'Add a glowing neon outline…', 'wp-banana' ) }
 					submitLabel={ __( 'Apply AI Edit', 'wp-banana' ) }
 					submitTooltip={ __( 'Apply AI edits and stage them in the editor buffer', 'wp-banana' ) }
-				/>
-
-				<ReferenceTray
-					referenceImages={ referenceImages }
-					onRemove={ removeReference }
-					fileInputRef={ fileInputRef }
-					onReferenceSelection={ handleEditReferenceSelection }
+					referenceTray={
+						<ReferenceTray
+							referenceImages={ referenceImages }
+							onRemove={ removeReference }
+							fileInputRef={ fileInputRef }
+							onReferenceSelection={ handleEditReferenceSelection }
+						/>
+					}
 				/>
 
 				<OptionsDrawer

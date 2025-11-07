@@ -60,7 +60,7 @@ const OptionsDrawer = ( {
 	}
 
 	return (
-		<div className="wp-banana-generate-panel__options">
+		<div className="wp-banana-generate-panel__options" style={ { marginTop: '16px' } }>
 			{ children }
 			{ connectedProviders.length > 1 && (
 				<SelectControl

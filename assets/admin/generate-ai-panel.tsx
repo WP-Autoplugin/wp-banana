@@ -370,13 +370,14 @@ const GeneratePanel = ( {
 					variationMenu={ variationMenu }
 					enableReferenceDragDrop={ enableReferenceDragDrop }
 					dropOverlayVisible={ dropOverlayVisible }
-				/>
-
-				<ReferenceTray
-					referenceImages={ referenceImages }
-					onRemove={ removeReference }
-					fileInputRef={ fileInputRef }
-					onReferenceSelection={ handleReferenceSelection }
+					referenceTray={
+						<ReferenceTray
+							referenceImages={ referenceImages }
+							onRemove={ removeReference }
+							fileInputRef={ fileInputRef }
+							onReferenceSelection={ handleReferenceSelection }
+						/>
+					}
 				/>
 
 				<OptionsDrawer

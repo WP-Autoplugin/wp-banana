@@ -31,6 +31,7 @@ type PromptComposerProps = {
 	promptPlaceholder?: string;
 	submitLabel?: string;
 	submitTooltip?: string;
+	referenceTray?: ReactNode;
 };
 
 const PromptComposer = ( {
@@ -54,6 +55,7 @@ const PromptComposer = ( {
 	promptPlaceholder,
 	submitLabel,
 	submitTooltip,
+	referenceTray,
 }: PromptComposerProps ) => {
 	const showVariationControls = Boolean( variationMenuRef && onVariationToggle && typeof isVariationMenuOpen === 'boolean' );
 	const resolvedPromptLabel = promptLabel ?? __( 'Describe the image', 'wp-banana' );
@@ -113,6 +115,8 @@ const PromptComposer = ( {
 					<span className="dashicons dashicons-paperclip" aria-hidden="true" />
 				</button>
 			</div>
+
+			{ referenceTray }
 
 			<div
 				className="wp-banana-generate-panel__actions"
