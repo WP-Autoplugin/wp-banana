@@ -32,6 +32,7 @@ type UseGeneratorConfigArgs = {
 	defaultAspectRatio?: string;
 	referenceCount: number;
 	multiReferenceMode: boolean;
+	purposeOverride?: 'generate' | 'edit';
 };
 
 export const useGeneratorConfig = ( {
@@ -43,6 +44,7 @@ export const useGeneratorConfig = ( {
 	defaultAspectRatio,
 	referenceCount,
 	multiReferenceMode,
+	purposeOverride,
 }: UseGeneratorConfigArgs ) => {
 	const connectedProviders = useMemo(
 		() => providers.filter( ( provider ) => provider.connected !== false ),
@@ -131,7 +133,7 @@ export const useGeneratorConfig = ( {
 			setModels( [] );
 			return;
 		}
-		const purpose = referenceCount > 0 ? 'edit' : 'generate';
+		const purpose = purposeOverride ?? ( referenceCount > 0 ? 'edit' : 'generate' );
 		let isMounted = true;
 		setModelsLoading( true );
 		setLoadError( null );
@@ -175,7 +177,7 @@ export const useGeneratorConfig = ( {
 		return () => {
 			isMounted = false;
 		};
-	}, [ provider, restNamespace, defaultGeneratorModel, referenceCount ] );
+	}, [ provider, restNamespace, defaultGeneratorModel, referenceCount, purposeOverride ] );
 
 	const modelOptions = useMemo( () => {
 		if ( ! multiReferenceMode ) {

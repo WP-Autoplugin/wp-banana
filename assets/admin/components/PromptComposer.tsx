@@ -21,12 +21,16 @@ type PromptComposerProps = {
 	showOptions: boolean;
 	onToggleOptions: () => void;
 	summary: GeneratorSummary;
-	variationMenuRef: RefObject<HTMLDivElement>;
-	onVariationToggle: () => void;
-	isVariationMenuOpen: boolean;
+	variationMenuRef?: RefObject<HTMLDivElement>;
+	onVariationToggle?: () => void;
+	isVariationMenuOpen?: boolean;
 	variationMenu?: ReactNode;
 	enableReferenceDragDrop?: boolean;
 	dropOverlayVisible?: boolean;
+	promptLabel?: string;
+	promptPlaceholder?: string;
+	submitLabel?: string;
+	submitTooltip?: string;
 };
 
 const PromptComposer = ( {
@@ -46,7 +50,18 @@ const PromptComposer = ( {
 	variationMenu,
 	enableReferenceDragDrop = false,
 	dropOverlayVisible = false,
+	promptLabel,
+	promptPlaceholder,
+	submitLabel,
+	submitTooltip,
 }: PromptComposerProps ) => {
+	const showVariationControls = Boolean( variationMenuRef && onVariationToggle && typeof isVariationMenuOpen === 'boolean' );
+	const resolvedPromptLabel = promptLabel ?? __( 'Describe the image', 'wp-banana' );
+	const resolvedPromptPlaceholder = promptPlaceholder ?? __( 'A cat surfing a wave at sunset…', 'wp-banana' );
+	const resolvedSubmitLabel = submitLabel ?? __( 'Generate Image', 'wp-banana' );
+	const resolvedSubmitTooltip =
+		submitTooltip ?? __( 'Generate one image and save to Media Library', 'wp-banana' );
+
 	return (
 		<>
 			{ enableReferenceDragDrop && (
@@ -70,12 +85,12 @@ const PromptComposer = ( {
 				style={ { position: 'relative', marginBottom: '8px' } }
 			>
 				<TextareaControl
-					label={ __( 'Describe the image', 'wp-banana' ) }
+					label={ resolvedPromptLabel }
 					value={ prompt }
 					onChange={ onPromptChange }
 					onKeyDown={ onPromptKeyDown }
 					rows={ 5 }
-					placeholder={ __( 'A cat surfing a wave at sunset…', 'wp-banana' ) }
+					placeholder={ resolvedPromptPlaceholder }
 					disabled={ isSubmitting }
 				/>
 				<button
@@ -111,7 +126,7 @@ const PromptComposer = ( {
 				} }
 			>
 				<div
-					ref={ variationMenuRef }
+					ref={ showVariationControls ? variationMenuRef ?? null : null }
 					style={ { display: 'flex', alignItems: 'center', gap: '12px', position: 'relative', zIndex: 1000 } }
 				>
 					<div className="button-group">
@@ -120,30 +135,32 @@ const PromptComposer = ( {
 							className="button button-primary wp-banana-generate-panel__submit"
 							onClick={ onSubmit }
 							disabled={ ! canSubmit || isSubmitting }
-							title={ __( 'Generate one image and save to Media Library', 'wp-banana' ) }
+							title={ resolvedSubmitTooltip }
 						>
-							{ __( 'Generate Image', 'wp-banana' ) }
+							{ resolvedSubmitLabel }
 						</button>
-						<button
-							type="button"
-							className="button button-primary"
-							onClick={ onVariationToggle }
-							disabled={ isSubmitting || ! canSubmit }
-							aria-haspopup="menu"
-							aria-expanded={ isVariationMenuOpen }
-							aria-label={ __( 'Generate multiple variations', 'wp-banana' ) }
-							style={ { padding: '0 4px' } }
-							title={ __( 'Generate multiple variations and preview before saving', 'wp-banana' ) }
-						>
-							<span
-								className="dashicons dashicons-arrow-down-alt2"
-								aria-hidden="true"
-								style={ { lineHeight: '30px' } }
-							/>
-						</button>
+						{ showVariationControls && (
+							<button
+								type="button"
+								className="button button-primary"
+								onClick={ onVariationToggle }
+								disabled={ isSubmitting || ! canSubmit }
+								aria-haspopup="menu"
+								aria-expanded={ isVariationMenuOpen }
+								aria-label={ __( 'Generate multiple variations', 'wp-banana' ) }
+								style={ { padding: '0 4px' } }
+								title={ __( 'Generate multiple variations and preview before saving', 'wp-banana' ) }
+							>
+								<span
+									className="dashicons dashicons-arrow-down-alt2"
+									aria-hidden="true"
+									style={ { lineHeight: '30px' } }
+								/>
+							</button>
+						) }
 					</div>
 					{ isSubmitting && <span className="spinner is-active" aria-hidden="true" /> }
-					{ variationMenu }
+					{ showVariationControls && variationMenu }
 				</div>
 				<div style={ { display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', textAlign: 'right' } }>
 					{ summary.fallback ? (

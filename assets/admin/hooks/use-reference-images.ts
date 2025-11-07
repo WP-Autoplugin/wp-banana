@@ -15,6 +15,7 @@ type UseReferenceImagesArgs = {
 	limit?: number;
 	enableReferenceDragDrop?: boolean;
 	onReferencesChange?: () => void;
+	allowSelection?: boolean;
 };
 
 type ReferenceInjectionEvent = CustomEvent< {
@@ -25,6 +26,7 @@ export const useReferenceImages = ( {
 	limit = REFERENCE_LIMIT,
 	enableReferenceDragDrop = false,
 	onReferencesChange,
+	allowSelection,
 }: UseReferenceImagesArgs ) => {
 	const [ referenceImages, setReferenceImages ] = useState< ReferenceItem[] >( [] );
 	const [ referenceError, setReferenceError ] = useState< string | null >( null );
@@ -32,6 +34,7 @@ export const useReferenceImages = ( {
 	const referenceImagesRef = useRef< ReferenceItem[] >( [] );
 	const fileInputRef = useRef< HTMLInputElement | null >( null );
 	const dragDepthRef = useRef( 0 );
+	const selectionEnabled = allowSelection !== false;
 
 	const commitReferences = useCallback(
 		( next: ReferenceItem[] ) => {
@@ -70,10 +73,13 @@ export const useReferenceImages = ( {
 	}, [ commitReferences ] );
 
 	const triggerReferenceDialog = useCallback( () => {
+		if ( ! selectionEnabled ) {
+			return;
+		}
 		if ( fileInputRef.current ) {
 			fileInputRef.current.click();
 		}
-	}, [] );
+	}, [ selectionEnabled ] );
 
 	const addReferenceFiles = useCallback(
 		( incoming: File[] ) => {
@@ -119,13 +125,17 @@ export const useReferenceImages = ( {
 
 	const handleReferenceSelection = useCallback(
 		( event: ChangeEvent<HTMLInputElement> ) => {
+			if ( ! selectionEnabled ) {
+				event.target.value = '';
+				return;
+			}
 			const files = event.target.files;
 			if ( files && files.length > 0 ) {
 				addReferenceFiles( Array.from( files ) );
 			}
 			event.target.value = '';
 		},
-		[ addReferenceFiles ]
+		[ addReferenceFiles, selectionEnabled ]
 	);
 
 	const removeReference = useCallback(
@@ -269,7 +279,7 @@ export const useReferenceImages = ( {
 	}, [ applyReferenceInjection ] );
 
 	useEffect( () => {
-		if ( ! enableReferenceDragDrop ) {
+		if ( ! enableReferenceDragDrop || ! selectionEnabled ) {
 			return;
 		}
 
@@ -362,7 +372,7 @@ export const useReferenceImages = ( {
 			window.removeEventListener( 'dragend', handleDragEnd );
 			resetDragState();
 		};
-	}, [ addReferenceFiles, enableReferenceDragDrop ] );
+	}, [ addReferenceFiles, enableReferenceDragDrop, selectionEnabled ] );
 
 	const dropOverlayVisible = useMemo( () => enableReferenceDragDrop && isDraggingFiles, [ enableReferenceDragDrop, isDraggingFiles ] );
 

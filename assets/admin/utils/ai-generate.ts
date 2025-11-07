@@ -69,3 +69,32 @@ export const previewStatusLabel = ( status: string ): string => {
 			return '';
 	}
 };
+
+export const supportsMultiImageModel = (
+	provider: string,
+	{
+		model,
+		availableModels = [],
+		fallbackModels = [],
+	}: {
+		model?: string;
+		availableModels?: string[];
+		fallbackModels?: Array<string | undefined>;
+	} = {}
+): boolean => {
+	const allowList = MULTI_IMAGE_MODEL_ALLOWLIST[ provider ] ?? [];
+	if ( allowList.length === 0 ) {
+		return false;
+	}
+	const candidates: string[] = [];
+	if ( model ) {
+		candidates.push( model );
+	}
+	fallbackModels
+		.filter( ( value ): value is string => typeof value === 'string' && value.length > 0 )
+		.forEach( ( value ) => candidates.push( value ) );
+	if ( candidates.length === 0 && availableModels.length > 0 ) {
+		return availableModels.some( ( value ) => allowList.includes( value ) );
+	}
+	return candidates.some( ( value ) => allowList.includes( value ) );
+};

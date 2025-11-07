@@ -4,20 +4,22 @@
  * @package WPBanana
  */
 
-import { render } from '@wordpress/element';
-import { useEffect, useMemo, useState } from '@wordpress/element';
-import { useRef, useCallback, type ChangeEvent, type KeyboardEvent } from 'react';
-import { __, _n, sprintf } from '@wordpress/i18n';
+import { render, useEffect, useMemo, useState, useCallback } from '@wordpress/element';
+import type { ChangeEvent, KeyboardEvent } from 'react';
+import { __, sprintf } from '@wordpress/i18n';
 import apiFetch from '@wordpress/api-fetch';
 import {
 	Card,
 	CardBody,
 	Notice,
-	SelectControl,
-	Spinner,
-	TextareaControl,
 } from '@wordpress/components';
 import type { ProviderInfo } from './types/generate';
+import PromptComposer from './components/PromptComposer';
+import ReferenceTray from './components/ReferenceTray';
+import OptionsDrawer from './components/OptionsDrawer';
+import { useGeneratorConfig } from './hooks/use-generator-config';
+import { useReferenceImages } from './hooks/use-reference-images';
+import { MIN_PROMPT_LENGTH, supportsMultiImageModel } from './utils/ai-generate';
 
 declare global {
 	interface Window {
@@ -72,20 +74,6 @@ type NoticeState = {
 	url?: string;
 	linkLabel?: string;
 	openInNewTab?: boolean;
-};
-
-const MIN_PROMPT_LENGTH = 3;
-const REFERENCE_LIMIT = 4;
-const MULTI_IMAGE_MODEL_ALLOWLIST: Record<string, string[]> = {
-	gemini: [ 'gemini-2.5-flash-image', 'gemini-2.5-flash-image-preview' ],
-	openai: [ 'gpt-image-1', 'gpt-image-1-mini' ],
-	replicate: [ 'google/nano-banana', 'bytedance/seedream-4', 'reve/remix' ],
-};
-
-type ReferenceItem = {
-	id: string;
-	file: File;
-	url: string;
 };
 
 const HISTORY_KEY = 'banana';
@@ -508,67 +496,51 @@ const EditPanel = ( {
 	defaultEditorModel,
 	defaultEditorProvider,
 }: EditPanelProps ) => {
-	const connectedProviders = useMemo(
-		() => providers.filter( ( provider ) => provider.connected !== false ),
-		[ providers ]
-	);
-
-	const preferredProvider = useMemo( () => {
-		if ( defaultEditorProvider ) {
-			const match = connectedProviders.find( ( item ) => item.slug === defaultEditorProvider );
-			if ( match ) {
-				return match.slug;
-			}
-		}
-
-		if ( defaultEditorModel ) {
-			const byModel = connectedProviders.find( ( item ) => item.default_model === defaultEditorModel );
-			if ( byModel ) {
-				return byModel.slug;
-			}
-			const anyProvider = providers.find( ( item ) => item.default_model === defaultEditorModel );
-			if ( anyProvider ) {
-				const stillConnected = connectedProviders.find( ( item ) => item.slug === anyProvider.slug );
-				if ( stillConnected ) {
-					return stillConnected.slug;
-				}
-			}
-		}
-
-		const replicate = connectedProviders.find( ( item ) => item.slug === 'replicate' );
-		if ( replicate ) {
-			return replicate.slug;
-		}
-		return connectedProviders[ 0 ]?.slug ?? providers[ 0 ]?.slug ?? '';
-	}, [ connectedProviders, providers, defaultEditorProvider, defaultEditorModel ] );
-
-	const [ provider, setProvider ] = useState( preferredProvider );
 	const [ prompt, setPrompt ] = useState( '' );
-	const [ models, setModels ] = useState< string[] >( [] );
-	const [ model, setModel ] = useState( '' );
-	const [ modelsLoading, setModelsLoading ] = useState( false );
-	const [ loadError, setLoadError ] = useState< string | null >( null );
 	const [ submitError, setSubmitError ] = useState< string | null >( null );
 	const [ isSubmitting, setIsSubmitting ] = useState( false );
 	const [ notice, setNotice ] = useState< NoticeState | null >( null );
 	const [ showOptions, setShowOptions ] = useState( false );
-	const [ referenceImages, setReferenceImages ] = useState< ReferenceItem[] >( [] );
-	const [ referenceError, setReferenceError ] = useState< string | null >( null );
-	const fileInputRef = useRef< HTMLInputElement | null >( null );
-	const referenceImagesRef = useRef< ReferenceItem[] >( referenceImages );
-	const referenceCount = referenceImages.length;
+
+	const {
+		fileInputRef,
+		referenceImages,
+		referenceError,
+		setReferenceError,
+		referenceCount,
+		removeReference,
+		handleReferenceSelection,
+		triggerReferenceDialog,
+		resetReferenceImages,
+		prepareReferenceFiles,
+	} = useReferenceImages( {
+		onReferencesChange: () => setSubmitError( null ),
+	} );
+
 	const multiReferenceMode = referenceCount > 0;
-	const modelOptions = useMemo( () => {
-		if ( ! multiReferenceMode ) {
-			return models;
-		}
-		const allowList = MULTI_IMAGE_MODEL_ALLOWLIST[ provider ] ?? [];
-		if ( allowList.length === 0 ) {
-			return [] as string[];
-		}
-		const allowSet = new Set( allowList );
-		return models.filter( ( value ) => allowSet.has( value ) );
-	}, [ models, provider, multiReferenceMode ] );
+
+	const {
+		provider,
+		setProvider,
+		model,
+		setModel,
+		modelOptions,
+		models,
+		modelsLoading,
+		loadError,
+		connectedProviders,
+		selectedProviderConfig,
+		summary,
+		modelRequirementSatisfied,
+	} = useGeneratorConfig( {
+		providers,
+		restNamespace,
+		defaultGeneratorModel: defaultEditorModel,
+		defaultGeneratorProvider: defaultEditorProvider,
+		referenceCount,
+		multiReferenceMode,
+		purposeOverride: 'edit',
+	} );
 
 	useEffect( () => {
 		const handler = ( event: Event ) => {
@@ -583,150 +555,15 @@ const EditPanel = ( {
 		};
 	}, [] );
 
-	useEffect( () => {
-		referenceImagesRef.current = referenceImages;
-	}, [ referenceImages ] );
-
-	useEffect( () => () => {
-		referenceImagesRef.current.forEach( ( item ) => {
-			window.URL.revokeObjectURL( item.url );
-		} );
-	}, [] );
-
-	const selectedProviderConfig = useMemo(
-		() => providers.find( ( item ) => item.slug === provider ),
-		[ provider, providers ]
+	const multiReferenceSupported = useMemo(
+		() =>
+			supportsMultiImageModel( provider, {
+				model,
+				availableModels: models,
+				fallbackModels: [ selectedProviderConfig?.default_model, defaultEditorModel ],
+			} ),
+		[ provider, model, models, selectedProviderConfig, defaultEditorModel ]
 	);
-
-	const multiReferenceSupported = useMemo( () => {
-		if ( modelsLoading ) {
-			return false;
-		}
-		if ( ! provider ) {
-			return false;
-		}
-		const allowList = MULTI_IMAGE_MODEL_ALLOWLIST[ provider ] ?? [];
-		if ( allowList.length === 0 ) {
-			return false;
-		}
-		const candidates: string[] = [];
-		if ( model ) {
-			candidates.push( model );
-		} else if ( models.length === 0 ) {
-			if ( selectedProviderConfig?.default_model ) {
-				candidates.push( String( selectedProviderConfig.default_model ) );
-			}
-			if ( defaultEditorModel ) {
-				candidates.push( defaultEditorModel );
-			}
-		}
-		if ( candidates.length === 0 ) {
-			return false;
-		}
-		return candidates.some( ( value ) => allowList.includes( value ) );
-	}, [ provider, model, models, selectedProviderConfig, defaultEditorModel, modelsLoading ] );
-
-	const providerLabel = useMemo( () => {
-		if ( selectedProviderConfig?.label ) {
-			return selectedProviderConfig.label;
-		}
-		const fallback = providers.find( ( item ) => item.slug === provider );
-		return fallback?.label ?? ( provider ? provider.toUpperCase() : '' );
-	}, [ provider, providers, selectedProviderConfig ] );
-
-	const summary = useMemo( () => {
-		const defaultModelName = selectedProviderConfig?.default_model ? String( selectedProviderConfig.default_model ) : '';
-		const modelName = model || ( modelsLoading ? __( 'Loading model…', 'wp-banana' ) : ( defaultModelName !== '' ? defaultModelName : __( 'Provider default model', 'wp-banana' ) ) );
-		const providerName = providerLabel;
-		const referenceSummary = referenceCount > 0 ? sprintf( _n( '%d reference', '%d references', referenceCount, 'wp-banana' ), referenceCount ) : '';
-		const hasContent = modelName || providerName || referenceSummary;
-		return {
-			model: modelName,
-			provider: providerName,
-			references: referenceSummary,
-			fallback: hasContent ? '' : __( 'Using provider defaults', 'wp-banana' ),
-		};
-	}, [ model, modelsLoading, providerLabel, selectedProviderConfig, referenceCount ] );
-
-	useEffect( () => {
-		if ( provider && connectedProviders.some( ( item ) => item.slug === provider ) ) {
-			return;
-		}
-		if ( preferredProvider ) {
-			setProvider( preferredProvider );
-		}
-	}, [ preferredProvider, provider, connectedProviders ] );
-
-	useEffect( () => {
-		if ( ! provider ) {
-			return;
-		}
-		let isMounted = true;
-		setModelsLoading( true );
-		setLoadError( null );
-		apiFetch( { path: `${ restNamespace }/models?provider=${ provider }&purpose=edit` } )
-			.then( ( response ) => {
-				if ( ! isMounted ) {
-					return;
-				}
-				const payload = response as ModelsResponse;
-				const available = Array.isArray( payload.models ) ? payload.models : [];
-				setModels( available );
-				if ( available.length === 0 ) {
-					setModel( '' );
-					return;
-				}
-				const candidates = [ defaultEditorModel, selectedProviderConfig?.default_model ];
-				const chosen = candidates.find( ( value ): value is string => !! value && available.includes( value ) );
-				if ( chosen ) {
-					setModel( chosen );
-					return;
-				}
-				setModel( available[ 0 ] );
-			} )
-			.catch( ( error: ApiError ) => {
-				if ( ! isMounted ) {
-					return;
-				}
-				setModels( [] );
-				setModel( '' );
-				setLoadError( error?.message ?? __( 'Failed to load models.', 'wp-banana' ) );
-			} )
-			.finally( () => {
-				if ( isMounted ) {
-					setModelsLoading( false );
-				}
-			} );
-
-		return () => {
-			isMounted = false;
-		};
-	}, [ provider, restNamespace, selectedProviderConfig, defaultEditorModel ] );
-
-	useEffect( () => {
-		if ( modelsLoading ) {
-			return;
-		}
-		if ( modelOptions.length === 0 ) {
-			if ( multiReferenceMode && model !== '' ) {
-				setModel( '' );
-			}
-			return;
-		}
-		if ( ! modelOptions.includes( model ) ) {
-			setModel( modelOptions[ 0 ] );
-		}
-	}, [ modelOptions, model, modelsLoading, multiReferenceMode ] );
-
-	const modelRequirementSatisfied = useMemo( () => {
-		if ( modelOptions.length > 0 ) {
-			return model !== '' && modelOptions.includes( model );
-		}
-		if ( multiReferenceMode ) {
-			return false;
-		}
-		return model !== '' || models.length === 0;
-	}, [ modelOptions, model, multiReferenceMode, models ] );
 
 	const canSubmit = useMemo( () => {
 		if ( isSubmitting || modelsLoading ) {
@@ -744,78 +581,26 @@ const EditPanel = ( {
 		return true;
 	}, [ isSubmitting, modelsLoading, prompt, provider, modelRequirementSatisfied ] );
 
-	const resetReferenceImages = useCallback( () => {
-		referenceImagesRef.current.forEach( ( item ) => {
-			window.URL.revokeObjectURL( item.url );
-		} );
-		referenceImagesRef.current = [];
-		setReferenceImages( [] );
-		setReferenceError( null );
-	}, [] );
-
-	const triggerReferenceDialog = useCallback( () => {
+	const handleReferenceButtonClick = useCallback( () => {
 		if ( ! multiReferenceSupported ) {
+			setReferenceError( __( 'Switch to a supported model to send multiple reference images.', 'wp-banana' ) );
 			return;
 		}
-		if ( fileInputRef.current ) {
-			fileInputRef.current.click();
-		}
-	}, [ multiReferenceSupported ] );
+		triggerReferenceDialog();
+	}, [ multiReferenceSupported, triggerReferenceDialog, setReferenceError ] );
 
-	const handleReferenceSelection = useCallback( ( event: ChangeEvent<HTMLInputElement> ) => {
-		if ( ! multiReferenceSupported ) {
-			event.target.value = '';
-			return;
-		}
-		const files = event.target.files;
-		if ( ! files || files.length === 0 ) {
-			return;
-		}
-		let remainingSlots = Math.max( 0, REFERENCE_LIMIT - referenceImages.length );
-		let accepted = 0;
-		let validFiles = 0;
-		const additions: ReferenceItem[] = [];
-		Array.from( files ).forEach( ( file ) => {
-			if ( ! file.type || ! file.type.startsWith( 'image/' ) ) {
+	const handleEditReferenceSelection = useCallback(
+		( event: ChangeEvent<HTMLInputElement> ) => {
+			if ( ! multiReferenceSupported ) {
+				event.target.value = '';
 				return;
 			}
-			validFiles += 1;
-			if ( remainingSlots <= 0 ) {
-				return;
-			}
-			const id = `${ Date.now() }-${ Math.random().toString( 36 ).slice( 2 ) }`;
-			additions.push( { id, file, url: window.URL.createObjectURL( file ) } );
-			remainingSlots -= 1;
-			accepted += 1;
-		} );
-		if ( accepted > 0 ) {
-			setReferenceImages( [ ...referenceImages, ...additions ] );
-			setSubmitError( null );
-			setReferenceError( validFiles > accepted ? __( 'You can upload up to 4 reference images.', 'wp-banana' ) : null );
-		} else if ( validFiles > 0 ) {
-			setReferenceError( __( 'You can upload up to 4 reference images.', 'wp-banana' ) );
-		}
-		event.target.value = '';
-	}, [ referenceImages, multiReferenceSupported ] );
+			handleReferenceSelection( event );
+		},
+		[ multiReferenceSupported, handleReferenceSelection ]
+	);
 
-	const removeReference = useCallback( ( id: string ) => {
-		let removed = false;
-		const remaining = referenceImages.filter( ( item ) => {
-			if ( item.id === id ) {
-				window.URL.revokeObjectURL( item.url );
-				removed = true;
-				return false;
-			}
-			return true;
-		} );
-		if ( removed ) {
-			referenceImagesRef.current = remaining;
-		}
-		setReferenceImages( remaining );
-		setReferenceError( null );
-	}, [ referenceImages ] );
-
-	const handleSubmit = async () => {
+	const handleSubmit = useCallback( async () => {
 		const trimmedPrompt = prompt.trim();
 		if ( trimmedPrompt.length < MIN_PROMPT_LENGTH ) {
 			setSubmitError( __( 'Please enter a longer prompt.', 'wp-banana' ) );
@@ -829,10 +614,18 @@ const EditPanel = ( {
 		setReferenceError( null );
 		setNotice( null );
 		setIsSubmitting( true );
+		setNotice( null );
 		try {
 			let response: unknown;
 			const baseBufferKey = resolveBaseBufferKey( attachmentId );
 			if ( referenceCount > 0 ) {
+				let referenceFiles: File[] = [];
+				try {
+					referenceFiles = await prepareReferenceFiles();
+				} catch ( prepareError ) {
+					setReferenceError( __( 'Could not load the selected images.', 'wp-banana' ) );
+					throw prepareError;
+				}
 				const formData = new window.FormData();
 				formData.append( 'attachment_id', String( attachmentId ) );
 				formData.append( 'prompt', trimmedPrompt );
@@ -844,8 +637,8 @@ const EditPanel = ( {
 				if ( baseBufferKey ) {
 					formData.append( 'base_buffer_key', baseBufferKey );
 				}
-				referenceImages.forEach( ( item ) => {
-					formData.append( 'reference_images[]', item.file, item.file.name );
+				referenceFiles.forEach( ( file ) => {
+					formData.append( 'reference_images[]', file, file.name );
 				} );
 				response = await apiFetch( {
 					path: `${ restNamespace }/edit`,
@@ -917,7 +710,19 @@ const EditPanel = ( {
 		} finally {
 			setIsSubmitting( false );
 		}
-	};
+	}, [
+		prompt,
+		multiReferenceMode,
+		modelOptions,
+		setReferenceError,
+		referenceCount,
+		prepareReferenceFiles,
+		provider,
+		model,
+		restNamespace,
+		attachmentId,
+		resetReferenceImages,
+	] );
 
 	const handlePromptKeyDown = useCallback(
 		( event: KeyboardEvent<HTMLTextAreaElement> ) => {
@@ -928,19 +733,19 @@ const EditPanel = ( {
 				return;
 			}
 			event.preventDefault();
-			if ( ! canSubmit ) {
+			if ( ! canSubmit || isSubmitting ) {
 				return;
 			}
 			handleSubmit();
 		},
-		[ canSubmit, handleSubmit ]
+		[ canSubmit, isSubmitting, handleSubmit ]
 	);
 
 	return (
 		<Card>
 			<CardBody>
 				{ loadError && (
-					<Notice status="error" isDismissible onRemove={ () => setLoadError( null ) }>
+					<Notice status="error" isDismissible={ false }>
 						{ loadError }
 					</Notice>
 				) }
@@ -969,178 +774,59 @@ const EditPanel = ( {
 						{ notice.url && (
 							<>
 								{' '}
-									<a
-										href={ notice.url }
-										target={ notice.openInNewTab === false ? undefined : '_blank' }
-										rel={ notice.openInNewTab === false ? undefined : 'noopener noreferrer' }
-									>
-										<em>{ notice.linkLabel ?? __( 'Open image in new tab', 'wp-banana' ) }</em>
-									</a>
-								</>
-							) }
-						</Notice>
-					) }
-				<div style={ { position: 'relative', marginBottom: '8px' } }>
-					<TextareaControl
-						label={ __( 'Describe the desired changes', 'wp-banana' ) }
-						value={ prompt }
-						onChange={ ( value: string ) => setPrompt( value ) }
-						onKeyDown={ handlePromptKeyDown }
-						rows={ 4 }
-						placeholder={ __( 'Add a glowing neon outline…', 'wp-banana' ) }
-						disabled={ isSubmitting }
-					/>
-					{ multiReferenceSupported && (
-						<>
-							<button
-								type="button"
-								className="button button-secondary button-small"
-								onClick={ triggerReferenceDialog }
-								disabled={ isSubmitting }
-								aria-label={ __( 'Add reference images', 'wp-banana' ) }
-								style={ { position: 'absolute', top: '26px', right: '0', lineHeight: '20px', padding: '0 4px', border: 'none', borderRadius: 0, background: 'transparent' } }
-							>
-								<span className="dashicons dashicons-paperclip" aria-hidden="true" />
-							</button>
-							<input
-								ref={ fileInputRef }
-								type="file"
-								accept="image/png,image/jpeg,image/webp"
-								multiple
-								onChange={ handleReferenceSelection }
-								style={ { display: 'none' } }
-							/>
-						</>
-					) }
-				</div>
-
-				{ referenceImages.length > 0 && (
-					<div
-						style={ {
-							display: 'flex',
-							gap: '8px',
-							marginBottom: '16px',
-							flexWrap: 'wrap',
-						} }
-					>
-						{ referenceImages.map( ( item: ReferenceItem ) => (
-							<div
-								key={ item.id }
-								style={ {
-									position: 'relative',
-									width: '72px',
-									height: '72px',
-									overflow: 'hidden',
-									borderRadius: '4px',
-									border: '1px solid #dcdcde',
-								} }
-							>
-								<img src={ item.url } alt="" style={ { width: '100%', height: '100%', objectFit: 'cover' } } />
-								<button
-									type="button"
-									className="button-link"
-									onClick={ () => removeReference( item.id ) }
-									aria-label={ __( 'Remove reference image', 'wp-banana' ) }
-									style={ {
-										position: 'absolute',
-										top: '2px',
-										right: '2px',
-										background: 'rgba(0,0,0,0.55)',
-										borderRadius: '3px',
-										color: '#fff',
-										width: '22px',
-										height: '22px',
-										display: 'inline-flex',
-										alignItems: 'center',
-										justifyContent: 'center',
-										textDecoration: 'none',
-									} }
+								<a
+									href={ notice.url }
+									target={ notice.openInNewTab === false ? undefined : '_blank' }
+									rel={ notice.openInNewTab === false ? undefined : 'noopener noreferrer' }
 								>
-									<span className="dashicons dashicons-no" />
-								</button>
-							</div>
-						) ) }
-					</div>
-				) }
-
-				{ showOptions && connectedProviders.length > 1 && (
-					<SelectControl
-						label={ __( 'Provider', 'wp-banana' ) }
-						value={ provider }
-						onChange={ ( value: string ) => setProvider( value ) }
-						disabled={ isSubmitting }
-						options={ connectedProviders.map( ( item ) => ( {
-							label: item.label,
-							value: item.slug,
-						} ) ) }
-					/>
-				) }
-
-				{ showOptions && (
-					<SelectControl
-						label={ __( 'Model', 'wp-banana' ) }
-						value={ model }
-						onChange={ ( value: string ) => setModel( value ) }
-						options={
-							modelOptions.length > 0
-								? modelOptions.map( ( value ) => ( { label: value, value } ) )
-								: [ { label: __( 'No models available', 'wp-banana' ), value: '' } ]
-						}
-						disabled={ modelsLoading || modelOptions.length === 0 || isSubmitting }
-					/>
-				) }
-				{ modelsLoading && (
-					<div
-						className="wp-banana-edit-panel__spinner"
-						style={ { display: 'flex', alignItems: 'center', gap: '8px' } }
-					>
-						<Spinner /> { __( 'Loading models…', 'wp-banana' ) }
-					</div>
-				) }
-
-				<div
-					className="wp-banana-edit-panel__actions"
-					style={ {
-						marginTop: '12px',
-						display: 'flex',
-						flexWrap: 'wrap',
-						alignItems: 'center',
-						gap: '12px',
-						justifyContent: 'space-between',
-					} }
-				>
-					<div style={ { display: 'flex', alignItems: 'center', gap: '12px' } }>
-						<button
-							type="button"
-							className="button button-primary wp-banana-edit-panel__submit"
-							onClick={ handleSubmit }
-							disabled={ ! canSubmit }
-						>
-							{ __( 'Apply AI Edit', 'wp-banana' ) }
-						</button>
-						{ isSubmitting && (
-							<span className="spinner is-active" aria-hidden="true" />
+									<em>{ notice.linkLabel ?? __( 'Open image in new tab', 'wp-banana' ) }</em>
+								</a>
+							</>
 						) }
-					</div>
-					<div style={ { display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', textAlign: 'right' } }>
-						{ summary.fallback ? (
-							<span>{ summary.fallback }</span>
-						) : (
-							<span>
-								<code>{ summary.model }</code>
-								{ summary.provider && <span> ({ summary.provider })</span> }
-								{ summary.references && <span> - { summary.references }</span> }
-							</span>
-						) }
-						<button
-							type="button"
-							className="button-link"
-							onClick={ () => setShowOptions( ! showOptions ) }
-						>
-							{ showOptions ? __( 'Hide options', 'wp-banana' ) : __( 'Change', 'wp-banana' ) }
-						</button>
-					</div>
-				</div>
+					</Notice>
+				) }
+
+				<PromptComposer
+					prompt={ prompt }
+					onPromptChange={ setPrompt }
+					onPromptKeyDown={ handlePromptKeyDown }
+					isSubmitting={ isSubmitting }
+					canSubmit={ canSubmit }
+					onSubmit={ handleSubmit }
+					onReferenceClick={ handleReferenceButtonClick }
+					showOptions={ showOptions }
+					onToggleOptions={ () => setShowOptions( ( value ) => ! value ) }
+					summary={ summary }
+					enableReferenceDragDrop={ false }
+					dropOverlayVisible={ false }
+					promptLabel={ __( 'Describe the desired changes', 'wp-banana' ) }
+					promptPlaceholder={ __( 'Add a glowing neon outline…', 'wp-banana' ) }
+					submitLabel={ __( 'Apply AI Edit', 'wp-banana' ) }
+					submitTooltip={ __( 'Apply AI edits and stage them in the editor buffer', 'wp-banana' ) }
+				/>
+
+				<ReferenceTray
+					referenceImages={ referenceImages }
+					onRemove={ removeReference }
+					fileInputRef={ fileInputRef }
+					onReferenceSelection={ handleEditReferenceSelection }
+				/>
+
+				<OptionsDrawer
+					show={ showOptions }
+					connectedProviders={ connectedProviders }
+					provider={ provider }
+					onProviderChange={ ( value: string ) => setProvider( value ) }
+					model={ model }
+					onModelChange={ ( value: string ) => setModel( value ) }
+					modelOptions={ modelOptions }
+					modelsLoading={ modelsLoading }
+					aspectRatioEnabled={ false }
+					aspectRatio=""
+					onAspectRatioChange={ ( _value: string ) => {} }
+					aspectOptions={ [] }
+					isSubmitting={ isSubmitting }
+				/>
 			</CardBody>
 		</Card>
 	);

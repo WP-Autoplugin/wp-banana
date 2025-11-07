@@ -1,4 +1,4 @@
 <?php return [
-	'dependencies' => [ 'react', 'react-jsx-runtime', 'wp-api-fetch', 'wp-components', 'wp-element', 'wp-i18n' ],
-	'version'      => 'f58a52ab17a2795f0896',
+	'dependencies' => [ 'react-jsx-runtime', 'wp-api-fetch', 'wp-components', 'wp-element', 'wp-i18n' ],
+	'version'      => 'ff7be1f10c8c1df35072',
 ];
