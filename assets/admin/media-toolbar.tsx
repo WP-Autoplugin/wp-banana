@@ -86,7 +86,7 @@ const mountGeneratePanel = (
 			<GeneratePanel
 				providers={ data.providers }
 				restNamespace={ data.restNamespace }
-				onComplete={ () => window.location.reload() }
+				onComplete={ () => {} }
 				defaultGeneratorModel={ data.defaultGeneratorModel }
 				defaultGeneratorProvider={ data.defaultGeneratorProvider }
 				defaultAspectRatio={ data.defaultAspectRatio }
@@ -101,7 +101,7 @@ const mountGeneratePanel = (
 		<GeneratePanel
 			providers={ data.providers }
 			restNamespace={ data.restNamespace }
-			onComplete={ () => window.location.reload() }
+			onComplete={ () => {} }
 			defaultGeneratorModel={ data.defaultGeneratorModel }
 			defaultGeneratorProvider={ data.defaultGeneratorProvider }
 			defaultAspectRatio={ data.defaultAspectRatio }

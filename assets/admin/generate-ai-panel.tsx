@@ -899,6 +899,7 @@ const GeneratePanel = ( {
 			}
 			setShowOptions( false );
 			resetReferenceImages();
+			dispatchMediaRefresh();
 			onComplete();
 		} catch ( error ) {
 			const apiError = error as ApiError;
