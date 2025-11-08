@@ -521,7 +521,7 @@ final class Generate_Controller {
 					array_merge(
 						$log_context,
 						[
-							'status'           => 'preview',
+							'status'           => 'success',
 							'response_time_ms' => (int) round( ( microtime( true ) - $operation_start ) * 1000 ),
 							'response_payload' => [
 								'width'  => $norm->width,
