@@ -40,6 +40,13 @@ use function wp_handle_sideload;
 use function is_uploaded_file;
 use function file_exists;
 use function wp_delete_file;
+use function base64_encode;
+use function base64_decode;
+use function strlen;
+use function trim;
+use function preg_replace;
+use function strtolower;
+use function sanitize_text_field;
 
 /**
  * Handles text-to-image generation requests.
@@ -117,6 +124,54 @@ final class Generate_Controller {
 						'type'     => 'string',
 						'required' => false,
 					], // png|webp|jpeg.
+					'preview_only' => [
+						'type'     => 'boolean',
+						'required' => false,
+					],
+				],
+			]
+		);
+
+		register_rest_route(
+			$ns,
+			'/generate/save-preview',
+			[
+				'methods'             => 'POST',
+				'callback'            => [ $this, 'save_preview' ],
+				'permission_callback' => [ $this, 'can_access' ],
+				'args'                => [
+					'data'          => [
+						'type'     => 'string',
+						'required' => true,
+					],
+					'provider'      => [
+						'type'     => 'string',
+						'required' => false,
+					],
+					'model'         => [
+						'type'     => 'string',
+						'required' => false,
+					],
+					'format'        => [
+						'type'     => 'string',
+						'required' => false,
+					],
+					'mime'          => [
+						'type'     => 'string',
+						'required' => false,
+					],
+					'prompt'        => [
+						'type'     => 'string',
+						'required' => false,
+					],
+					'title'         => [
+						'type'     => 'string',
+						'required' => false,
+					],
+					'filename_base' => [
+						'type'     => 'string',
+						'required' => false,
+					],
 				],
 			]
 		);
@@ -155,6 +210,8 @@ final class Generate_Controller {
 			return $reference_images;
 		}
 		$reference_count = count( $reference_images );
+
+		$preview_only = $this->is_truthy( $req->get_param( 'preview_only' ) );
 
 		try {
 
@@ -407,6 +464,78 @@ final class Generate_Controller {
 			$filename_base = Attachment_Service::filename_from_prompt( $prompt, 'ai-image' );
 			$title         = Attachment_Service::title_from_prompt( $prompt, __( 'AI Image', 'wp-banana' ) );
 
+			if ( $preview_only ) {
+				$response_data = [
+					'preview' => [
+						'data'   => base64_encode( $norm->bytes ),
+						'mime'   => $norm->mime,
+						'width'  => $norm->width,
+						'height' => $norm->height,
+						'bytes'  => strlen( $norm->bytes ),
+					],
+					'context' => [
+						'provider'      => $provider,
+						'model'         => $model_eff,
+						'prompt'        => $prompt,
+						'format'        => $format,
+						'filename_base' => $filename_base,
+						'title'         => $title,
+						'timestamp'     => $timestamp,
+					],
+				];
+
+				$response_data = apply_filters(
+					'wp_banana_generate_preview_response',
+					$response_data,
+					[
+						'provider'  => $provider,
+						'model'     => $model_eff,
+						'prompt'    => $prompt,
+						'user_id'   => $current_user,
+						'timestamp' => $timestamp,
+					]
+				);
+
+				if ( ! is_array( $response_data ) ) {
+					$response_data = [
+						'preview' => [
+							'data'   => base64_encode( $norm->bytes ),
+							'mime'   => $norm->mime,
+							'width'  => $norm->width,
+							'height' => $norm->height,
+							'bytes'  => strlen( $norm->bytes ),
+						],
+						'context' => [
+							'provider'      => $provider,
+							'model'         => $model_eff,
+							'prompt'        => $prompt,
+							'format'        => $format,
+							'filename_base' => $filename_base,
+							'title'         => $title,
+							'timestamp'     => $timestamp,
+						],
+					];
+				}
+
+				$this->record_log(
+					array_merge(
+						$log_context,
+						[
+							'status'           => 'success',
+							'response_time_ms' => (int) round( ( microtime( true ) - $operation_start ) * 1000 ),
+							'response_payload' => [
+								'width'  => $norm->width,
+								'height' => $norm->height,
+								'mime'   => $norm->mime,
+								'bytes'  => strlen( $norm->bytes ),
+							],
+						]
+					)
+				);
+
+				return new WP_REST_Response( $response_data, 200 );
+			}
+
 			try {
 				$att   = new Attachment_Service();
 				$saved = $att->save_new(
@@ -495,6 +624,165 @@ final class Generate_Controller {
 	}
 
 	/**
+	 * Persist a preview payload as an attachment.
+	 *
+	 * @param WP_REST_Request $req Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function save_preview( WP_REST_Request $req ) {
+		if ( ! $this->options->is_connected() ) {
+			return new WP_Error( 'wp_banana_not_connected', __( 'No provider configured. Add a key in settings.', 'wp-banana' ) );
+		}
+
+		$data_param = $req->get_param( 'data' );
+		$encoded    = is_string( $data_param ) ? trim( $data_param ) : '';
+		if ( '' === $encoded ) {
+			return new WP_Error( 'wp_banana_preview_missing', __( 'Invalid preview payload.', 'wp-banana' ) );
+		}
+
+		$encoded = preg_replace( '#^data:[^,]+,#', '', $encoded );
+		$encoded = is_string( $encoded ) ? preg_replace( '#\s+#', '', $encoded ) : $encoded;
+		$encoded = is_string( $encoded ) ? trim( $encoded ) : '';
+
+		if ( '' === $encoded ) {
+			return new WP_Error( 'wp_banana_preview_missing', __( 'Invalid preview payload.', 'wp-banana' ) );
+		}
+
+		$decoded = base64_decode( $encoded, true );
+		if ( false === $decoded ) {
+			return new WP_Error( 'wp_banana_preview_invalid', __( 'Invalid preview payload.', 'wp-banana' ) );
+		}
+
+		$prompt = trim( (string) $req->get_param( 'prompt' ) );
+		if ( '' === $prompt || strlen( $prompt ) > 4000 ) {
+			return new WP_Error( 'wp_banana_invalid_prompt', __( 'Invalid prompt.', 'wp-banana' ) );
+		}
+		if ( preg_match( '/[\x00-\x08\x0B\x0C\x0E-\x1F]/', $prompt ) ) {
+			return new WP_Error( 'wp_banana_invalid_prompt', __( 'Prompt contains control characters.', 'wp-banana' ) );
+		}
+
+		$provider_param = $req->get_param( 'provider' );
+		$provider       = is_string( $provider_param ) ? sanitize_key( $provider_param ) : 'gemini';
+		if ( ! in_array( $provider, [ 'gemini', 'replicate', 'openai' ], true ) ) {
+			return new WP_Error( 'wp_banana_invalid_provider', __( 'Unsupported provider.', 'wp-banana' ) );
+		}
+
+		$model_param = $req->get_param( 'model' );
+		$model_eff   = is_string( $model_param ) ? sanitize_text_field( $model_param ) : '';
+
+		$format_param = $req->get_param( 'format' );
+		$format       = is_string( $format_param ) ? strtolower( $format_param ) : '';
+		if ( ! in_array( $format, [ 'png', 'webp', 'jpeg' ], true ) ) {
+			$format = 'png';
+		}
+
+		$conv = new Convert_Service();
+		try {
+			$normalized = $conv->normalize( $decoded, $format, null, null );
+		} catch ( \Throwable $e ) {
+			return new WP_Error( 'wp_banana_convert_failed', $e->getMessage() );
+		}
+
+		$filename_param = $req->get_param( 'filename_base' );
+		$filename_base  = is_string( $filename_param ) ? sanitize_file_name( $filename_param ) : '';
+		if ( '' === $filename_base ) {
+			$filename_base = Attachment_Service::filename_from_prompt( $prompt, 'ai-image' );
+		}
+
+		$title_param = $req->get_param( 'title' );
+		$title       = is_string( $title_param ) && '' !== trim( $title_param )
+			? sanitize_text_field( $title_param )
+			: Attachment_Service::title_from_prompt( $prompt, __( 'AI Image', 'wp-banana' ) );
+
+		$current_user = get_current_user_id();
+		$timestamp    = time();
+		$log_context  = [
+			'operation'       => 'generate-save-preview',
+			'user_id'         => $current_user,
+			'prompt_excerpt'  => $prompt,
+			'provider'        => $provider,
+			'model'           => $model_eff,
+			'save_mode'       => 'new',
+			'request_payload' => [
+				'format' => $format,
+			],
+		];
+
+		$context = [
+			'action'    => 'generate',
+			'provider'  => $provider,
+			'model'     => $model_eff,
+			'mode'      => 'new',
+			'user_id'   => $current_user,
+			'timestamp' => $timestamp,
+			'prompt'    => $prompt,
+		];
+
+		$operation_start = microtime( true );
+
+		try {
+			$att   = new Attachment_Service();
+			$saved = $att->save_new( $normalized, $filename_base, [], null, $context, $title );
+		} catch ( \Throwable $e ) {
+			$this->record_log(
+				array_merge(
+					$log_context,
+					[
+						'status'           => 'error',
+						'response_time_ms' => (int) round( ( microtime( true ) - $operation_start ) * 1000 ),
+						'error_message'    => $e->getMessage(),
+						'error_code'       => $e->getCode() ? (string) $e->getCode() : '',
+					]
+				)
+			);
+			return new WP_Error( 'wp_banana_save_failed', $e->getMessage() );
+		}
+
+		$response_data = [
+			'attachment_id' => $saved['attachment_id'],
+			'url'           => $saved['url'],
+		];
+
+		$response_data = apply_filters(
+			'wp_banana_generate_response',
+			$response_data,
+			$saved,
+			[
+				'provider'  => $provider,
+				'model'     => $model_eff,
+				'prompt'    => $prompt,
+				'user_id'   => $current_user,
+				'timestamp' => $timestamp,
+			]
+		);
+
+		$response_data = is_array( $response_data ) ? $response_data : [
+			'attachment_id' => $saved['attachment_id'],
+			'url'           => $saved['url'],
+		];
+
+		$this->record_log(
+			array_merge(
+				$log_context,
+				[
+					'status'           => 'success',
+					'response_time_ms' => (int) round( ( microtime( true ) - $operation_start ) * 1000 ),
+					'attachment_id'    => (int) $saved['attachment_id'],
+					'response_payload' => [
+						'attachment_id' => $saved['attachment_id'],
+						'url'           => $saved['url'],
+						'width'         => $normalized->width,
+						'height'        => $normalized->height,
+						'mime'          => $normalized->mime,
+					],
+				]
+			)
+		);
+
+		return new WP_REST_Response( $response_data, 200 );
+	}
+
+	/**
 	 * Record a log entry while swallowing logging failures.
 	 *
 	 * @param array $payload Log payload.
@@ -510,6 +798,26 @@ final class Generate_Controller {
 		} catch ( \Throwable $ignored ) {
 			// Logging should never block the API; swallow unexpected failures.
 		}
+	}
+
+	/**
+	 * Normalize truthy flag from request payload.
+	 *
+	 * @param mixed $value Raw value.
+	 * @return bool
+	 */
+	private function is_truthy( $value ): bool {
+		if ( is_bool( $value ) ) {
+			return $value;
+		}
+		if ( is_numeric( $value ) ) {
+			return (int) $value === 1;
+		}
+		if ( is_string( $value ) ) {
+			$normalized = strtolower( $value );
+			return in_array( $normalized, [ '1', 'true', 'yes', 'on' ], true );
+		}
+		return false;
 	}
 
 	/**

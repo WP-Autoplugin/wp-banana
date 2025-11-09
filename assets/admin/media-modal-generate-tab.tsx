@@ -6,7 +6,8 @@
 
 import { render } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
-import GeneratePanel, { ProviderInfo } from './generate-ai-panel';
+import GeneratePanel from './generate-ai-panel';
+import type { ProviderInfo } from './types/generate';
 
 type MediaData = {
 	restNamespace: string;
@@ -151,6 +152,12 @@ const refreshMediaLibrary = () => {
 		frame.trigger( 'library:refresh' );
 	}
 };
+
+if ( typeof document !== 'undefined' ) {
+	document.addEventListener( 'wp-banana:media-refresh', () => {
+		refreshMediaLibrary();
+	} );
+}
 
 const enhanceMediaModal = ( modal: HTMLElement, data: MediaData ) => {
 	// If we've already injected our generate tab into this modal, skip.

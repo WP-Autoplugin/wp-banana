@@ -5,7 +5,7 @@
  */
 
 import { __, _n, sprintf } from '@wordpress/i18n';
-import type { ProviderInfo } from './generate-ai-panel';
+import type { ProviderInfo } from './types/generate';
 
 type BananaUser = {
 	id?: number;

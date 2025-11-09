@@ -779,12 +779,12 @@ final class Edit_Controller {
 			return new WP_Error( 'wp_banana_save_failed', __( 'Failed to read rendered image.', 'wp-banana' ) );
 		}
 
-		$binary         = new Binary_Image( $bytes, $mime, $width, $height );
-		$current_user   = get_current_user_id();
+		$binary          = new Binary_Image( $bytes, $mime, $width, $height );
+		$current_user    = get_current_user_id();
 		$event_timestamp = time();
-		$context_prompt = isset( $last_context['prompt'] ) ? (string) $last_context['prompt'] : '';
-		$filename_base  = Attachment_Service::filename_from_prompt( $context_prompt, 'ai-edit-' . $id );
-		$title          = Attachment_Service::title_from_prompt( $context_prompt, __( 'AI Edit', 'wp-banana' ) );
+		$context_prompt  = isset( $last_context['prompt'] ) ? (string) $last_context['prompt'] : '';
+		$filename_base   = Attachment_Service::filename_from_prompt( $context_prompt, 'ai-edit-' . $id );
+		$title           = Attachment_Service::title_from_prompt( $context_prompt, __( 'AI Edit', 'wp-banana' ) );
 		try {
 			$attachment = ( new Attachment_Service() )->save_new(
 				$binary,

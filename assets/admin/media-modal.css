@@ -11,7 +11,7 @@
 	padding: 16px;
 	box-sizing: border-box;
 	max-height: calc(100vh - 220px);
-	overflow-y: auto;
+	overflow-y: visible;
 	background: #fff;
 }
 

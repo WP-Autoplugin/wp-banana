@@ -52,6 +52,7 @@ WP Nano Banana is a free WordPress plugin that lets you generate and edit images
 ### Developer-Friendly
 - Built with hooks and filters for extensibility
 - BYOK (Bring Your Own Key) approach — use your own API credentials
+- Store keys in the database or define them in `wp-config.php`
 - Transparent, polished codebase — easy to audit and extend
 
 ## Installation
@@ -82,7 +83,8 @@ Constants (if present) take priority over saved settings.
 1. Open the Media Library or the Media pop-up in the Post Editor.
 2. Click **Generate Image**.
 3. Enter your text prompt (e.g. *"banana-shaped rocket flying through space in retro 90s neon style"*).
-4. Click **Generate Image** to create the image in a few seconds.
+4. Click **Generate Image** to create the image in a few seconds and save it to your Media Library.
+5. Want variations? Use the preview button to queue 1–4 images at once, review them inline, and decide which ones to save or discard before they hit the Media Library.
 
 ### Combine Images
 
