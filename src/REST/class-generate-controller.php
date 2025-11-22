@@ -247,6 +247,9 @@ final class Generate_Controller {
 			if ( $reference_count > 0 && 'gemini' === $provider ) {
 				$model_eff = $this->normalize_gemini_reference_model( $model_eff );
 			}
+			if ( $reference_count > 0 && 'replicate' === $provider ) {
+				$model_eff = $this->normalize_replicate_reference_model( $model_eff );
+			}
 
 			$aspect_param = $req->get_param( 'aspect_ratio' );
 			$aspect_ratio = is_string( $aspect_param ) ? $this->sanitize_aspect_ratio( $aspect_param ) : '';
@@ -987,6 +990,20 @@ final class Generate_Controller {
 		$normalized = strtolower( trim( $model ) );
 		if ( 0 === strpos( $normalized, 'gemini-3-pro-image-preview-' ) ) {
 			return 'gemini-3-pro-image-preview';
+		}
+		return $model;
+	}
+
+	/**
+	 * Normalize Replicate models for reference-based requests.
+	 *
+	 * @param string $model Model identifier.
+	 * @return string
+	 */
+	private function normalize_replicate_reference_model( string $model ): string {
+		$normalized = strtolower( trim( $model ) );
+		if ( 0 === strpos( $normalized, 'google/nano-banana-pro-' ) ) {
+			return 'google/nano-banana-pro';
 		}
 		return $model;
 	}

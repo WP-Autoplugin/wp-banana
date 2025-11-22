@@ -20,7 +20,12 @@ export const MULTI_IMAGE_MODEL_ALLOWLIST: Record<string, string[]> = {
 		'gemini-3-pro-image-preview',
 	],
 	openai: [ 'gpt-image-1', 'gpt-image-1-mini' ],
-	replicate: [ 'google/nano-banana', 'bytedance/seedream-4', 'reve/remix' ],
+	replicate: [
+		'google/nano-banana',
+		'google/nano-banana-pro',
+		'bytedance/seedream-4',
+		'reve/remix',
+	],
 };
 
 export const MIME_EXTENSION_MAP: Record<string, string> = {

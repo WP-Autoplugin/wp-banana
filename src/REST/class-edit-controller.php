@@ -286,6 +286,8 @@ final class Edit_Controller {
 
 			if ( 'gemini' === $provider ) {
 				$model_eff = $this->normalize_gemini_reference_model( $model_eff );
+			} elseif ( 'replicate' === $provider ) {
+				$model_eff = $this->normalize_replicate_reference_model( $model_eff );
 			}
 
 			if ( $reference_count > 0 && ! $this->model_supports_multi_reference( $provider, $model_eff ) ) {
@@ -1005,6 +1007,20 @@ final class Edit_Controller {
 		$normalized = strtolower( trim( $model ) );
 		if ( 0 === strpos( $normalized, 'gemini-3-pro-image-preview-' ) ) {
 			return 'gemini-3-pro-image-preview';
+		}
+		return $model;
+	}
+
+	/**
+	 * Normalize Replicate models for reference-based requests.
+	 *
+	 * @param string $model Model identifier.
+	 * @return string
+	 */
+	private function normalize_replicate_reference_model( string $model ): string {
+		$normalized = strtolower( trim( $model ) );
+		if ( 0 === strpos( $normalized, 'google/nano-banana-pro-' ) ) {
+			return 'google/nano-banana-pro';
 		}
 		return $model;
 	}
