@@ -8,7 +8,7 @@ WP Nano Banana is a free WordPress plugin that lets you generate and edit images
 
 - Combine existing images from your Media Library with new uploads
 - Generate completely new images from text prompts
-- Edit, enhance, and transform images using AI models like **Google Nano Banana**, **gpt-image-1**, **Seedream 4.0** and more
+- Edit, enhance, and transform images using state-of-the-art models like **Google Nano Banana Pro** (with 4K resolution support)
 - Native-like integration in Gutenberg, Classic Editor, and most page builders
 
 [▼ **See Screenshots & Demo**](#screenshots--demo)
@@ -18,7 +18,7 @@ WP Nano Banana is a free WordPress plugin that lets you generate and edit images
 - **Native Integration**: Looks and feels like WordPress core — no flashy UI, no distractions
 - **Free & Open Source**: 100% free, GPL-licensed, no upsells
 - **Bring Your Own Key**: Connect your own Google, OpenAI or Replicate API key (no middleman fees)
-- **Multiple AI Models**: Supports OpenAI’s `gpt-image-1`, Google's Nano Banana (`gemini-2.5-flash-image`), and more
+- **Multiple AI Models**: Supports OpenAI’s `gpt-image-1`, Google's Nano Banana Pro (`gemini-3-pro-image`), and more
 - **Secure & Performant**: Clean codebase, minimal overhead, optimized for WordPress best practices
 - **Universal Compatibility**: Works with Gutenberg, Classic Editor, Elementor, WooCommerce, ACF, and more
 
@@ -145,6 +145,7 @@ https://github.com/user-attachments/assets/28a5ef2d-682e-4206-99e7-6eb1f141146d
 
 WP Nano Banana supports a wide range of state-of-the-art AI image models for both generation and editing. Below are some of the available models you can use:
 
+- **Google Gemini 3 Pro Image Preview** (`gemini-3-pro-image-preview` / `google/nano-banana-pro`)
 - **Google Gemini 2.5 Flash Image**, a.k.a. **Google Nano Banana** (`gemini-2.5-flash-image` / `google/nano-banana`)
 - **OpenAI GPT-Image-1** (`gpt-image-1`) - the same model used by ChatGPT for image generation and editing
 - **OpenAI GPT-Image-1-Mini** (`gpt-image-1-mini`)

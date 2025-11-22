@@ -62,7 +62,7 @@ final class Logs_Page {
 	 */
 	public function add_page(): void {
 		$hook = add_submenu_page(
-			null,
+			'-', // Passing null or an empty string causes PHP warnings, so we use a dash.
 			__( 'WP Nano Banana Logs', 'wp-banana' ),
 			__( 'WP Nano Banana Logs', 'wp-banana' ),
 			'manage_options',

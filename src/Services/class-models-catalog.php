@@ -33,6 +33,10 @@ final class Models_Catalog {
 			'generate' => [
 				'gemini'    => [
 					'gemini-2.5-flash-image-preview',
+					'gemini-3-pro-image-preview',
+					'gemini-3-pro-image-preview-1k',
+					'gemini-3-pro-image-preview-2k',
+					'gemini-3-pro-image-preview-4k',
 					'imagen-4.0-generate-001',
 					'imagen-4.0-ultra-generate-001',
 					'imagen-4.0-fast-generate-001',
@@ -46,6 +50,9 @@ final class Models_Catalog {
 					'google/imagen-4',
 					'google/imagen-4-ultra',
 					'google/imagen-4-fast',
+					'google/nano-banana-pro-1k',
+					'google/nano-banana-pro-2k',
+					'google/nano-banana-pro-4k',
 					'black-forest-labs/flux-1.1-pro',
 					'black-forest-labs/flux-dev',
 					'black-forest-labs/flux-schnell',
@@ -64,6 +71,7 @@ final class Models_Catalog {
 			'edit'     => [
 				'gemini'    => [
 					'gemini-2.5-flash-image-preview',
+					'gemini-3-pro-image-preview',
 				],
 				'openai'    => [
 					'gpt-image-1',
@@ -73,6 +81,7 @@ final class Models_Catalog {
 					'qwen/qwen-image-edit',
 					'bytedance/seededit-3.0',
 					'bytedance/seedream-4',
+					'google/nano-banana-pro',
 					'google/nano-banana',
 					'black-forest-labs/flux-kontext-max',
 					'black-forest-labs/flux-kontext-dev',

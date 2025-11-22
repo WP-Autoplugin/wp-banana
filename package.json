@@ -6,7 +6,7 @@
     "build": "wp-scripts build --source-path=assets/admin",
     "postbuild": "npm run format",
     "start": "wp-scripts start --source-path=assets/admin",
-    "format": "phpcbf . --extensions=php --ignore='vendor/*' --ignore='node_modules/*'"
+    "format": "phpcbf . --extensions=php --ignore='vendor/*,node_modules/*,build/*.asset.php'"
   },
   "devDependencies": {
     "@wordpress/scripts": "^30.5.0",
@@ -17,4 +17,3 @@
     "typescript": "^5.5.4"
   }
 }
-

@@ -3,7 +3,7 @@ Contributors: pbalazs
 Tags: ai, images, openai, replicate, google
 Requires at least: 6.0
 Tested up to: 6.8
-Stable tag: 0.4
+Stable tag: 0.5
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -52,6 +52,7 @@ Unlike many AI plugins, WP Nano Banana has:
 
 WP Nano Banana supports a wide range of AI image models:
 
+- **Google Gemini 3 Pro Image Preview** (`gemini-3-pro-image-preview`), a.k.a. *Google Nano Banana Pro* (`google/nano-banana-pro`)
 - **Google Gemini 2.5 Flash Image**, a.k.a. *Google Nano Banana* (`gemini-2.5-flash-image`)
 - **OpenAI GPT-Image-1** (`gpt-image-1`) — same model ChatGPT uses for image generation
 - **Google Imagen 4 (Gemini API)** (`imagen-4.0-generate-001`, `imagen-4.0-ultra-generate-001`, `imagen-4.0-fast-generate-001`)
@@ -127,6 +128,11 @@ All images are saved directly into your WordPress Media Library. You can use the
 ---
 
 == Changelog ==
+
+= 0.5 =
+* Added support for Google Gemini 3 Pro Image Preview model through Gemini API & Replicate
+* Improved error handling for API requests
+* Fixed minor bugs causing PHP warnings in certain environments
 
 = 0.4 =
 * Added multi-image generation and preview options

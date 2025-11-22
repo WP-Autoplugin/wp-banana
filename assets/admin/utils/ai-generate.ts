@@ -14,9 +14,18 @@ export const VARIATION_MAX = 4;
 export const VARIATION_OPTIONS: number[] = [ 1, 2, 3, 4 ];
 
 export const MULTI_IMAGE_MODEL_ALLOWLIST: Record<string, string[]> = {
-	gemini: [ 'gemini-2.5-flash-image-preview', 'gemini-2.5-flash-image' ],
+	gemini: [
+		'gemini-2.5-flash-image-preview',
+		'gemini-2.5-flash-image',
+		'gemini-3-pro-image-preview',
+	],
 	openai: [ 'gpt-image-1', 'gpt-image-1-mini' ],
-	replicate: [ 'google/nano-banana', 'bytedance/seedream-4', 'reve/remix' ],
+	replicate: [
+		'google/nano-banana',
+		'google/nano-banana-pro',
+		'bytedance/seedream-4',
+		'reve/remix',
+	],
 };
 
 export const MIME_EXTENSION_MAP: Record<string, string> = {

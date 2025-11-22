@@ -283,6 +283,7 @@ const patchImageEdit = () => {
 			} else if ( entry && entry[ HISTORY_KEY ] ) {
 				const banana = entry[ HISTORY_KEY ];
 				ops[ index ] = {
+					type: 'banana',
 					[ HISTORY_KEY ]: {
 						key: banana.key,
 						fw: banana.fw,
@@ -357,6 +358,7 @@ const pushBufferedStep = ( payload: BufferResponse ) => {
 	}
 	imageEdit.addStep(
 		{
+			type: 'banana',
 			[ HISTORY_KEY ]: bananaPayload,
 		},
 		payload.attachment_id,

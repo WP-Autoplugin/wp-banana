@@ -284,6 +284,12 @@ final class Edit_Controller {
 			$model     = '' !== $model_input ? sanitize_text_field( $model_input ) : (string) ( $provider_conf['default_model'] ?? $fallback );
 			$model_eff = $model;
 
+			if ( 'gemini' === $provider ) {
+				$model_eff = $this->normalize_gemini_reference_model( $model_eff );
+			} elseif ( 'replicate' === $provider ) {
+				$model_eff = $this->normalize_replicate_reference_model( $model_eff );
+			}
+
 			if ( $reference_count > 0 && ! $this->model_supports_multi_reference( $provider, $model_eff ) ) {
 				return new WP_Error( 'wp_banana_reference_not_supported', __( 'Selected model does not support multiple reference images.', 'wp-banana' ) );
 			}
@@ -992,6 +998,34 @@ final class Edit_Controller {
 	}
 
 	/**
+	 * Normalize Gemini models for reference-based requests.
+	 *
+	 * @param string $model Model identifier.
+	 * @return string
+	 */
+	private function normalize_gemini_reference_model( string $model ): string {
+		$normalized = strtolower( trim( $model ) );
+		if ( 0 === strpos( $normalized, 'gemini-3-pro-image-preview-' ) ) {
+			return 'gemini-3-pro-image-preview';
+		}
+		return $model;
+	}
+
+	/**
+	 * Normalize Replicate models for reference-based requests.
+	 *
+	 * @param string $model Model identifier.
+	 * @return string
+	 */
+	private function normalize_replicate_reference_model( string $model ): string {
+		$normalized = strtolower( trim( $model ) );
+		if ( 0 === strpos( $normalized, 'google/nano-banana-pro-' ) ) {
+			return 'google/nano-banana-pro';
+		}
+		return $model;
+	}
+
+	/**
 	 * Determine if the selected model supports multiple reference images.
 	 *
 	 * @param string $provider Provider slug.
@@ -1003,7 +1037,15 @@ final class Edit_Controller {
 		$model    = strtolower( trim( $model ) );
 
 		if ( 'gemini' === $provider ) {
-			return in_array( $model, [ 'gemini-2.5-flash-image', 'gemini-2.5-flash-image-preview' ], true );
+			return in_array(
+				$model,
+				[
+					'gemini-2.5-flash-image',
+					'gemini-2.5-flash-image-preview',
+					'gemini-3-pro-image-preview',
+				],
+				true
+			);
 		}
 		if ( 'openai' === $provider ) {
 			return in_array( $model, [ 'gpt-image-1', 'gpt-image-1-mini' ], true );

@@ -244,6 +244,13 @@ final class Generate_Controller {
 			$model     = '' !== $model_input ? sanitize_text_field( $model_input ) : (string) ( $provider_conf['default_model'] ?? $fallback );
 			$model_eff = $model;
 
+			if ( $reference_count > 0 && 'gemini' === $provider ) {
+				$model_eff = $this->normalize_gemini_reference_model( $model_eff );
+			}
+			if ( $reference_count > 0 && 'replicate' === $provider ) {
+				$model_eff = $this->normalize_replicate_reference_model( $model_eff );
+			}
+
 			$aspect_param = $req->get_param( 'aspect_ratio' );
 			$aspect_ratio = is_string( $aspect_param ) ? $this->sanitize_aspect_ratio( $aspect_param ) : '';
 
@@ -318,6 +325,11 @@ final class Generate_Controller {
 				return new WP_Error( 'wp_banana_reference_not_supported', __( 'Selected model does not support multiple reference images.', 'wp-banana' ) );
 			}
 
+			$is_gemini_image_preview_v3 = (
+				'gemini' === $provider
+				&& 0 === strpos( strtolower( $model_eff ), 'gemini-3-pro-image-preview' )
+			);
+
 			if ( 'gemini' === $provider ) {
 				$api_key = isset( $provider_conf['api_key'] ) ? (string) $provider_conf['api_key'] : '';
 				if ( '' === $api_key ) {
@@ -325,7 +337,9 @@ final class Generate_Controller {
 				}
 				$provider_inst = new Gemini_Provider( $api_key, $model_eff );
 				if ( 0 === $reference_count ) {
-					$dto_aspect_ratio = null;
+					if ( ! $is_gemini_image_preview_v3 ) {
+						$dto_aspect_ratio = null;
+					}
 					$normalize_width  = null;
 					$normalize_height = null;
 				}
@@ -967,6 +981,34 @@ final class Generate_Controller {
 	}
 
 	/**
+	 * Normalize Gemini models for reference-based requests.
+	 *
+	 * @param string $model Model identifier.
+	 * @return string
+	 */
+	private function normalize_gemini_reference_model( string $model ): string {
+		$normalized = strtolower( trim( $model ) );
+		if ( 0 === strpos( $normalized, 'gemini-3-pro-image-preview-' ) ) {
+			return 'gemini-3-pro-image-preview';
+		}
+		return $model;
+	}
+
+	/**
+	 * Normalize Replicate models for reference-based requests.
+	 *
+	 * @param string $model Model identifier.
+	 * @return string
+	 */
+	private function normalize_replicate_reference_model( string $model ): string {
+		$normalized = strtolower( trim( $model ) );
+		if ( 0 === strpos( $normalized, 'google/nano-banana-pro-' ) ) {
+			return 'google/nano-banana-pro';
+		}
+		return $model;
+	}
+
+	/**
 	 * Determine whether selected provider/model allows multi-image references.
 	 *
 	 * @param string $provider Provider slug.
@@ -978,7 +1020,15 @@ final class Generate_Controller {
 		$model    = strtolower( trim( $model ) );
 
 		if ( 'gemini' === $provider ) {
-			return in_array( $model, [ 'gemini-2.5-flash-image', 'gemini-2.5-flash-image-preview' ], true );
+			return in_array(
+				$model,
+				[
+					'gemini-2.5-flash-image',
+					'gemini-2.5-flash-image-preview',
+					'gemini-3-pro-image-preview',
+				],
+				true
+			);
 		}
 		if ( 'openai' === $provider ) {
 			return in_array( $model, [ 'gpt-image-1', 'gpt-image-1-mini' ], true );

@@ -77,6 +77,8 @@ final class Replicate_Provider implements Provider_Interface {
 	public function generate( Image_Params $p ): Binary_Image {
 		$prompt = $this->normalize_prompt( $p->prompt );
 		$model  = '' !== $p->model ? $p->model : $this->default_model;
+		$config = $this->resolve_model_config( $model, ! empty( $p->reference_images ) );
+		$model  = $config['api_model'];
 		if ( '' === $model ) {
 			throw new RuntimeException( 'Replicate model not configured.' );
 		}
@@ -84,6 +86,9 @@ final class Replicate_Provider implements Provider_Interface {
 		$input = [
 			'prompt' => $prompt,
 		];
+		if ( ! empty( $config['resolution'] ) ) {
+			$input['resolution'] = $config['resolution'];
+		}
 		if ( ! empty( $p->aspect_ratio ) ) {
 			$input['aspect_ratio'] = $p->aspect_ratio;
 		}
@@ -122,7 +127,9 @@ final class Replicate_Provider implements Provider_Interface {
 	 * @throws RuntimeException If the file cannot be read or the API fails.
 	 */
 	public function edit( Edit_Params $p ): Binary_Image {
-		$model = '' !== $p->model ? $p->model : $this->default_model;
+		$model  = '' !== $p->model ? $p->model : $this->default_model;
+		$config = $this->resolve_model_config( $model, true );
+		$model  = $config['api_model'];
 		if ( '' === $model ) {
 			throw new RuntimeException( 'Replicate model not configured.' );
 		}
@@ -184,6 +191,37 @@ final class Replicate_Provider implements Provider_Interface {
 			return true;
 		}
 		return false;
+	}
+
+	/**
+	 * Resolve model to base id and resolution hints.
+	 *
+	 * @param string $model           Selected model identifier.
+	 * @param bool   $has_references  Whether request includes reference images.
+	 * @return array{api_model:string,resolution:?string}
+	 */
+	private function resolve_model_config( string $model, bool $has_references ): array {
+		$config     = [
+			'api_model'  => $model,
+			'resolution' => null,
+		];
+		$normalized = strtolower( trim( $model ) );
+		if ( 0 === strpos( $normalized, 'google/nano-banana-pro' ) ) {
+			$config['api_model'] = 'google/nano-banana-pro';
+			if ( ! $has_references ) {
+				$suffix = substr( $normalized, strlen( 'google/nano-banana-pro' ) );
+				$suffix = ( '-' === substr( $suffix, 0, 1 ) ) ? substr( $suffix, 1 ) : $suffix;
+				$map    = [
+					'1k' => '1K',
+					'2k' => '2K',
+					'4k' => '4K',
+				];
+				if ( isset( $map[ $suffix ] ) ) {
+					$config['resolution'] = $map[ $suffix ];
+				}
+			}
+		}
+		return $config;
 	}
 
 	/**
@@ -514,9 +552,10 @@ final class Replicate_Provider implements Provider_Interface {
 	 * @return array
 	 */
 	private function defaults_for_edit_model( string $model, string $prompt, string $data_uri, string $format ): array {
-		$defaults = [
+		$output_format = $this->format_for_request( $format );
+		$defaults      = [
 			'prompt'         => $prompt,
-			'output_format'  => $this->format_for_request( $format ) ?: 'png',
+			'output_format'  => '' !== $output_format ? $output_format : 'png',
 			'output_quality' => 80,
 		];
 
