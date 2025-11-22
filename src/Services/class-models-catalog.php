@@ -33,6 +33,7 @@ final class Models_Catalog {
 			'generate' => [
 				'gemini'    => [
 					'gemini-2.5-flash-image-preview',
+					'gemini-3-pro-image-preview',
 					'gemini-3-pro-image-preview-1k',
 					'gemini-3-pro-image-preview-2k',
 					'gemini-3-pro-image-preview-4k',
@@ -67,9 +68,7 @@ final class Models_Catalog {
 			'edit'     => [
 				'gemini'    => [
 					'gemini-2.5-flash-image-preview',
-					'gemini-3-pro-image-preview-1k',
-					'gemini-3-pro-image-preview-2k',
-					'gemini-3-pro-image-preview-4k',
+					'gemini-3-pro-image-preview',
 				],
 				'openai'    => [
 					'gpt-image-1',

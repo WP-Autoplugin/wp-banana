@@ -244,6 +244,10 @@ final class Generate_Controller {
 			$model     = '' !== $model_input ? sanitize_text_field( $model_input ) : (string) ( $provider_conf['default_model'] ?? $fallback );
 			$model_eff = $model;
 
+			if ( $reference_count > 0 && 'gemini' === $provider ) {
+				$model_eff = $this->normalize_gemini_reference_model( $model_eff );
+			}
+
 			$aspect_param = $req->get_param( 'aspect_ratio' );
 			$aspect_ratio = is_string( $aspect_param ) ? $this->sanitize_aspect_ratio( $aspect_param ) : '';
 
@@ -974,6 +978,20 @@ final class Generate_Controller {
 	}
 
 	/**
+	 * Normalize Gemini models for reference-based requests.
+	 *
+	 * @param string $model Model identifier.
+	 * @return string
+	 */
+	private function normalize_gemini_reference_model( string $model ): string {
+		$normalized = strtolower( trim( $model ) );
+		if ( 0 === strpos( $normalized, 'gemini-3-pro-image-preview-' ) ) {
+			return 'gemini-3-pro-image-preview';
+		}
+		return $model;
+	}
+
+	/**
 	 * Determine whether selected provider/model allows multi-image references.
 	 *
 	 * @param string $provider Provider slug.
@@ -990,9 +1008,7 @@ final class Generate_Controller {
 				[
 					'gemini-2.5-flash-image',
 					'gemini-2.5-flash-image-preview',
-					'gemini-3-pro-image-preview-1k',
-					'gemini-3-pro-image-preview-2k',
-					'gemini-3-pro-image-preview-4k',
+					'gemini-3-pro-image-preview',
 				],
 				true
 			);

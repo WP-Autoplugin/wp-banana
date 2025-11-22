@@ -17,9 +17,7 @@ export const MULTI_IMAGE_MODEL_ALLOWLIST: Record<string, string[]> = {
 	gemini: [
 		'gemini-2.5-flash-image-preview',
 		'gemini-2.5-flash-image',
-		'gemini-3-pro-image-preview-1k',
-		'gemini-3-pro-image-preview-2k',
-		'gemini-3-pro-image-preview-4k',
+		'gemini-3-pro-image-preview',
 	],
 	openai: [ 'gpt-image-1', 'gpt-image-1-mini' ],
 	replicate: [ 'google/nano-banana', 'bytedance/seedream-4', 'reve/remix' ],
