@@ -318,6 +318,11 @@ final class Generate_Controller {
 				return new WP_Error( 'wp_banana_reference_not_supported', __( 'Selected model does not support multiple reference images.', 'wp-banana' ) );
 			}
 
+			$is_gemini_image_preview_v3 = (
+				'gemini' === $provider
+				&& 0 === strpos( strtolower( $model_eff ), 'gemini-3-pro-image-preview' )
+			);
+
 			if ( 'gemini' === $provider ) {
 				$api_key = isset( $provider_conf['api_key'] ) ? (string) $provider_conf['api_key'] : '';
 				if ( '' === $api_key ) {
@@ -325,7 +330,9 @@ final class Generate_Controller {
 				}
 				$provider_inst = new Gemini_Provider( $api_key, $model_eff );
 				if ( 0 === $reference_count ) {
-					$dto_aspect_ratio = null;
+					if ( ! $is_gemini_image_preview_v3 ) {
+						$dto_aspect_ratio = null;
+					}
 					$normalize_width  = null;
 					$normalize_height = null;
 				}
@@ -978,7 +985,17 @@ final class Generate_Controller {
 		$model    = strtolower( trim( $model ) );
 
 		if ( 'gemini' === $provider ) {
-			return in_array( $model, [ 'gemini-2.5-flash-image', 'gemini-2.5-flash-image-preview' ], true );
+			return in_array(
+				$model,
+				[
+					'gemini-2.5-flash-image',
+					'gemini-2.5-flash-image-preview',
+					'gemini-3-pro-image-preview-1k',
+					'gemini-3-pro-image-preview-2k',
+					'gemini-3-pro-image-preview-4k',
+				],
+				true
+			);
 		}
 		if ( 'openai' === $provider ) {
 			return in_array( $model, [ 'gpt-image-1', 'gpt-image-1-mini' ], true );

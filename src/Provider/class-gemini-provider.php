@@ -16,6 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 use RuntimeException;
 use function esc_html;
 use WPBanana\Domain\Binary_Image;
+use WPBanana\Domain\Aspect_Ratios;
 use WPBanana\Domain\Edit_Params;
 use WPBanana\Domain\Image_Params;
 use WPBanana\Domain\Reference_Image;
@@ -82,17 +83,20 @@ final class Gemini_Provider implements Provider_Interface {
 			throw new RuntimeException( 'Gemini model not configured.' );
 		}
 
-		$is_imagen = $this->is_imagen_model( $model );
+		$model_config    = $this->resolve_model_config( $model );
+		$transport_model = $model_config['api_model'];
+
+		$is_imagen = $this->is_imagen_model( $transport_model );
 		if ( $is_imagen && ! empty( $p->reference_images ) ) {
 			throw new RuntimeException( 'Imagen 4 models do not support reference images.' );
 		}
 
 		if ( $is_imagen ) {
-			$url     = trailingslashit( $this->api_url ) . rawurlencode( $model ) . ':predict';
-			$payload = $this->build_imagen_generate_payload( $p, $model );
+			$url     = trailingslashit( $this->api_url ) . rawurlencode( $transport_model ) . ':predict';
+			$payload = $this->build_imagen_generate_payload( $p, $transport_model );
 		} else {
-			$url     = trailingslashit( $this->api_url ) . rawurlencode( $model ) . ':generateContent';
-			$payload = $this->build_generate_payload( $p->prompt, $p->reference_images );
+			$url     = trailingslashit( $this->api_url ) . rawurlencode( $transport_model ) . ':generateContent';
+			$payload = $this->build_generate_payload( $p, $model_config );
 		}
 
 		$data = $this->perform_request(
@@ -101,6 +105,7 @@ final class Gemini_Provider implements Provider_Interface {
 			[
 				'operation' => 'generate',
 				'model'     => $model,
+				'api_model' => $transport_model,
 				'prompt'    => $p->prompt,
 				'endpoint'  => $is_imagen ? 'predict' : 'generateContent',
 			]
@@ -136,7 +141,10 @@ final class Gemini_Provider implements Provider_Interface {
 			throw new RuntimeException( 'Imagen 4 models do not support editing.' );
 		}
 
-		$url = trailingslashit( $this->api_url ) . rawurlencode( $model ) . ':generateContent';
+		$model_config    = $this->resolve_model_config( $model );
+		$transport_model = $model_config['api_model'];
+
+		$url = trailingslashit( $this->api_url ) . rawurlencode( $transport_model ) . ':generateContent';
 
 		if ( ! file_exists( $p->source_file ) ) {
 			throw new RuntimeException( 'Source image not found' );
@@ -148,13 +156,14 @@ final class Gemini_Provider implements Provider_Interface {
 		}
 		$ft      = wp_check_filetype( $p->source_file );
 		$mime    = is_array( $ft ) && ! empty( $ft['type'] ) ? $ft['type'] : 'image/png';
-		$payload = $this->build_edit_payload( $p->prompt, $mime, $bytes, $p->reference_images );
+		$payload = $this->build_edit_payload( $p, $mime, $bytes, $model_config );
 		$data    = $this->perform_request(
 			$url,
 			$payload,
 			[
 				'operation'  => 'edit',
 				'model'      => $model,
+				'api_model'  => $transport_model,
 				'prompt'     => $p->prompt,
 				'sourceFile' => $p->source_file,
 			]
@@ -279,20 +288,53 @@ final class Gemini_Provider implements Provider_Interface {
 	}
 
 	/**
+	 * Resolve the transport model id and related options.
+	 *
+	 * @param string $model Selected model id.
+	 * @return array{api_model:string,image_size:?string,supports_image_config:bool}
+	 */
+	private function resolve_model_config( string $model ): array {
+		$normalized = strtolower( trim( $model ) );
+		$config     = [
+			'api_model'             => $model,
+			'image_size'            => null,
+			'supports_image_config' => false,
+		];
+
+		if ( 0 === strpos( $normalized, 'gemini-3-pro-image-preview' ) ) {
+			$config['api_model']             = 'gemini-3-pro-image-preview';
+			$config['supports_image_config'] = true;
+
+			$suffix   = substr( $normalized, strlen( 'gemini-3-pro-image-preview' ) );
+			$suffix   = ( '-' === substr( $suffix, 0, 1 ) ) ? substr( $suffix, 1 ) : $suffix;
+			$size_map = [
+				'1k' => '1K',
+				'2k' => '2K',
+				'4k' => '4K',
+			];
+			if ( isset( $size_map[ $suffix ] ) ) {
+				$config['image_size'] = $size_map[ $suffix ];
+			}
+		}
+
+		return $config;
+	}
+
+	/**
 	 * Build payload for image generation requests.
 	 *
-	 * @param string            $prompt Prompt text.
-	 * @param Reference_Image[] $references Reference images.
+	 * @param Image_Params $params Generation parameters.
+	 * @param array        $model_config Model configuration details.
 	 * @return array
 	 * @throws RuntimeException If reference image reading/encoding fails.
 	 */
-	private function build_generate_payload( string $prompt, array $references = [] ): array {
-		$prompt = $this->normalize_prompt( $prompt );
+	private function build_generate_payload( Image_Params $params, array $model_config = [] ): array {
+		$prompt = $this->normalize_prompt( $params->prompt );
 		$parts  = [
 			[ 'text' => $prompt ],
 		];
 
-		foreach ( $references as $reference ) {
+		foreach ( $params->reference_images as $reference ) {
 			if ( ! ( $reference instanceof Reference_Image ) ) {
 				continue;
 			}
@@ -317,7 +359,7 @@ final class Gemini_Provider implements Provider_Interface {
 			];
 		}
 
-		return [
+		$payload = [
 			'contents'         => [
 				[
 					'role'  => 'user',
@@ -328,6 +370,62 @@ final class Gemini_Provider implements Provider_Interface {
 				'responseModalities' => [ 'IMAGE' ],
 			],
 		];
+
+		$image_config = $this->build_image_config_from_generate_params( $params, $model_config );
+		if ( ! empty( $image_config ) ) {
+			$payload['generationConfig']['imageConfig'] = $image_config;
+		}
+
+		return $payload;
+	}
+
+	/**
+	 * Derive imageConfig payload for generation requests.
+	 *
+	 * @param Image_Params $params       Generation parameters.
+	 * @param array        $model_config Model configuration.
+	 * @return array<string,string>
+	 */
+	private function build_image_config_from_generate_params( Image_Params $params, array $model_config ): array {
+		if ( empty( $model_config['supports_image_config'] ) ) {
+			return [];
+		}
+
+		$config = [];
+		$aspect = $this->sanitize_aspect_ratio_value( $params->aspect_ratio );
+		if ( '' === $aspect ) {
+			$aspect = $this->aspect_ratio_from_dimensions_full( (int) $params->width, (int) $params->height );
+		}
+		if ( '' !== $aspect ) {
+			$config['aspectRatio'] = $aspect;
+		}
+		if ( isset( $model_config['image_size'] ) && is_string( $model_config['image_size'] ) && '' !== $model_config['image_size'] ) {
+			$config['imageSize'] = $model_config['image_size'];
+		}
+		return $config;
+	}
+
+	/**
+	 * Derive imageConfig payload for edit requests.
+	 *
+	 * @param Edit_Params $params       Edit parameters.
+	 * @param array       $model_config Model configuration.
+	 * @return array<string,string>
+	 */
+	private function build_image_config_from_edit_params( Edit_Params $params, array $model_config ): array {
+		if ( empty( $model_config['supports_image_config'] ) ) {
+			return [];
+		}
+
+		$config = [];
+		$aspect = $this->aspect_ratio_from_dimensions_full( (int) $params->target_width, (int) $params->target_height );
+		if ( '' !== $aspect ) {
+			$config['aspectRatio'] = $aspect;
+		}
+		if ( isset( $model_config['image_size'] ) && is_string( $model_config['image_size'] ) && '' !== $model_config['image_size'] ) {
+			$config['imageSize'] = $model_config['image_size'];
+		}
+		return $config;
 	}
 
 	/**
@@ -482,6 +580,60 @@ final class Gemini_Provider implements Provider_Interface {
 	}
 
 	/**
+	 * Map requested or derived ratio to supported Gemini ratios.
+	 *
+	 * @param int $width  Width.
+	 * @param int $height Height.
+	 * @return string
+	 */
+	private function aspect_ratio_from_dimensions_full( int $width, int $height ): string {
+		if ( $width <= 0 || $height <= 0 ) {
+			return '';
+		}
+		$ratio         = $width / max( 1, $height );
+		$closest_ratio = '';
+		$closest_diff  = null;
+
+		foreach ( Aspect_Ratios::all() as $candidate ) {
+			$parts = explode( ':', $candidate );
+			if ( 2 !== count( $parts ) ) {
+				continue;
+			}
+			$left  = max( 0.001, (float) $parts[0] );
+			$right = max( 0.001, (float) $parts[1] );
+			$value = $left / $right;
+			$diff  = abs( $ratio - $value );
+			if ( null === $closest_diff || $diff < $closest_diff ) {
+				$closest_diff  = $diff;
+				$closest_ratio = strtoupper( $candidate );
+			}
+		}
+
+		return $closest_ratio;
+	}
+
+	/**
+	 * Sanitize an aspect ratio value.
+	 *
+	 * @param string|null $ratio Raw ratio.
+	 * @return string
+	 */
+	private function sanitize_aspect_ratio_value( $ratio ): string {
+		if ( ! is_string( $ratio ) ) {
+			return '';
+		}
+		$canonical = Aspect_Ratios::sanitize( $ratio );
+		if ( '' !== $canonical ) {
+			return $canonical;
+		}
+		$trimmed = strtoupper( trim( $ratio ) );
+		if ( preg_match( '/^[0-9]+:[0-9]+$/', $trimmed ) ) {
+			return $trimmed;
+		}
+		return '';
+	}
+
+	/**
 	 * Whether the provided model id is an Imagen 4 variant.
 	 *
 	 * @param string $model Model name.
@@ -495,20 +647,20 @@ final class Gemini_Provider implements Provider_Interface {
 	/**
 	 * Build payload for edit requests with inline image data.
 	 *
-	 * @param string            $prompt Prompt text.
-	 * @param string            $mime   Source MIME type.
-	 * @param string            $bytes  Source image bytes.
-	 * @param Reference_Image[] $references Reference images.
+	 * @param Edit_Params $params Edit parameters.
+	 * @param string      $mime   Source MIME type.
+	 * @param string      $bytes  Source image bytes.
+	 * @param array       $model_config Model configuration details.
 	 * @return array
 	 * @throws RuntimeException If reference image reading/encoding fails.
 	 */
-	private function build_edit_payload( string $prompt, string $mime, string $bytes, array $references ): array {
-		$prompt = $this->normalize_prompt( $prompt );
+	private function build_edit_payload( Edit_Params $params, string $mime, string $bytes, array $model_config ): array {
+		$prompt = $this->normalize_prompt( $params->prompt );
 		$parts  = [
 			[ 'text' => $prompt ],
 		];
 
-		foreach ( $references as $reference ) {
+		foreach ( $params->reference_images as $reference ) {
 			if ( ! ( $reference instanceof Reference_Image ) ) {
 				continue;
 			}
@@ -546,7 +698,7 @@ final class Gemini_Provider implements Provider_Interface {
 			],
 		];
 
-		return [
+		$payload = [
 			'contents'         => [
 				[
 					'role'  => 'user',
@@ -557,6 +709,13 @@ final class Gemini_Provider implements Provider_Interface {
 				'responseModalities' => [ 'IMAGE' ],
 			],
 		];
+
+		$image_config = $this->build_image_config_from_edit_params( $params, $model_config );
+		if ( ! empty( $image_config ) ) {
+			$payload['generationConfig']['imageConfig'] = $image_config;
+		}
+
+		return $payload;
 	}
 
 	/**
@@ -571,7 +730,6 @@ final class Gemini_Provider implements Provider_Interface {
 	private function perform_request( string $url, array $payload, array $context ): array {
 		list( $url, $args, $_payload, $request_context ) = $this->prepare_request( $url, $payload, $context );
 		$res = Http::request( $url, $args );
-
 		if ( is_wp_error( $res ) ) {
 			throw new RuntimeException( esc_html( $res->get_error_message() ) );
 		}

@@ -1003,7 +1003,17 @@ final class Edit_Controller {
 		$model    = strtolower( trim( $model ) );
 
 		if ( 'gemini' === $provider ) {
-			return in_array( $model, [ 'gemini-2.5-flash-image', 'gemini-2.5-flash-image-preview' ], true );
+			return in_array(
+				$model,
+				[
+					'gemini-2.5-flash-image',
+					'gemini-2.5-flash-image-preview',
+					'gemini-3-pro-image-preview-1k',
+					'gemini-3-pro-image-preview-2k',
+					'gemini-3-pro-image-preview-4k',
+				],
+				true
+			);
 		}
 		if ( 'openai' === $provider ) {
 			return in_array( $model, [ 'gpt-image-1', 'gpt-image-1-mini' ], true );
