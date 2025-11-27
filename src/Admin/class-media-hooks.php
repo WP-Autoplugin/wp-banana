@@ -13,6 +13,7 @@ use WPBanana\Services\Options;
 use WPBanana\Services\Models_Catalog;
 use WPBanana\Services\Attachment_Metadata;
 use WPBanana\Domain\Aspect_Ratios;
+use WPBanana\Domain\Resolutions;
 use WP_Post;
 
 // Prevent direct access.
@@ -343,6 +344,11 @@ final class Media_Hooks {
 		if ( '' === $default_aspect_ratio ) {
 			$default_aspect_ratio = Aspect_Ratios::default();
 		}
+		$default_resolution = (string) $this->options->get( 'generation_defaults.resolution', Resolutions::default() );
+		$default_resolution = Resolutions::sanitize( $default_resolution );
+		if ( '' === $default_resolution ) {
+			$default_resolution = Resolutions::default();
+		}
 
 		return [
 			'restNamespace'            => 'wp-banana/v1',
@@ -351,6 +357,8 @@ final class Media_Hooks {
 			'defaultGeneratorProvider' => $this->detect_provider_for_model( $default_generator_model, 'generate' ),
 			'defaultAspectRatio'       => $default_aspect_ratio,
 			'aspectRatioOptions'       => Aspect_Ratios::all(),
+			'defaultResolution'        => $default_resolution,
+			'resolutionOptions'        => Resolutions::all(),
 			'defaultEditorModel'       => $default_editor_model,
 			'defaultEditorProvider'    => $this->detect_provider_for_model( $default_editor_model, 'edit' ),
 			'iconUrl'                  => trailingslashit( $this->plugin_url ) . 'assets/images/banana-icon-2.svg',

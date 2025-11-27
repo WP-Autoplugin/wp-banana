@@ -23,6 +23,10 @@ type OptionsDrawerProps = {
 	aspectRatio: string;
 	onAspectRatioChange: ( value: string ) => void;
 	aspectOptions: string[];
+	resolutionEnabled: boolean;
+	resolution: string;
+	onResolutionChange: ( value: string ) => void;
+	resolutionOptions: string[];
 	isSubmitting: boolean;
 	children?: ReactNode;
 };
@@ -40,6 +44,10 @@ const OptionsDrawer = ( {
 	aspectRatio,
 	onAspectRatioChange,
 	aspectOptions,
+	resolutionEnabled,
+	resolution,
+	onResolutionChange,
+	resolutionOptions,
 	isSubmitting,
 	children,
 }: OptionsDrawerProps ) => {
@@ -94,6 +102,16 @@ const OptionsDrawer = ( {
 					onChange={ onAspectRatioChange }
 					disabled={ isSubmitting }
 					options={ aspectOptions.map( ( value ) => ( { label: value, value } ) ) }
+				/>
+			) }
+
+			{ resolutionEnabled && (
+				<SelectControl
+					label={ __( 'Resolution', 'wp-banana' ) }
+					value={ resolution }
+					onChange={ onResolutionChange }
+					disabled={ isSubmitting }
+					options={ resolutionOptions.map( ( value ) => ( { label: value, value } ) ) }
 				/>
 			) }
 

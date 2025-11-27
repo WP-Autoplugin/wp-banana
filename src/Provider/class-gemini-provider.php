@@ -83,7 +83,7 @@ final class Gemini_Provider implements Provider_Interface {
 			throw new RuntimeException( 'Gemini model not configured.' );
 		}
 
-		$model_config    = $this->resolve_model_config( $model );
+		$model_config    = $this->resolve_model_config( $model, $p->resolution );
 		$transport_model = $model_config['api_model'];
 
 		$is_imagen = $this->is_imagen_model( $transport_model );
@@ -141,7 +141,7 @@ final class Gemini_Provider implements Provider_Interface {
 			throw new RuntimeException( 'Imagen 4 models do not support editing.' );
 		}
 
-		$model_config    = $this->resolve_model_config( $model );
+		$model_config    = $this->resolve_model_config( $model, null );
 		$transport_model = $model_config['api_model'];
 
 		$url = trailingslashit( $this->api_url ) . rawurlencode( $transport_model ) . ':generateContent';
@@ -290,10 +290,11 @@ final class Gemini_Provider implements Provider_Interface {
 	/**
 	 * Resolve the transport model id and related options.
 	 *
-	 * @param string $model Selected model id.
+	 * @param string      $model      Selected model id.
+	 * @param string|null $resolution Optional resolution parameter (e.g. 1K, 2K, 4K).
 	 * @return array{api_model:string,image_size:?string,supports_image_config:bool}
 	 */
-	private function resolve_model_config( string $model ): array {
+	private function resolve_model_config( string $model, ?string $resolution = null ): array {
 		$normalized = strtolower( trim( $model ) );
 		$config     = [
 			'api_model'             => $model,
@@ -305,15 +306,21 @@ final class Gemini_Provider implements Provider_Interface {
 			$config['api_model']             = 'gemini-3-pro-image-preview';
 			$config['supports_image_config'] = true;
 
-			$suffix   = substr( $normalized, strlen( 'gemini-3-pro-image-preview' ) );
-			$suffix   = ( '-' === substr( $suffix, 0, 1 ) ) ? substr( $suffix, 1 ) : $suffix;
-			$size_map = [
-				'1k' => '1K',
-				'2k' => '2K',
-				'4k' => '4K',
-			];
-			if ( isset( $size_map[ $suffix ] ) ) {
-				$config['image_size'] = $size_map[ $suffix ];
+			// Use explicit resolution parameter if provided.
+			if ( null !== $resolution && '' !== $resolution ) {
+				$config['image_size'] = $resolution;
+			} else {
+				// Fall back to extracting resolution from model name for backward compatibility.
+				$suffix   = substr( $normalized, strlen( 'gemini-3-pro-image-preview' ) );
+				$suffix   = ( '-' === substr( $suffix, 0, 1 ) ) ? substr( $suffix, 1 ) : $suffix;
+				$size_map = [
+					'1k' => '1K',
+					'2k' => '2K',
+					'4k' => '4K',
+				];
+				if ( isset( $size_map[ $suffix ] ) ) {
+					$config['image_size'] = $size_map[ $suffix ];
+				}
 			}
 		}
 

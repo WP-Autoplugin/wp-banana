@@ -12,6 +12,7 @@ use WPBanana\Plugin;
 use WPBanana\Services\Options;
 use WPBanana\Services\Models_Catalog;
 use WPBanana\Domain\Aspect_Ratios;
+use WPBanana\Domain\Resolutions;
 
 use function __;
 use function admin_url;
@@ -132,6 +133,11 @@ final class Generate_Page {
 		if ( '' === $default_aspect_ratio ) {
 			$default_aspect_ratio = Aspect_Ratios::default();
 		}
+		$default_resolution = (string) $this->options->get( 'generation_defaults.resolution', Resolutions::default() );
+		$default_resolution = Resolutions::sanitize( $default_resolution );
+		if ( '' === $default_resolution ) {
+			$default_resolution = Resolutions::default();
+		}
 
 		wp_localize_script(
 			$handle,
@@ -144,6 +150,8 @@ final class Generate_Page {
 				'defaultGeneratorProvider' => $this->detect_provider_for_model( $default_generator_model ),
 				'defaultAspectRatio'       => $default_aspect_ratio,
 				'aspectRatioOptions'       => Aspect_Ratios::all(),
+				'defaultResolution'        => $default_resolution,
+				'resolutionOptions'        => Resolutions::all(),
 			]
 		);
 

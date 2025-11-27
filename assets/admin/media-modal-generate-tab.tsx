@@ -16,6 +16,8 @@ type MediaData = {
 	defaultGeneratorProvider?: string;
 	defaultAspectRatio?: string;
 	aspectRatioOptions?: string[];
+	defaultResolution?: string;
+	resolutionOptions?: string[];
 };
 
 type WindowWithBanana = Window & {
@@ -47,6 +49,8 @@ const getData = (): MediaData | null => {
 		defaultGeneratorProvider: data.defaultGeneratorProvider,
 		defaultAspectRatio: data.defaultAspectRatio,
 		aspectRatioOptions: data.aspectRatioOptions,
+		defaultResolution: data.defaultResolution,
+		resolutionOptions: data.resolutionOptions,
 	};
 };
 
@@ -73,6 +77,8 @@ const mountGeneratePanel = (
 				defaultGeneratorProvider={ data.defaultGeneratorProvider }
 				defaultAspectRatio={ data.defaultAspectRatio }
 				aspectRatioOptions={ data.aspectRatioOptions }
+				defaultResolution={ data.defaultResolution }
+				resolutionOptions={ data.resolutionOptions }
 			/>
 		);
 		return;
@@ -87,6 +93,8 @@ const mountGeneratePanel = (
 			defaultGeneratorProvider={ data.defaultGeneratorProvider }
 			defaultAspectRatio={ data.defaultAspectRatio }
 			aspectRatioOptions={ data.aspectRatioOptions }
+			defaultResolution={ data.defaultResolution }
+			resolutionOptions={ data.resolutionOptions }
 		/>,
 		container
 	);

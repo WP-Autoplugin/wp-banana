@@ -828,6 +828,10 @@ const EditPanel = ( {
 					aspectRatio=""
 					onAspectRatioChange={ ( _value: string ) => {} }
 					aspectOptions={ [] }
+					resolutionEnabled={ false }
+					resolution=""
+					onResolutionChange={ ( _value: string ) => {} }
+					resolutionOptions={ [] }
 					isSubmitting={ isSubmitting }
 				/>
 			</CardBody>

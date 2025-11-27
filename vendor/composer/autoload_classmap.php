@@ -19,6 +19,7 @@ return array(
     'WPBanana\\Domain\\Edit_Params' => $baseDir . '/src/Domain/class-edit-params.php',
     'WPBanana\\Domain\\Image_Params' => $baseDir . '/src/Domain/class-image-params.php',
     'WPBanana\\Domain\\Reference_Image' => $baseDir . '/src/Domain/class-reference-image.php',
+    'WPBanana\\Domain\\Resolutions' => $baseDir . '/src/Domain/class-resolutions.php',
     'WPBanana\\GitHub_Updater' => $baseDir . '/src/class-github-updater.php',
     'WPBanana\\Plugin' => $baseDir . '/src/class-plugin.php',
     'WPBanana\\Provider\\Gemini_Provider' => $baseDir . '/src/Provider/class-gemini-provider.php',

@@ -77,7 +77,7 @@ final class Replicate_Provider implements Provider_Interface {
 	public function generate( Image_Params $p ): Binary_Image {
 		$prompt = $this->normalize_prompt( $p->prompt );
 		$model  = '' !== $p->model ? $p->model : $this->default_model;
-		$config = $this->resolve_model_config( $model, ! empty( $p->reference_images ) );
+		$config = $this->resolve_model_config( $model, ! empty( $p->reference_images ), $p->resolution );
 		$model  = $config['api_model'];
 		if ( '' === $model ) {
 			throw new RuntimeException( 'Replicate model not configured.' );
@@ -128,7 +128,7 @@ final class Replicate_Provider implements Provider_Interface {
 	 */
 	public function edit( Edit_Params $p ): Binary_Image {
 		$model  = '' !== $p->model ? $p->model : $this->default_model;
-		$config = $this->resolve_model_config( $model, true );
+		$config = $this->resolve_model_config( $model, true, null );
 		$model  = $config['api_model'];
 		if ( '' === $model ) {
 			throw new RuntimeException( 'Replicate model not configured.' );
@@ -196,11 +196,12 @@ final class Replicate_Provider implements Provider_Interface {
 	/**
 	 * Resolve model to base id and resolution hints.
 	 *
-	 * @param string $model           Selected model identifier.
-	 * @param bool   $has_references  Whether request includes reference images.
+	 * @param string      $model            Selected model identifier.
+	 * @param bool        $has_references   Whether request includes reference images.
+	 * @param string|null $resolution_param Optional resolution parameter (e.g. 1K, 2K, 4K).
 	 * @return array{api_model:string,resolution:?string}
 	 */
-	private function resolve_model_config( string $model, bool $has_references ): array {
+	private function resolve_model_config( string $model, bool $has_references, ?string $resolution_param = null ): array {
 		$config     = [
 			'api_model'  => $model,
 			'resolution' => null,
@@ -209,15 +210,21 @@ final class Replicate_Provider implements Provider_Interface {
 		if ( 0 === strpos( $normalized, 'google/nano-banana-pro' ) ) {
 			$config['api_model'] = 'google/nano-banana-pro';
 			if ( ! $has_references ) {
-				$suffix = substr( $normalized, strlen( 'google/nano-banana-pro' ) );
-				$suffix = ( '-' === substr( $suffix, 0, 1 ) ) ? substr( $suffix, 1 ) : $suffix;
-				$map    = [
-					'1k' => '1K',
-					'2k' => '2K',
-					'4k' => '4K',
-				];
-				if ( isset( $map[ $suffix ] ) ) {
-					$config['resolution'] = $map[ $suffix ];
+				// Use explicit resolution parameter if provided.
+				if ( null !== $resolution_param && '' !== $resolution_param ) {
+					$config['resolution'] = $resolution_param;
+				} else {
+					// Fall back to extracting resolution from model name for backward compatibility.
+					$suffix = substr( $normalized, strlen( 'google/nano-banana-pro' ) );
+					$suffix = ( '-' === substr( $suffix, 0, 1 ) ) ? substr( $suffix, 1 ) : $suffix;
+					$map    = [
+						'1k' => '1K',
+						'2k' => '2K',
+						'4k' => '4K',
+					];
+					if ( isset( $map[ $suffix ] ) ) {
+						$config['resolution'] = $map[ $suffix ];
+					}
 				}
 			}
 		}

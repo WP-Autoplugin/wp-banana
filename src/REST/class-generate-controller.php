@@ -21,6 +21,7 @@ use WPBanana\Domain\Image_Params;
 use WPBanana\Domain\Reference_Image;
 use WPBanana\Domain\Edit_Params;
 use WPBanana\Domain\Aspect_Ratios;
+use WPBanana\Domain\Resolutions;
 use WPBanana\Domain\Binary_Image;
 use WPBanana\Provider\Gemini_Provider;
 use WPBanana\Provider\OpenAI_Provider;
@@ -109,6 +110,10 @@ final class Generate_Controller {
 						'required' => false,
 					],
 					'aspect_ratio' => [
+						'type'     => 'string',
+						'required' => false,
+					],
+					'resolution'   => [
 						'type'     => 'string',
 						'required' => false,
 					],
@@ -253,6 +258,9 @@ final class Generate_Controller {
 
 			$aspect_param = $req->get_param( 'aspect_ratio' );
 			$aspect_ratio = is_string( $aspect_param ) ? $this->sanitize_aspect_ratio( $aspect_param ) : '';
+
+			$resolution_param = $req->get_param( 'resolution' );
+			$resolution       = is_string( $resolution_param ) ? Resolutions::sanitize( $resolution_param ) : '';
 
 			$width_param  = $req->get_param( 'width' );
 			$height_param = $req->get_param( 'height' );
@@ -400,7 +408,7 @@ final class Generate_Controller {
 					return new WP_Error( 'wp_banana_provider_error', $e->getMessage() );
 				}
 			} else {
-				$dto = new Image_Params( $prompt, $provider, $model_eff, $dto_width, $dto_height, $format, $dto_aspect_ratio, $reference_images );
+				$dto = new Image_Params( $prompt, $provider, $model_eff, $dto_width, $dto_height, $format, $dto_aspect_ratio, '' !== $resolution ? $resolution : null, $reference_images );
 				try {
 					$binary = $provider_inst->generate( $dto );
 				} catch ( \Throwable $e ) {
