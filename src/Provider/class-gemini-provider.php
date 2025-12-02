@@ -20,6 +20,7 @@ use WPBanana\Domain\Aspect_Ratios;
 use WPBanana\Domain\Edit_Params;
 use WPBanana\Domain\Image_Params;
 use WPBanana\Domain\Reference_Image;
+use WPBanana\Services\Models_Catalog;
 use WPBanana\Util\Http;
 
 /**
@@ -296,14 +297,15 @@ final class Gemini_Provider implements Provider_Interface {
 	 */
 	private function resolve_model_config( string $model, ?string $resolution = null ): array {
 		$normalized = strtolower( trim( $model ) );
+		$preview_v3 = strtolower( Models_Catalog::GEMINI_3_PRO_IMAGE_PREVIEW );
 		$config     = [
 			'api_model'             => $model,
 			'image_size'            => null,
 			'supports_image_config' => false,
 		];
 
-		if ( 0 === strpos( $normalized, 'gemini-3-pro-image-preview' ) ) {
-			$config['api_model']             = 'gemini-3-pro-image-preview';
+		if ( 0 === strpos( $normalized, $preview_v3 ) ) {
+			$config['api_model']             = Models_Catalog::GEMINI_3_PRO_IMAGE_PREVIEW;
 			$config['supports_image_config'] = true;
 
 			// Use explicit resolution parameter if provided.
@@ -311,7 +313,7 @@ final class Gemini_Provider implements Provider_Interface {
 				$config['image_size'] = $resolution;
 			} else {
 				// Fall back to extracting resolution from model name for backward compatibility.
-				$suffix   = substr( $normalized, strlen( 'gemini-3-pro-image-preview' ) );
+				$suffix   = substr( $normalized, strlen( $preview_v3 ) );
 				$suffix   = ( '-' === substr( $suffix, 0, 1 ) ) ? substr( $suffix, 1 ) : $suffix;
 				$size_map = [
 					'1k' => '1K',

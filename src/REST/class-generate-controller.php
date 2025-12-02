@@ -29,6 +29,7 @@ use WPBanana\Provider\Replicate_Provider;
 use WPBanana\Services\Convert_Service;
 use WPBanana\Services\Attachment_Service;
 use WPBanana\Services\Logging_Service;
+use WPBanana\Services\Models_Catalog;
 use WPBanana\Util\Mime;
 
 use function get_current_user_id;
@@ -228,22 +229,12 @@ final class Generate_Controller {
 
 			$provider_conf = $this->options->get_provider_config( $provider );
 			$model_input   = (string) ( $req->get_param( 'model' ) ? $req->get_param( 'model' ) : '' );
-			if ( $reference_count > 0 ) {
-				if ( 'gemini' === $provider ) {
-					$fallback = (string) $this->options->get( 'default_editor_model', 'gemini-2.5-flash-image-preview' );
-				} elseif ( 'replicate' === $provider ) {
-					$fallback = 'black-forest-labs/flux';
-				} else {
-					$fallback = 'gpt-image-1';
-				}
+			if ( $reference_count > 0 && 'gemini' === $provider ) {
+				$fallback = (string) $this->options->get( 'default_editor_model', Models_Catalog::default_editor_model() );
 			} else {
-				$fallback = 'gemini-2.5-flash-image-preview';
-				if ( 'replicate' === $provider ) {
-					$fallback = 'black-forest-labs/flux';
-				} elseif ( 'openai' === $provider ) {
-					$fallback = 'gpt-image-1';
-				} else {
-					$fallback = (string) $this->options->get( 'default_generator_model', 'gemini-2.5-flash-image-preview' );
+				$fallback = Models_Catalog::provider_default_model( $provider );
+				if ( 'gemini' === $provider ) {
+					$fallback = (string) $this->options->get( 'default_generator_model', Models_Catalog::default_generator_model() );
 				}
 			}
 			$model     = '' !== $model_input ? sanitize_text_field( $model_input ) : (string) ( $provider_conf['default_model'] ?? $fallback );
@@ -335,7 +326,7 @@ final class Generate_Controller {
 
 			$is_gemini_image_preview_v3 = (
 				'gemini' === $provider
-				&& 0 === strpos( strtolower( $model_eff ), 'gemini-3-pro-image-preview' )
+				&& 0 === strpos( strtolower( $model_eff ), strtolower( Models_Catalog::GEMINI_3_PRO_IMAGE_PREVIEW ) )
 			);
 
 			if ( 'gemini' === $provider ) {
@@ -996,8 +987,8 @@ final class Generate_Controller {
 	 */
 	private function normalize_gemini_reference_model( string $model ): string {
 		$normalized = strtolower( trim( $model ) );
-		if ( 0 === strpos( $normalized, 'gemini-3-pro-image-preview-' ) ) {
-			return 'gemini-3-pro-image-preview';
+		if ( 0 === strpos( $normalized, strtolower( Models_Catalog::GEMINI_3_PRO_IMAGE_PREVIEW ) . '-' ) ) {
+			return Models_Catalog::GEMINI_3_PRO_IMAGE_PREVIEW;
 		}
 		return $model;
 	}
@@ -1010,8 +1001,8 @@ final class Generate_Controller {
 	 */
 	private function normalize_replicate_reference_model( string $model ): string {
 		$normalized = strtolower( trim( $model ) );
-		if ( 0 === strpos( $normalized, 'google/nano-banana-pro-' ) ) {
-			return 'google/nano-banana-pro';
+		if ( 0 === strpos( $normalized, strtolower( Models_Catalog::REPLICATE_NANO_BANANA_PRO ) . '-' ) ) {
+			return Models_Catalog::REPLICATE_NANO_BANANA_PRO;
 		}
 		return $model;
 	}
@@ -1024,28 +1015,22 @@ final class Generate_Controller {
 	 * @return bool
 	 */
 	private function model_supports_multi_reference( string $provider, string $model ): bool {
-		$provider = strtolower( trim( $provider ) );
-		$model    = strtolower( trim( $model ) );
+		$allowlist = Models_Catalog::multi_image_allowlist();
+		$provider  = strtolower( trim( $provider ) );
+		$model     = strtolower( trim( $model ) );
 
-		if ( 'gemini' === $provider ) {
-			return in_array(
-				$model,
-				[
-					'gemini-2.5-flash-image',
-					'gemini-2.5-flash-image-preview',
-					'gemini-3-pro-image-preview',
-				],
-				true
-			);
-		}
-		if ( 'openai' === $provider ) {
-			return in_array( $model, [ 'gpt-image-1', 'gpt-image-1-mini' ], true );
-		}
-		if ( 'replicate' === $provider ) {
-			return in_array( $model, [ 'google/nano-banana', 'bytedance/seedream-4', 'reve/remix' ], true );
+		if ( ! isset( $allowlist[ $provider ] ) || ! is_array( $allowlist[ $provider ] ) ) {
+			return false;
 		}
 
-		return false;
+		$normalized_allowlist = array_map(
+			static function ( $value ) {
+				return strtolower( (string) $value );
+			},
+			$allowlist[ $provider ]
+		);
+
+		return in_array( $model, $normalized_allowlist, true );
 	}
 
 	/**

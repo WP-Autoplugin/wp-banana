@@ -9,7 +9,7 @@ import apiFetch from '@wordpress/api-fetch';
 import { __, _n, sprintf } from '@wordpress/i18n';
 
 import type { ProviderInfo } from '../types/generate';
-import { MULTI_IMAGE_MODEL_ALLOWLIST } from '../utils/ai-generate';
+import { MULTI_IMAGE_MODEL_ALLOWLIST, RESOLUTION_MODEL_ALLOWLIST } from '../utils/ai-generate';
 
 type ModelsResponse = {
 	models?: string[];
@@ -131,13 +131,9 @@ export const useGeneratorConfig = ( {
 			return false;
 		}
 		const modelLower = model.toLowerCase();
-		if ( provider === 'gemini' && modelLower === 'gemini-3-pro-image-preview' ) {
-			return true;
-		}
-		if ( provider === 'replicate' && modelLower === 'google/nano-banana-pro' ) {
-			return true;
-		}
-		return false;
+		const allowlist = ( RESOLUTION_MODEL_ALLOWLIST[ provider ] ?? [] )
+			.map( ( entry ) => entry.toLowerCase() );
+		return allowlist.includes( modelLower );
 	}, [ model, provider ] );
 
 	useEffect( () => {

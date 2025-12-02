@@ -20,6 +20,7 @@ use WPBanana\Domain\Edit_Params;
 use WPBanana\Domain\Image_Params;
 use WPBanana\Domain\Reference_Image;
 use WPBanana\Services\Options;
+use WPBanana\Services\Models_Catalog;
 use WPBanana\Util\Http;
 
 /**
@@ -202,20 +203,21 @@ final class Replicate_Provider implements Provider_Interface {
 	 * @return array{api_model:string,resolution:?string}
 	 */
 	private function resolve_model_config( string $model, bool $has_references, ?string $resolution_param = null ): array {
-		$config     = [
+		$config          = [
 			'api_model'  => $model,
 			'resolution' => null,
 		];
-		$normalized = strtolower( trim( $model ) );
-		if ( 0 === strpos( $normalized, 'google/nano-banana-pro' ) ) {
-			$config['api_model'] = 'google/nano-banana-pro';
+		$normalized      = strtolower( trim( $model ) );
+		$nano_banana_pro = strtolower( Models_Catalog::REPLICATE_NANO_BANANA_PRO );
+		if ( 0 === strpos( $normalized, $nano_banana_pro ) ) {
+			$config['api_model'] = Models_Catalog::REPLICATE_NANO_BANANA_PRO;
 			if ( ! $has_references ) {
 				// Use explicit resolution parameter if provided.
 				if ( null !== $resolution_param && '' !== $resolution_param ) {
 					$config['resolution'] = $resolution_param;
 				} else {
 					// Fall back to extracting resolution from model name for backward compatibility.
-					$suffix = substr( $normalized, strlen( 'google/nano-banana-pro' ) );
+					$suffix = substr( $normalized, strlen( $nano_banana_pro ) );
 					$suffix = ( '-' === substr( $suffix, 0, 1 ) ) ? substr( $suffix, 1 ) : $suffix;
 					$map    = [
 						'1k' => '1K',
@@ -490,6 +492,22 @@ final class Replicate_Provider implements Provider_Interface {
 	}
 
 	/**
+	 * Check if a haystack contains any of the provided needles.
+	 *
+	 * @param string   $haystack Lowercased haystack string.
+	 * @param string[] $needles  Lowercased needles to search for.
+	 * @return bool
+	 */
+	private function needle_contains_any( string $haystack, array $needles ): bool {
+		foreach ( $needles as $needle ) {
+			if ( '' !== $needle && false !== strpos( $haystack, $needle ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
 	 * Inject reference images into Replicate generation payload.
 	 *
 	 * @param string                 $model      Model name.
@@ -514,11 +532,18 @@ final class Replicate_Provider implements Provider_Interface {
 			throw new RuntimeException( 'No valid reference images provided for Replicate.' );
 		}
 
-		$needle = strtolower( $model );
-		if ( false !== strpos( $needle, 'nano-banana' ) || false !== strpos( $needle, 'seedream' ) ) {
+		$needle           = strtolower( $model );
+		$banana_variants  = [
+			strtolower( Models_Catalog::REPLICATE_NANO_BANANA ),
+			strtolower( Models_Catalog::REPLICATE_NANO_BANANA_PRO ),
+		];
+		$seedream_needle  = strtolower( Models_Catalog::REPLICATE_SEEDREAM_4 );
+		$reve_remix_lower = strtolower( Models_Catalog::REPLICATE_REVE_REMIX );
+
+		if ( $this->needle_contains_any( $needle, $banana_variants ) || false !== strpos( $needle, $seedream_needle ) ) {
 			$input['image_input'] = $data_uris;
 			$input['image_input'] = array_reverse( $input['image_input'] );
-		} elseif ( $needle === 'reve/remix' ) {
+		} elseif ( $needle === $reve_remix_lower ) {
 			$input['reference_images'] = $data_uris;
 		} else {
 			$input['image'] = $data_uris[0];
@@ -566,29 +591,42 @@ final class Replicate_Provider implements Provider_Interface {
 			'output_quality' => 80,
 		];
 
-		$needle = strtolower( $model );
-		if ( $needle === 'reve/remix' ) {
+		$needle          = strtolower( $model );
+		$banana_variants = [
+			strtolower( Models_Catalog::REPLICATE_NANO_BANANA ),
+			strtolower( Models_Catalog::REPLICATE_NANO_BANANA_PRO ),
+		];
+		$seedream        = strtolower( Models_Catalog::REPLICATE_SEEDREAM_4 );
+		$flux_kontext    = [
+			strtolower( Models_Catalog::REPLICATE_FLUX_KONTEXT_MAX ),
+			strtolower( Models_Catalog::REPLICATE_FLUX_KONTEXT_DEV ),
+		];
+		$seededit        = strtolower( Models_Catalog::REPLICATE_SEEDEDIT_30 );
+		$qwen_edit       = strtolower( Models_Catalog::REPLICATE_QWEN_IMAGE_EDIT );
+		$reve_remix      = strtolower( Models_Catalog::REPLICATE_REVE_REMIX );
+
+		if ( $needle === $reve_remix ) {
 			$defaults['reference_images'] = [
 				$data_uri,
 			];
-		} elseif ( false !== strpos( $needle, 'nano-banana' ) || false !== strpos( $needle, 'seedream' ) ) {
+		} elseif ( $this->needle_contains_any( $needle, $banana_variants ) || false !== strpos( $needle, $seedream ) ) {
 			$defaults['image_input'] = [ $data_uri ];
-		} elseif ( false !== strpos( $needle, 'flux-kontext' ) ) {
+		} elseif ( $this->needle_contains_any( $needle, $flux_kontext ) ) {
 			$defaults['input_image']   = $data_uri;
 			$defaults['aspect_ratio']  = 'match_input_image';
 			$defaults['output_format'] = 'jpg';
-			if ( false !== strpos( $needle, 'flux-kontext-max' ) ) {
+			if ( false !== strpos( $needle, $flux_kontext[0] ) ) {
 				$defaults['safety_tolerance'] = 2;
-			} elseif ( false !== strpos( $needle, 'flux-kontext-dev' ) ) {
+			} elseif ( false !== strpos( $needle, $flux_kontext[1] ) ) {
 				$defaults['go_fast']             = true;
 				$defaults['guidance']            = 2.5;
 				$defaults['num_inference_steps'] = 30;
 			}
-		} elseif ( false !== strpos( $needle, 'seededit' ) ) {
+		} elseif ( false !== strpos( $needle, $seededit ) ) {
 			$defaults['image'] = $data_uri;
 		} else {
 			$defaults['image'] = $data_uri;
-			if ( false !== strpos( $needle, 'qwen-image-edit' ) ) {
+			if ( false !== strpos( $needle, $qwen_edit ) ) {
 				$defaults['go_fast'] = true;
 			}
 		}

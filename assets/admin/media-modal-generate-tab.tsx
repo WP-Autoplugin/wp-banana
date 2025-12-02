@@ -18,6 +18,8 @@ type MediaData = {
 	aspectRatioOptions?: string[];
 	defaultResolution?: string;
 	resolutionOptions?: string[];
+	multiImageModelAllowlist?: Record< string, string[] >;
+	resolutionModelAllowlist?: Record< string, string[] >;
 };
 
 type WindowWithBanana = Window & {
@@ -51,6 +53,8 @@ const getData = (): MediaData | null => {
 		aspectRatioOptions: data.aspectRatioOptions,
 		defaultResolution: data.defaultResolution,
 		resolutionOptions: data.resolutionOptions,
+		multiImageModelAllowlist: data.multiImageModelAllowlist,
+		resolutionModelAllowlist: data.resolutionModelAllowlist,
 	};
 };
 

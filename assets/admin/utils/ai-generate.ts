@@ -13,20 +13,38 @@ export const VARIATION_MIN = 1;
 export const VARIATION_MAX = 4;
 export const VARIATION_OPTIONS: number[] = [ 1, 2, 3, 4 ];
 
-export const MULTI_IMAGE_MODEL_ALLOWLIST: Record<string, string[]> = {
-	gemini: [
-		'gemini-2.5-flash-image-preview',
-		'gemini-2.5-flash-image',
-		'gemini-3-pro-image-preview',
-	],
-	openai: [ 'gpt-image-1', 'gpt-image-1-mini' ],
-	replicate: [
-		'google/nano-banana',
-		'google/nano-banana-pro',
-		'bytedance/seedream-4',
-		'reve/remix',
-	],
+type MultiImageAllowlist = Record< string, string[] >;
+type BananaAllowlistWindow = {
+	wpBananaMedia?: {
+		multiImageModelAllowlist?: MultiImageAllowlist;
+		resolutionModelAllowlist?: MultiImageAllowlist;
+	};
+	wpBananaGeneratePage?: {
+		multiImageModelAllowlist?: MultiImageAllowlist;
+		resolutionModelAllowlist?: MultiImageAllowlist;
+	};
 };
+
+const resolveMultiImageAllowlist = (): MultiImageAllowlist => {
+	const win = window as unknown as BananaAllowlistWindow;
+
+	return (
+		win.wpBananaMedia?.multiImageModelAllowlist ??
+		win.wpBananaGeneratePage?.multiImageModelAllowlist ??
+		{}
+	);
+};
+
+export const MULTI_IMAGE_MODEL_ALLOWLIST: MultiImageAllowlist = resolveMultiImageAllowlist();
+
+export const RESOLUTION_MODEL_ALLOWLIST: MultiImageAllowlist = ( (): MultiImageAllowlist => {
+	const win = window as unknown as BananaAllowlistWindow;
+	return (
+		win.wpBananaMedia?.resolutionModelAllowlist ??
+		win.wpBananaGeneratePage?.resolutionModelAllowlist ??
+		{}
+	);
+} )();
 
 export const MIME_EXTENSION_MAP: Record<string, string> = {
 	'image/jpeg': 'jpg',

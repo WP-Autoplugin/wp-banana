@@ -21,6 +21,8 @@ declare global {
 			aspectRatioOptions?: string[];
 			defaultResolution?: string;
 			resolutionOptions?: string[];
+			multiImageModelAllowlist?: Record< string, string[] >;
+			resolutionModelAllowlist?: Record< string, string[] >;
 		};
 	}
 }
@@ -39,6 +41,8 @@ const mountPanel = (
 		aspectRatioOptions?: string[];
 		defaultResolution?: string;
 		resolutionOptions?: string[];
+		multiImageModelAllowlist?: Record< string, string[] >;
+		resolutionModelAllowlist?: Record< string, string[] >;
 	}
 ) => {
 	const wpElement = ( ( window as unknown ) as { wp?: { element?: Record<string, unknown> } } ).wp?.element as any;

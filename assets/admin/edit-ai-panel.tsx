@@ -899,6 +899,8 @@ type MediaData = {
 	defaultGeneratorProvider?: string;
 	defaultAspectRatio?: string;
 	aspectRatioOptions?: string[];
+	resolutionModelAllowlist?: Record< string, string[] >;
+	multiImageModelAllowlist?: Record< string, string[] >;
 	iconUrl?: string;
 };
 
