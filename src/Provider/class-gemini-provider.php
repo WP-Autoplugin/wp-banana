@@ -308,21 +308,8 @@ final class Gemini_Provider implements Provider_Interface {
 			$config['api_model']             = Models_Catalog::GEMINI_3_PRO_IMAGE_PREVIEW;
 			$config['supports_image_config'] = true;
 
-			// Use explicit resolution parameter if provided.
 			if ( null !== $resolution && '' !== $resolution ) {
 				$config['image_size'] = $resolution;
-			} else {
-				// Fall back to extracting resolution from model name for backward compatibility.
-				$suffix   = substr( $normalized, strlen( $preview_v3 ) );
-				$suffix   = ( '-' === substr( $suffix, 0, 1 ) ) ? substr( $suffix, 1 ) : $suffix;
-				$size_map = [
-					'1k' => '1K',
-					'2k' => '2K',
-					'4k' => '4K',
-				];
-				if ( isset( $size_map[ $suffix ] ) ) {
-					$config['image_size'] = $size_map[ $suffix ];
-				}
 			}
 		}
 

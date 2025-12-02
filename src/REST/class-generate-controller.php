@@ -240,13 +240,6 @@ final class Generate_Controller {
 			$model     = '' !== $model_input ? sanitize_text_field( $model_input ) : (string) ( $provider_conf['default_model'] ?? $fallback );
 			$model_eff = $model;
 
-			if ( $reference_count > 0 && 'gemini' === $provider ) {
-				$model_eff = $this->normalize_gemini_reference_model( $model_eff );
-			}
-			if ( $reference_count > 0 && 'replicate' === $provider ) {
-				$model_eff = $this->normalize_replicate_reference_model( $model_eff );
-			}
-
 			$aspect_param = $req->get_param( 'aspect_ratio' );
 			$aspect_ratio = is_string( $aspect_param ) ? $this->sanitize_aspect_ratio( $aspect_param ) : '';
 
@@ -977,34 +970,6 @@ final class Generate_Controller {
 				wp_delete_file( $image->path );
 			}
 		}
-	}
-
-	/**
-	 * Normalize Gemini models for reference-based requests.
-	 *
-	 * @param string $model Model identifier.
-	 * @return string
-	 */
-	private function normalize_gemini_reference_model( string $model ): string {
-		$normalized = strtolower( trim( $model ) );
-		if ( 0 === strpos( $normalized, strtolower( Models_Catalog::GEMINI_3_PRO_IMAGE_PREVIEW ) . '-' ) ) {
-			return Models_Catalog::GEMINI_3_PRO_IMAGE_PREVIEW;
-		}
-		return $model;
-	}
-
-	/**
-	 * Normalize Replicate models for reference-based requests.
-	 *
-	 * @param string $model Model identifier.
-	 * @return string
-	 */
-	private function normalize_replicate_reference_model( string $model ): string {
-		$normalized = strtolower( trim( $model ) );
-		if ( 0 === strpos( $normalized, strtolower( Models_Catalog::REPLICATE_NANO_BANANA_PRO ) . '-' ) ) {
-			return Models_Catalog::REPLICATE_NANO_BANANA_PRO;
-		}
-		return $model;
 	}
 
 	/**

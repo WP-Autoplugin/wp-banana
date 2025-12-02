@@ -211,23 +211,8 @@ final class Replicate_Provider implements Provider_Interface {
 		$nano_banana_pro = strtolower( Models_Catalog::REPLICATE_NANO_BANANA_PRO );
 		if ( 0 === strpos( $normalized, $nano_banana_pro ) ) {
 			$config['api_model'] = Models_Catalog::REPLICATE_NANO_BANANA_PRO;
-			if ( ! $has_references ) {
-				// Use explicit resolution parameter if provided.
-				if ( null !== $resolution_param && '' !== $resolution_param ) {
-					$config['resolution'] = $resolution_param;
-				} else {
-					// Fall back to extracting resolution from model name for backward compatibility.
-					$suffix = substr( $normalized, strlen( $nano_banana_pro ) );
-					$suffix = ( '-' === substr( $suffix, 0, 1 ) ) ? substr( $suffix, 1 ) : $suffix;
-					$map    = [
-						'1k' => '1K',
-						'2k' => '2K',
-						'4k' => '4K',
-					];
-					if ( isset( $map[ $suffix ] ) ) {
-						$config['resolution'] = $map[ $suffix ];
-					}
-				}
+			if ( ! $has_references && null !== $resolution_param && '' !== $resolution_param ) {
+				$config['resolution'] = $resolution_param;
 			}
 		}
 		return $config;
