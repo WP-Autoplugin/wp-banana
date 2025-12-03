@@ -36,6 +36,9 @@ final class Models_Catalog {
 	public const REPLICATE_IMAGEN_4_ULTRA       = 'google/imagen-4-ultra';
 	public const REPLICATE_IMAGEN_4_FAST        = 'google/imagen-4-fast';
 	public const REPLICATE_NANO_BANANA_PRO      = 'google/nano-banana-pro';
+	public const REPLICATE_FLUX_2_DEV           = 'black-forest-labs/flux-2-dev';
+	public const REPLICATE_FLUX_2_PRO           = 'black-forest-labs/flux-2-pro';
+	public const REPLICATE_FLUX_2_FLEX          = 'black-forest-labs/flux-2-flex';
 	public const REPLICATE_FLUX_11_PRO          = 'black-forest-labs/flux-1.1-pro';
 	public const REPLICATE_FLUX_DEV             = 'black-forest-labs/flux-dev';
 	public const REPLICATE_FLUX_SCHNELL         = 'black-forest-labs/flux-schnell';
@@ -177,6 +180,9 @@ final class Models_Catalog {
 				self::REPLICATE_NANO_BANANA,
 				self::REPLICATE_NANO_BANANA_PRO,
 				self::REPLICATE_SEEDREAM_4,
+				self::REPLICATE_FLUX_2_DEV,
+				self::REPLICATE_FLUX_2_PRO,
+				self::REPLICATE_FLUX_2_FLEX,
 				self::REPLICATE_REVE_REMIX,
 			],
 		];
@@ -194,6 +200,9 @@ final class Models_Catalog {
 			],
 			'replicate' => [
 				self::REPLICATE_NANO_BANANA_PRO,
+				self::REPLICATE_FLUX_2_DEV,
+				self::REPLICATE_FLUX_2_PRO,
+				self::REPLICATE_FLUX_2_FLEX,
 			],
 		];
 	}
@@ -222,6 +231,9 @@ final class Models_Catalog {
 				self::REPLICATE_IMAGEN_4_ULTRA,
 				self::REPLICATE_IMAGEN_4_FAST,
 				self::REPLICATE_NANO_BANANA_PRO,
+				self::REPLICATE_FLUX_2_DEV,
+				self::REPLICATE_FLUX_2_PRO,
+				self::REPLICATE_FLUX_2_FLEX,
 				self::REPLICATE_FLUX_11_PRO,
 				self::REPLICATE_FLUX_DEV,
 				self::REPLICATE_FLUX_SCHNELL,
@@ -260,6 +272,9 @@ final class Models_Catalog {
 				self::REPLICATE_SEEDREAM_4,
 				self::REPLICATE_NANO_BANANA_PRO,
 				self::REPLICATE_NANO_BANANA,
+				self::REPLICATE_FLUX_2_DEV,
+				self::REPLICATE_FLUX_2_PRO,
+				self::REPLICATE_FLUX_2_FLEX,
 				self::REPLICATE_FLUX_KONTEXT_MAX,
 				self::REPLICATE_FLUX_KONTEXT_DEV,
 				self::REPLICATE_REVE_EDIT,

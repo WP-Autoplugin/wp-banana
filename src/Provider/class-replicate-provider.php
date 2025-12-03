@@ -78,7 +78,7 @@ final class Replicate_Provider implements Provider_Interface {
 	public function generate( Image_Params $p ): Binary_Image {
 		$prompt = $this->normalize_prompt( $p->prompt );
 		$model  = '' !== $p->model ? $p->model : $this->default_model;
-		$config = $this->resolve_model_config( $model, ! empty( $p->reference_images ), $p->resolution );
+		$config = $this->resolve_model_config( $model, ! empty( $p->reference_images ), $p->resolution, $p->width, $p->height );
 		$model  = $config['api_model'];
 		if ( '' === $model ) {
 			throw new RuntimeException( 'Replicate model not configured.' );
@@ -89,6 +89,10 @@ final class Replicate_Provider implements Provider_Interface {
 		];
 		if ( ! empty( $config['resolution'] ) ) {
 			$input['resolution'] = $config['resolution'];
+		}
+		if ( ! empty( $config['width'] ) && ! empty( $config['height'] ) ) {
+			$input['width']  = (int) $config['width'];
+			$input['height'] = (int) $config['height'];
 		}
 		if ( ! empty( $p->aspect_ratio ) ) {
 			$input['aspect_ratio'] = $p->aspect_ratio;
@@ -129,7 +133,7 @@ final class Replicate_Provider implements Provider_Interface {
 	 */
 	public function edit( Edit_Params $p ): Binary_Image {
 		$model  = '' !== $p->model ? $p->model : $this->default_model;
-		$config = $this->resolve_model_config( $model, true, null );
+		$config = $this->resolve_model_config( $model, true, null, $p->target_width, $p->target_height );
 		$model  = $config['api_model'];
 		if ( '' === $model ) {
 			throw new RuntimeException( 'Replicate model not configured.' );
@@ -200,15 +204,38 @@ final class Replicate_Provider implements Provider_Interface {
 	 * @param string      $model            Selected model identifier.
 	 * @param bool        $has_references   Whether request includes reference images.
 	 * @param string|null $resolution_param Optional resolution parameter (e.g. 1K, 2K, 4K).
-	 * @return array{api_model:string,resolution:?string}
+	 * @param int|null    $target_width     Target width when provided by the request.
+	 * @param int|null    $target_height    Target height when provided by the request.
+	 * @return array{api_model:string,resolution:?string,width:?int,height:?int}
 	 */
-	private function resolve_model_config( string $model, bool $has_references, ?string $resolution_param = null ): array {
+	private function resolve_model_config( string $model, bool $has_references, ?string $resolution_param = null, ?int $target_width = null, ?int $target_height = null ): array {
 		$config          = [
 			'api_model'  => $model,
 			'resolution' => null,
+			'width'      => null,
+			'height'     => null,
 		];
 		$normalized      = strtolower( trim( $model ) );
 		$nano_banana_pro = strtolower( Models_Catalog::REPLICATE_NANO_BANANA_PRO );
+		$flux_2_dev      = strtolower( Models_Catalog::REPLICATE_FLUX_2_DEV );
+		$flux_2_pro      = strtolower( Models_Catalog::REPLICATE_FLUX_2_PRO );
+		$flux_2_flex     = strtolower( Models_Catalog::REPLICATE_FLUX_2_FLEX );
+
+		if ( 0 === strpos( $normalized, $flux_2_dev ) ) {
+			$config['api_model']                        = Models_Catalog::REPLICATE_FLUX_2_DEV;
+			list( $config['width'], $config['height'] ) = $this->resolve_flux_2_dev_dimensions( $target_width, $target_height, $resolution_param );
+		} elseif ( 0 === strpos( $normalized, $flux_2_pro ) ) {
+			$config['api_model'] = Models_Catalog::REPLICATE_FLUX_2_PRO;
+			if ( ! $has_references && null !== $resolution_param && '' !== $resolution_param ) {
+				$config['resolution'] = $this->resolution_to_megapixels( $resolution_param );
+			}
+		} elseif ( 0 === strpos( $normalized, $flux_2_flex ) ) {
+			$config['api_model'] = Models_Catalog::REPLICATE_FLUX_2_FLEX;
+			if ( ! $has_references && null !== $resolution_param && '' !== $resolution_param ) {
+				$config['resolution'] = $this->resolution_to_megapixels( $resolution_param );
+			}
+		}
+
 		if ( 0 === strpos( $normalized, $nano_banana_pro ) ) {
 			$config['api_model'] = Models_Catalog::REPLICATE_NANO_BANANA_PRO;
 			if ( ! $has_references && null !== $resolution_param && '' !== $resolution_param ) {
@@ -493,6 +520,85 @@ final class Replicate_Provider implements Provider_Interface {
 	}
 
 	/**
+	 * Map generic resolution choices to Replicate megapixel strings.
+	 *
+	 * @param string|null $resolution Resolution label.
+	 * @return string|null
+	 */
+	private function resolution_to_megapixels( ?string $resolution ): ?string {
+		if ( null === $resolution ) {
+			return null;
+		}
+		$canonical = strtoupper( trim( $resolution ) );
+		if ( '' === $canonical ) {
+			return null;
+		}
+		if ( '1K' === $canonical ) {
+			return '1 MP';
+		}
+		if ( '2K' === $canonical ) {
+			return '2 MP';
+		}
+		if ( '4K' === $canonical ) {
+			return '4 MP';
+		}
+		return null;
+	}
+
+	/**
+	 * Determine the long edge to use for flux-2-dev given a resolution choice.
+	 *
+	 * @param string|null $resolution Resolution label.
+	 * @return int|null
+	 */
+	private function long_edge_for_resolution( ?string $resolution ): ?int {
+		$canonical = strtoupper( trim( (string) $resolution ) );
+		if ( '1K' === $canonical ) {
+			return 1024;
+		}
+		if ( '2K' === $canonical || '4K' === $canonical ) {
+			return 1440;
+		}
+		return null;
+	}
+
+	/**
+	 * Clamp flux-2-dev dimensions to supported bounds and optional resolution targets.
+	 *
+	 * @param int|null    $target_width  Requested width.
+	 * @param int|null    $target_height Requested height.
+	 * @param string|null $resolution    Resolution label.
+	 * @return array{0:int,1:int}
+	 */
+	private function resolve_flux_2_dev_dimensions( ?int $target_width, ?int $target_height, ?string $resolution ): array {
+		$min = 256;
+		$max = 1440;
+
+		$width  = is_int( $target_width ) ? $target_width : 1024;
+		$height = is_int( $target_height ) ? $target_height : 1024;
+
+		$width  = max( $min, min( $max, $width ) );
+		$height = max( $min, min( $max, $height ) );
+
+		$long_edge = $this->long_edge_for_resolution( $resolution );
+		if ( $long_edge ) {
+			if ( $width >= $height ) {
+				$scale  = $width > 0 ? ( $height / $width ) : 1.0;
+				$width  = $long_edge;
+				$height = (int) round( $long_edge * $scale );
+			} else {
+				$scale  = $height > 0 ? ( $width / $height ) : 1.0;
+				$width  = (int) round( $long_edge * $scale );
+				$height = $long_edge;
+			}
+			$width  = max( $min, min( $max, $width ) );
+			$height = max( $min, min( $max, $height ) );
+		}
+
+		return [ $width, $height ];
+	}
+
+	/**
 	 * Inject reference images into Replicate generation payload.
 	 *
 	 * @param string                 $model      Model name.
@@ -522,10 +628,17 @@ final class Replicate_Provider implements Provider_Interface {
 			strtolower( Models_Catalog::REPLICATE_NANO_BANANA ),
 			strtolower( Models_Catalog::REPLICATE_NANO_BANANA_PRO ),
 		];
+		$flux_2_models    = [
+			strtolower( Models_Catalog::REPLICATE_FLUX_2_DEV ),
+			strtolower( Models_Catalog::REPLICATE_FLUX_2_PRO ),
+			strtolower( Models_Catalog::REPLICATE_FLUX_2_FLEX ),
+		];
 		$seedream_needle  = strtolower( Models_Catalog::REPLICATE_SEEDREAM_4 );
 		$reve_remix_lower = strtolower( Models_Catalog::REPLICATE_REVE_REMIX );
 
-		if ( $this->needle_contains_any( $needle, $banana_variants ) || false !== strpos( $needle, $seedream_needle ) ) {
+		if ( $this->needle_contains_any( $needle, $flux_2_models ) ) {
+			$input['input_images'] = $data_uris;
+		} elseif ( $this->needle_contains_any( $needle, $banana_variants ) || false !== strpos( $needle, $seedream_needle ) ) {
 			$input['image_input'] = $data_uris;
 			$input['image_input'] = array_reverse( $input['image_input'] );
 		} elseif ( $needle === $reve_remix_lower ) {
@@ -586,11 +699,22 @@ final class Replicate_Provider implements Provider_Interface {
 			strtolower( Models_Catalog::REPLICATE_FLUX_KONTEXT_MAX ),
 			strtolower( Models_Catalog::REPLICATE_FLUX_KONTEXT_DEV ),
 		];
+		$flux_2_models   = [
+			strtolower( Models_Catalog::REPLICATE_FLUX_2_DEV ),
+			strtolower( Models_Catalog::REPLICATE_FLUX_2_PRO ),
+			strtolower( Models_Catalog::REPLICATE_FLUX_2_FLEX ),
+		];
 		$seededit        = strtolower( Models_Catalog::REPLICATE_SEEDEDIT_30 );
 		$qwen_edit       = strtolower( Models_Catalog::REPLICATE_QWEN_IMAGE_EDIT );
 		$reve_remix      = strtolower( Models_Catalog::REPLICATE_REVE_REMIX );
 
-		if ( $needle === $reve_remix ) {
+		if ( $this->needle_contains_any( $needle, $flux_2_models ) ) {
+			$defaults['input_images'] = [ $data_uri ];
+			$defaults['aspect_ratio'] = 'match_input_image';
+			if ( false !== strpos( $needle, strtolower( Models_Catalog::REPLICATE_FLUX_2_DEV ) ) ) {
+				$defaults['go_fast'] = true;
+			}
+		} elseif ( $needle === $reve_remix ) {
 			$defaults['reference_images'] = [
 				$data_uri,
 			];
