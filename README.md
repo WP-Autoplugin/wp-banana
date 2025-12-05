@@ -28,7 +28,7 @@ WP Nano Banana is a free WordPress plugin that lets you generate and edit images
 - Create new images from simple text prompts
 - Attach optional reference images from your computer or the Media Library to guide generation
 - Use AI to generate featured images, blog graphics, product photos, and more
-- Multiple model support: ChatGPT Image model, Seedream 4.0, Gemini 2.5 Flash Image
+- Multiple model support: ChatGPT Image model, Seedream 4.0, Gemini 3 Pro Image, FLUX.2 models
 
 ### AI Image Editing
 - Select images from your Media Library or upload new ones
@@ -145,11 +145,12 @@ https://github.com/user-attachments/assets/28a5ef2d-682e-4206-99e7-6eb1f141146d
 
 WP Nano Banana supports a wide range of state-of-the-art AI image models for both generation and editing. Below are some of the available models you can use:
 
-- **Google Gemini 3 Pro Image Preview** (`gemini-3-pro-image-preview` / `google/nano-banana-pro`)
+- **Google Gemini 3 Pro Image Preview**, a.k.a. **Nano Banana Pro** (`gemini-3-pro-image-preview` / `google/nano-banana-pro`)
 - **Google Gemini 2.5 Flash Image**, a.k.a. **Google Nano Banana** (`gemini-2.5-flash-image` / `google/nano-banana`)
 - **OpenAI GPT-Image-1** (`gpt-image-1`) - the same model used by ChatGPT for image generation and editing
 - **OpenAI GPT-Image-1-Mini** (`gpt-image-1-mini`)
 - **Google Imagen 4** (`google/imagen-4`, `google/imagen-4-ultra`, `google/imagen-4-fast`) - through Google Gemini API or Replicate
+- **FLUX.2** (`black-forest-labs/flux-2-dev`, `black-forest-labs/flux-2-pro`, `black-forest-labs/flux-2-flex`)
 - **FLUX Kontext** (`black-forest-labs/flux-kontext-max`, `black-forest-labs/flux-kontext-dev`)
 - **FLUX 1.1 Pro** (`black-forest-labs/flux-1.1-pro`)
 - **FLUX Schnell** (`black-forest-labs/flux-schnell`)
