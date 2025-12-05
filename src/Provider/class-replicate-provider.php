@@ -65,7 +65,7 @@ final class Replicate_Provider implements Provider_Interface {
 	public function __construct( string $api_token, string $default_model ) {
 		$this->api_token     = $api_token;
 		$this->default_model = $default_model;
-		$this->timeout       = 60; // Replicate synchronous wait limit.
+		$this->timeout       = 65; // Replicate synchronous wait limit is 60 seconds, adding some buffer.
 	}
 
 	/**
@@ -89,6 +89,9 @@ final class Replicate_Provider implements Provider_Interface {
 		];
 		if ( ! empty( $config['resolution'] ) ) {
 			$input['resolution'] = $config['resolution'];
+		}
+		if ( ! empty( $config['size'] ) ) {
+			$input['size'] = $config['size'];
 		}
 		if ( ! empty( $config['width'] ) && ! empty( $config['height'] ) ) {
 			$input['width']  = (int) $config['width'];
@@ -206,7 +209,7 @@ final class Replicate_Provider implements Provider_Interface {
 	 * @param string|null $resolution_param Optional resolution parameter (e.g. 1K, 2K, 4K).
 	 * @param int|null    $target_width     Target width when provided by the request.
 	 * @param int|null    $target_height    Target height when provided by the request.
-	 * @return array{api_model:string,resolution:?string,width:?int,height:?int}
+	 * @return array{api_model:string,resolution:?string,width:?int,height:?int,size:?string}
 	 */
 	private function resolve_model_config( string $model, bool $has_references, ?string $resolution_param = null, ?int $target_width = null, ?int $target_height = null ): array {
 		$config          = [
@@ -214,12 +217,14 @@ final class Replicate_Provider implements Provider_Interface {
 			'resolution' => null,
 			'width'      => null,
 			'height'     => null,
+			'size'       => null,
 		];
 		$normalized      = strtolower( trim( $model ) );
 		$nano_banana_pro = strtolower( Models_Catalog::REPLICATE_NANO_BANANA_PRO );
 		$flux_2_dev      = strtolower( Models_Catalog::REPLICATE_FLUX_2_DEV );
 		$flux_2_pro      = strtolower( Models_Catalog::REPLICATE_FLUX_2_PRO );
 		$flux_2_flex     = strtolower( Models_Catalog::REPLICATE_FLUX_2_FLEX );
+		$seedream_45     = strtolower( Models_Catalog::REPLICATE_SEEDREAM_45 );
 
 		if ( 0 === strpos( $normalized, $flux_2_dev ) ) {
 			$config['api_model']                        = Models_Catalog::REPLICATE_FLUX_2_DEV;
@@ -233,6 +238,11 @@ final class Replicate_Provider implements Provider_Interface {
 			$config['api_model'] = Models_Catalog::REPLICATE_FLUX_2_FLEX;
 			if ( ! $has_references && null !== $resolution_param && '' !== $resolution_param ) {
 				$config['resolution'] = $this->resolution_to_megapixels( $resolution_param );
+			}
+		} elseif ( 0 === strpos( $normalized, $seedream_45 ) ) {
+			$config['api_model'] = Models_Catalog::REPLICATE_SEEDREAM_45;
+			if ( null !== $resolution_param && '' !== $resolution_param ) {
+				$config['size'] = $this->resolution_to_seedream_size( $resolution_param );
 			}
 		}
 
@@ -546,6 +556,29 @@ final class Replicate_Provider implements Provider_Interface {
 	}
 
 	/**
+	 * Map generic resolution choices to Seedream size strings.
+	 *
+	 * @param string|null $resolution Resolution label.
+	 * @return string|null
+	 */
+	private function resolution_to_seedream_size( ?string $resolution ): ?string {
+		if ( null === $resolution ) {
+			return null;
+		}
+		$canonical = strtoupper( trim( $resolution ) );
+		if ( '' === $canonical ) {
+			return null;
+		}
+		if ( '4K' === $canonical ) {
+			return '4K';
+		}
+		if ( '2K' === $canonical || '1K' === $canonical ) {
+			return '2K';
+		}
+		return null;
+	}
+
+	/**
 	 * Determine the long edge to use for flux-2-dev given a resolution choice.
 	 *
 	 * @param string|null $resolution Resolution label.
@@ -633,12 +666,15 @@ final class Replicate_Provider implements Provider_Interface {
 			strtolower( Models_Catalog::REPLICATE_FLUX_2_PRO ),
 			strtolower( Models_Catalog::REPLICATE_FLUX_2_FLEX ),
 		];
-		$seedream_needle  = strtolower( Models_Catalog::REPLICATE_SEEDREAM_4 );
+		$seedream_needles = [
+			strtolower( Models_Catalog::REPLICATE_SEEDREAM_4 ),
+			strtolower( Models_Catalog::REPLICATE_SEEDREAM_45 ),
+		];
 		$reve_remix_lower = strtolower( Models_Catalog::REPLICATE_REVE_REMIX );
 
 		if ( $this->needle_contains_any( $needle, $flux_2_models ) ) {
 			$input['input_images'] = $data_uris;
-		} elseif ( $this->needle_contains_any( $needle, $banana_variants ) || false !== strpos( $needle, $seedream_needle ) ) {
+		} elseif ( $this->needle_contains_any( $needle, $banana_variants ) || $this->needle_contains_any( $needle, $seedream_needles ) ) {
 			$input['image_input'] = $data_uris;
 			$input['image_input'] = array_reverse( $input['image_input'] );
 		} elseif ( $needle === $reve_remix_lower ) {
@@ -694,7 +730,10 @@ final class Replicate_Provider implements Provider_Interface {
 			strtolower( Models_Catalog::REPLICATE_NANO_BANANA ),
 			strtolower( Models_Catalog::REPLICATE_NANO_BANANA_PRO ),
 		];
-		$seedream        = strtolower( Models_Catalog::REPLICATE_SEEDREAM_4 );
+		$seedream        = [
+			strtolower( Models_Catalog::REPLICATE_SEEDREAM_4 ),
+			strtolower( Models_Catalog::REPLICATE_SEEDREAM_45 ),
+		];
 		$flux_kontext    = [
 			strtolower( Models_Catalog::REPLICATE_FLUX_KONTEXT_MAX ),
 			strtolower( Models_Catalog::REPLICATE_FLUX_KONTEXT_DEV ),
@@ -718,7 +757,7 @@ final class Replicate_Provider implements Provider_Interface {
 			$defaults['reference_images'] = [
 				$data_uri,
 			];
-		} elseif ( $this->needle_contains_any( $needle, $banana_variants ) || false !== strpos( $needle, $seedream ) ) {
+		} elseif ( $this->needle_contains_any( $needle, $banana_variants ) || $this->needle_contains_any( $needle, $seedream ) ) {
 			$defaults['image_input'] = [ $data_uri ];
 		} elseif ( $this->needle_contains_any( $needle, $flux_kontext ) ) {
 			$defaults['input_image']   = $data_uri;

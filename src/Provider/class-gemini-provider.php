@@ -65,7 +65,7 @@ final class Gemini_Provider implements Provider_Interface {
 	public function __construct( string $api_key, string $default_model ) {
 		$this->api_key       = $api_key;
 		$this->default_model = $default_model;
-		$this->timeout       = 60; // Fixed 60s timeout for Gemini.
+		$this->timeout       = 300;
 	}
 
 	/**

@@ -48,6 +48,7 @@ final class Models_Catalog {
 	public const REPLICATE_IDEOGRAM_V3_QUALITY  = 'ideogram-ai/ideogram-v3-quality';
 	public const REPLICATE_IDEOGRAM_V3_BALANCED = 'ideogram-ai/ideogram-v3-balanced';
 	public const REPLICATE_SD35_LARGE           = 'stability-ai/stable-diffusion-3.5-large';
+	public const REPLICATE_SEEDREAM_45          = 'bytedance/seedream-4.5';
 	public const REPLICATE_SEEDREAM_4           = 'bytedance/seedream-4';
 	public const REPLICATE_HUNYUAN_IMAGE_3      = 'tencent/hunyuan-image-3';
 	public const REPLICATE_QWEN_IMAGE           = 'qwen/qwen-image';
@@ -179,6 +180,7 @@ final class Models_Catalog {
 			'replicate' => [
 				self::REPLICATE_NANO_BANANA,
 				self::REPLICATE_NANO_BANANA_PRO,
+				self::REPLICATE_SEEDREAM_45,
 				self::REPLICATE_SEEDREAM_4,
 				self::REPLICATE_FLUX_2_DEV,
 				self::REPLICATE_FLUX_2_PRO,
@@ -203,6 +205,7 @@ final class Models_Catalog {
 				self::REPLICATE_FLUX_2_DEV,
 				self::REPLICATE_FLUX_2_PRO,
 				self::REPLICATE_FLUX_2_FLEX,
+				self::REPLICATE_SEEDREAM_45,
 			],
 		];
 	}
@@ -243,6 +246,7 @@ final class Models_Catalog {
 				self::REPLICATE_IDEOGRAM_V3_QUALITY,
 				self::REPLICATE_IDEOGRAM_V3_BALANCED,
 				self::REPLICATE_SD35_LARGE,
+				self::REPLICATE_SEEDREAM_45,
 				self::REPLICATE_SEEDREAM_4,
 				self::REPLICATE_HUNYUAN_IMAGE_3,
 				self::REPLICATE_QWEN_IMAGE,
@@ -267,11 +271,12 @@ final class Models_Catalog {
 				self::OPENAI_GPT_IMAGE_1_MINI,
 			],
 			'replicate' => [
-				self::REPLICATE_QWEN_IMAGE_EDIT,
-				self::REPLICATE_SEEDEDIT_30,
-				self::REPLICATE_SEEDREAM_4,
 				self::REPLICATE_NANO_BANANA_PRO,
 				self::REPLICATE_NANO_BANANA,
+				self::REPLICATE_SEEDREAM_45,
+				self::REPLICATE_SEEDREAM_4,
+				self::REPLICATE_SEEDEDIT_30,
+				self::REPLICATE_QWEN_IMAGE_EDIT,
 				self::REPLICATE_FLUX_2_DEV,
 				self::REPLICATE_FLUX_2_PRO,
 				self::REPLICATE_FLUX_2_FLEX,

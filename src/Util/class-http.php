@@ -30,7 +30,7 @@ final class Http {
 	public static function request( string $url, array $args ) {
 		$defaults = [
 			'method'  => 'GET',
-			'timeout' => 180,
+			'timeout' => 300,
 			'headers' => [
 				'Content-Type' => 'application/json',
 			],
