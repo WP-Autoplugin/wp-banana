@@ -19,6 +19,10 @@ declare global {
 			defaultGeneratorProvider?: string;
 			defaultAspectRatio?: string;
 			aspectRatioOptions?: string[];
+			defaultResolution?: string;
+			resolutionOptions?: string[];
+			multiImageModelAllowlist?: Record< string, string[] >;
+			resolutionModelAllowlist?: Record< string, string[] >;
 		};
 	}
 }
@@ -35,6 +39,10 @@ const mountPanel = (
 		defaultGeneratorProvider?: string;
 		defaultAspectRatio?: string;
 		aspectRatioOptions?: string[];
+		defaultResolution?: string;
+		resolutionOptions?: string[];
+		multiImageModelAllowlist?: Record< string, string[] >;
+		resolutionModelAllowlist?: Record< string, string[] >;
 	}
 ) => {
 	const wpElement = ( ( window as unknown ) as { wp?: { element?: Record<string, unknown> } } ).wp?.element as any;
@@ -60,6 +68,8 @@ const mountPanel = (
 				defaultGeneratorProvider={ payload.defaultGeneratorProvider }
 				defaultAspectRatio={ payload.defaultAspectRatio }
 				aspectRatioOptions={ payload.aspectRatioOptions }
+				defaultResolution={ payload.defaultResolution }
+				resolutionOptions={ payload.resolutionOptions }
 				enableReferenceDragDrop
 			/>
 		);
@@ -75,6 +85,8 @@ const mountPanel = (
 			defaultGeneratorProvider={ payload.defaultGeneratorProvider }
 			defaultAspectRatio={ payload.defaultAspectRatio }
 			aspectRatioOptions={ payload.aspectRatioOptions }
+			defaultResolution={ payload.defaultResolution }
+			resolutionOptions={ payload.resolutionOptions }
 			enableReferenceDragDrop
 		/>,
 		container
@@ -118,6 +130,8 @@ const init = () => {
 		defaultGeneratorProvider: payload.defaultGeneratorProvider,
 		defaultAspectRatio: payload.defaultAspectRatio,
 		aspectRatioOptions: payload.aspectRatioOptions,
+		defaultResolution: payload.defaultResolution,
+		resolutionOptions: payload.resolutionOptions,
 	} );
 };
 

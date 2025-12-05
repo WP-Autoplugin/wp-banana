@@ -29,6 +29,8 @@ export interface GeneratePanelProps {
 	defaultGeneratorProvider?: string;
 	aspectRatioOptions?: string[];
 	defaultAspectRatio?: string;
+	resolutionOptions?: string[];
+	defaultResolution?: string;
 	enableReferenceDragDrop?: boolean;
 }
 
@@ -44,6 +46,8 @@ const GeneratePanel = ( {
 	defaultGeneratorProvider,
 	aspectRatioOptions,
 	defaultAspectRatio,
+	resolutionOptions,
+	defaultResolution,
 	enableReferenceDragDrop = false,
 }: GeneratePanelProps ) => {
 	const [ prompt, setPrompt ] = useState( '' );
@@ -87,10 +91,15 @@ const GeneratePanel = ( {
 		setAspectRatio,
 		aspectRatioEnabled,
 		aspectOptions,
+		resolution,
+		setResolution,
+		resolutionEnabled,
+		resolutionOptions: resolvedResolutionOptions,
 		connectedProviders,
 		summary,
 		modelRequirementSatisfied,
 		preferredAspectRatio,
+		preferredResolution,
 	} = useGeneratorConfig( {
 		providers,
 		restNamespace,
@@ -98,6 +107,8 @@ const GeneratePanel = ( {
 		defaultGeneratorProvider,
 		aspectRatioOptions,
 		defaultAspectRatio,
+		resolutionOptions,
+		defaultResolution,
 		referenceCount,
 		multiReferenceMode,
 	} );
@@ -181,6 +192,9 @@ const GeneratePanel = ( {
 			if ( aspectRatioEnabled && aspectRatio ) {
 				payload.aspect_ratio = aspectRatio;
 			}
+			if ( resolutionEnabled && resolution ) {
+				payload.resolution = resolution;
+			}
 			if ( previewOnly ) {
 				payload.preview_only = '1';
 			}
@@ -190,7 +204,7 @@ const GeneratePanel = ( {
 				data: payload,
 			} );
 		},
-		[ referenceCount, prepareReferenceFiles, setReferenceError, provider, model, restNamespace, aspectRatioEnabled, aspectRatio ]
+		[ referenceCount, prepareReferenceFiles, setReferenceError, provider, model, restNamespace, aspectRatioEnabled, aspectRatio, resolutionEnabled, resolution ]
 	);
 
 	const handleSubmit = useCallback( async () => {
@@ -211,6 +225,9 @@ const GeneratePanel = ( {
 			setPrompt( '' );
 			if ( aspectRatioEnabled ) {
 				setAspectRatio( preferredAspectRatio );
+			}
+			if ( resolutionEnabled ) {
+				setResolution( preferredResolution );
 			}
 			setShowOptions( false );
 			resetReferenceImages();
@@ -236,6 +253,8 @@ const GeneratePanel = ( {
 		sendGenerateRequest,
 		aspectRatioEnabled,
 		preferredAspectRatio,
+		resolutionEnabled,
+		preferredResolution,
 		resetReferenceImages,
 		dispatchMediaRefresh,
 		onComplete,
@@ -290,9 +309,12 @@ const GeneratePanel = ( {
 		if ( aspectRatioEnabled ) {
 			setAspectRatio( preferredAspectRatio );
 		}
+		if ( resolutionEnabled ) {
+			setResolution( preferredResolution );
+		}
 		resetReferenceImages();
 		setShowOptions( false );
-	}, [ aspectRatioEnabled, preferredAspectRatio, resetReferenceImages ] );
+	}, [ aspectRatioEnabled, preferredAspectRatio, resolutionEnabled, preferredResolution, resetReferenceImages ] );
 
 	const handleVariationSelect = useCallback(
 		( count: number ) => {
@@ -393,6 +415,10 @@ const GeneratePanel = ( {
 					aspectRatio={ aspectRatio }
 					onAspectRatioChange={ setAspectRatio }
 					aspectOptions={ aspectOptions }
+					resolutionEnabled={ resolutionEnabled }
+					resolution={ resolution }
+					onResolutionChange={ setResolution }
+					resolutionOptions={ resolvedResolutionOptions }
 					isSubmitting={ isSubmitting }
 				/>
 

@@ -20,6 +20,7 @@ use WPBanana\Domain\Aspect_Ratios;
 use WPBanana\Domain\Edit_Params;
 use WPBanana\Domain\Image_Params;
 use WPBanana\Domain\Reference_Image;
+use WPBanana\Services\Models_Catalog;
 use WPBanana\Util\Http;
 
 /**
@@ -64,7 +65,7 @@ final class Gemini_Provider implements Provider_Interface {
 	public function __construct( string $api_key, string $default_model ) {
 		$this->api_key       = $api_key;
 		$this->default_model = $default_model;
-		$this->timeout       = 60; // Fixed 60s timeout for Gemini.
+		$this->timeout       = 300;
 	}
 
 	/**
@@ -83,7 +84,7 @@ final class Gemini_Provider implements Provider_Interface {
 			throw new RuntimeException( 'Gemini model not configured.' );
 		}
 
-		$model_config    = $this->resolve_model_config( $model );
+		$model_config    = $this->resolve_model_config( $model, $p->resolution );
 		$transport_model = $model_config['api_model'];
 
 		$is_imagen = $this->is_imagen_model( $transport_model );
@@ -141,7 +142,7 @@ final class Gemini_Provider implements Provider_Interface {
 			throw new RuntimeException( 'Imagen 4 models do not support editing.' );
 		}
 
-		$model_config    = $this->resolve_model_config( $model );
+		$model_config    = $this->resolve_model_config( $model, null );
 		$transport_model = $model_config['api_model'];
 
 		$url = trailingslashit( $this->api_url ) . rawurlencode( $transport_model ) . ':generateContent';
@@ -290,30 +291,25 @@ final class Gemini_Provider implements Provider_Interface {
 	/**
 	 * Resolve the transport model id and related options.
 	 *
-	 * @param string $model Selected model id.
+	 * @param string      $model      Selected model id.
+	 * @param string|null $resolution Optional resolution parameter (e.g. 1K, 2K, 4K).
 	 * @return array{api_model:string,image_size:?string,supports_image_config:bool}
 	 */
-	private function resolve_model_config( string $model ): array {
+	private function resolve_model_config( string $model, ?string $resolution = null ): array {
 		$normalized = strtolower( trim( $model ) );
+		$preview_v3 = strtolower( Models_Catalog::GEMINI_3_PRO_IMAGE_PREVIEW );
 		$config     = [
 			'api_model'             => $model,
 			'image_size'            => null,
 			'supports_image_config' => false,
 		];
 
-		if ( 0 === strpos( $normalized, 'gemini-3-pro-image-preview' ) ) {
-			$config['api_model']             = 'gemini-3-pro-image-preview';
+		if ( 0 === strpos( $normalized, $preview_v3 ) ) {
+			$config['api_model']             = Models_Catalog::GEMINI_3_PRO_IMAGE_PREVIEW;
 			$config['supports_image_config'] = true;
 
-			$suffix   = substr( $normalized, strlen( 'gemini-3-pro-image-preview' ) );
-			$suffix   = ( '-' === substr( $suffix, 0, 1 ) ) ? substr( $suffix, 1 ) : $suffix;
-			$size_map = [
-				'1k' => '1K',
-				'2k' => '2K',
-				'4k' => '4K',
-			];
-			if ( isset( $size_map[ $suffix ] ) ) {
-				$config['image_size'] = $size_map[ $suffix ];
+			if ( null !== $resolution && '' !== $resolution ) {
+				$config['image_size'] = $resolution;
 			}
 		}
 

@@ -20,6 +20,7 @@ use WPBanana\Domain\Edit_Params;
 use WPBanana\Domain\Image_Params;
 use WPBanana\Domain\Reference_Image;
 use WPBanana\Services\Options;
+use WPBanana\Services\Models_Catalog;
 use WPBanana\Util\Http;
 
 /**
@@ -56,6 +57,20 @@ final class Replicate_Provider implements Provider_Interface {
 	private $timeout;
 
 	/**
+	 * Poll interval in seconds when waiting on async predictions.
+	 *
+	 * @var int
+	 */
+	private $poll_interval = 2;
+
+	/**
+	 * Maximum additional poll duration in seconds.
+	 *
+	 * @var int
+	 */
+	private $poll_timeout = 60;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param string $api_token     API token.
@@ -64,7 +79,7 @@ final class Replicate_Provider implements Provider_Interface {
 	public function __construct( string $api_token, string $default_model ) {
 		$this->api_token     = $api_token;
 		$this->default_model = $default_model;
-		$this->timeout       = 60; // Replicate synchronous wait limit.
+		$this->timeout       = 65; // Replicate synchronous wait limit is 60 seconds, adding some buffer.
 	}
 
 	/**
@@ -77,7 +92,7 @@ final class Replicate_Provider implements Provider_Interface {
 	public function generate( Image_Params $p ): Binary_Image {
 		$prompt = $this->normalize_prompt( $p->prompt );
 		$model  = '' !== $p->model ? $p->model : $this->default_model;
-		$config = $this->resolve_model_config( $model, ! empty( $p->reference_images ) );
+		$config = $this->resolve_model_config( $model, ! empty( $p->reference_images ), $p->resolution, $p->width, $p->height );
 		$model  = $config['api_model'];
 		if ( '' === $model ) {
 			throw new RuntimeException( 'Replicate model not configured.' );
@@ -88,6 +103,13 @@ final class Replicate_Provider implements Provider_Interface {
 		];
 		if ( ! empty( $config['resolution'] ) ) {
 			$input['resolution'] = $config['resolution'];
+		}
+		if ( ! empty( $config['size'] ) ) {
+			$input['size'] = $config['size'];
+		}
+		if ( ! empty( $config['width'] ) && ! empty( $config['height'] ) ) {
+			$input['width']  = (int) $config['width'];
+			$input['height'] = (int) $config['height'];
 		}
 		if ( ! empty( $p->aspect_ratio ) ) {
 			$input['aspect_ratio'] = $p->aspect_ratio;
@@ -128,7 +150,7 @@ final class Replicate_Provider implements Provider_Interface {
 	 */
 	public function edit( Edit_Params $p ): Binary_Image {
 		$model  = '' !== $p->model ? $p->model : $this->default_model;
-		$config = $this->resolve_model_config( $model, true );
+		$config = $this->resolve_model_config( $model, true, null, $p->target_width, $p->target_height );
 		$model  = $config['api_model'];
 		if ( '' === $model ) {
 			throw new RuntimeException( 'Replicate model not configured.' );
@@ -196,29 +218,52 @@ final class Replicate_Provider implements Provider_Interface {
 	/**
 	 * Resolve model to base id and resolution hints.
 	 *
-	 * @param string $model           Selected model identifier.
-	 * @param bool   $has_references  Whether request includes reference images.
-	 * @return array{api_model:string,resolution:?string}
+	 * @param string      $model            Selected model identifier.
+	 * @param bool        $has_references   Whether request includes reference images.
+	 * @param string|null $resolution_param Optional resolution parameter (e.g. 1K, 2K, 4K).
+	 * @param int|null    $target_width     Target width when provided by the request.
+	 * @param int|null    $target_height    Target height when provided by the request.
+	 * @return array{api_model:string,resolution:?string,width:?int,height:?int,size:?string}
 	 */
-	private function resolve_model_config( string $model, bool $has_references ): array {
-		$config     = [
+	private function resolve_model_config( string $model, bool $has_references, ?string $resolution_param = null, ?int $target_width = null, ?int $target_height = null ): array {
+		$config          = [
 			'api_model'  => $model,
 			'resolution' => null,
+			'width'      => null,
+			'height'     => null,
+			'size'       => null,
 		];
-		$normalized = strtolower( trim( $model ) );
-		if ( 0 === strpos( $normalized, 'google/nano-banana-pro' ) ) {
-			$config['api_model'] = 'google/nano-banana-pro';
-			if ( ! $has_references ) {
-				$suffix = substr( $normalized, strlen( 'google/nano-banana-pro' ) );
-				$suffix = ( '-' === substr( $suffix, 0, 1 ) ) ? substr( $suffix, 1 ) : $suffix;
-				$map    = [
-					'1k' => '1K',
-					'2k' => '2K',
-					'4k' => '4K',
-				];
-				if ( isset( $map[ $suffix ] ) ) {
-					$config['resolution'] = $map[ $suffix ];
-				}
+		$normalized      = strtolower( trim( $model ) );
+		$nano_banana_pro = strtolower( Models_Catalog::REPLICATE_NANO_BANANA_PRO );
+		$flux_2_dev      = strtolower( Models_Catalog::REPLICATE_FLUX_2_DEV );
+		$flux_2_pro      = strtolower( Models_Catalog::REPLICATE_FLUX_2_PRO );
+		$flux_2_flex     = strtolower( Models_Catalog::REPLICATE_FLUX_2_FLEX );
+		$seedream_45     = strtolower( Models_Catalog::REPLICATE_SEEDREAM_45 );
+
+		if ( 0 === strpos( $normalized, $flux_2_dev ) ) {
+			$config['api_model']                        = Models_Catalog::REPLICATE_FLUX_2_DEV;
+			list( $config['width'], $config['height'] ) = $this->resolve_flux_2_dev_dimensions( $target_width, $target_height, $resolution_param );
+		} elseif ( 0 === strpos( $normalized, $flux_2_pro ) ) {
+			$config['api_model'] = Models_Catalog::REPLICATE_FLUX_2_PRO;
+			if ( ! $has_references && null !== $resolution_param && '' !== $resolution_param ) {
+				$config['resolution'] = $this->resolution_to_megapixels( $resolution_param );
+			}
+		} elseif ( 0 === strpos( $normalized, $flux_2_flex ) ) {
+			$config['api_model'] = Models_Catalog::REPLICATE_FLUX_2_FLEX;
+			if ( ! $has_references && null !== $resolution_param && '' !== $resolution_param ) {
+				$config['resolution'] = $this->resolution_to_megapixels( $resolution_param );
+			}
+		} elseif ( 0 === strpos( $normalized, $seedream_45 ) ) {
+			$config['api_model'] = Models_Catalog::REPLICATE_SEEDREAM_45;
+			if ( null !== $resolution_param && '' !== $resolution_param ) {
+				$config['size'] = $this->resolution_to_seedream_size( $resolution_param );
+			}
+		}
+
+		if ( 0 === strpos( $normalized, $nano_banana_pro ) ) {
+			$config['api_model'] = Models_Catalog::REPLICATE_NANO_BANANA_PRO;
+			if ( ! $has_references && null !== $resolution_param && '' !== $resolution_param ) {
+				$config['resolution'] = $resolution_param;
 			}
 		}
 		return $config;
@@ -286,7 +331,17 @@ final class Replicate_Provider implements Provider_Interface {
 			$message = 'Replicate API error: ' . $this->stringify_error( $data['error'] );
 			throw new RuntimeException( esc_html( $message ) );
 		}
+		if ( $this->should_poll_status( $data['status'] ?? '' ) && empty( $data['output'] ) ) {
+			$data = $this->poll_prediction(
+				$data,
+				$response,
+				$context
+			);
+		}
 		if ( empty( $data['output'] ) ) {
+			if ( $this->should_poll_status( $data['status'] ?? '' ) ) {
+				throw new RuntimeException( 'Replicate prediction did not finish in time.' );
+			}
 			throw new RuntimeException( 'Replicate API returned no output.' );
 		}
 
@@ -464,6 +519,99 @@ final class Replicate_Provider implements Provider_Interface {
 	}
 
 	/**
+	 * Poll a pending prediction until completion or timeout.
+	 *
+	 * @param array $data      Initial prediction payload.
+	 * @param array $response  Initial HTTP response.
+	 * @param array $context   Request context metadata.
+	 * @return array
+	 */
+	private function poll_prediction( array $data, array $response, array $context ): array {
+		$poll_url = '';
+		if ( isset( $data['urls']['get'] ) && is_string( $data['urls']['get'] ) ) {
+			$poll_url = $data['urls']['get'];
+		}
+		if ( '' === $poll_url ) {
+			$location = wp_remote_retrieve_header( $response, 'location' );
+			if ( is_string( $location ) && '' !== $location ) {
+				$poll_url = $location;
+			}
+		}
+		if ( '' === $poll_url ) {
+			return $data;
+		}
+
+		$deadline = time() + $this->poll_timeout;
+		$attempt  = 0;
+
+		while ( $this->should_poll_status( $data['status'] ?? '' ) && time() < $deadline ) {
+			$attempt++;
+			$args = [
+				'method'  => 'GET',
+				'timeout' => $this->timeout,
+				'headers' => [
+					'Authorization' => 'Bearer ' . $this->api_token,
+					'Content-Type'  => 'application/json',
+				],
+			];
+			list( $url, $args, $_payload, $request_context ) = $this->prepare_request(
+				$poll_url,
+				$args,
+				null,
+				array_merge(
+					$context,
+					[
+						'operation'    => $context['operation'] ?? '',
+						'polling'      => true,
+						'poll_attempt' => $attempt,
+					]
+				),
+				'get',
+				false
+			);
+			$res = Http::request( $url, $args );
+			if ( is_wp_error( $res ) ) {
+				throw new RuntimeException( esc_html( $res->get_error_message() ) );
+			}
+			$body = wp_remote_retrieve_body( $res );
+			$decoded = json_decode( $body, true );
+			$decoded = apply_filters( 'wp_banana_provider_decoded_response', $decoded, $request_context, $res );
+			$decoded = apply_filters( 'wp_banana_replicate_decoded_response', $decoded, $request_context, $res );
+			if ( ! is_array( $decoded ) ) {
+				break;
+			}
+			$data = $decoded;
+			if ( isset( $data['error'] ) && ! empty( $data['error'] ) ) {
+				$message = 'Replicate API error: ' . $this->stringify_error( $data['error'] );
+				throw new RuntimeException( esc_html( $message ) );
+			}
+			if ( ! empty( $data['output'] ) ) {
+				return $data;
+			}
+			if ( ! $this->should_poll_status( $data['status'] ?? '' ) ) {
+				break;
+			}
+			sleep( $this->poll_interval );
+		}
+
+		return $data;
+	}
+
+	/**
+	 * Determine if a prediction status warrants polling.
+	 *
+	 * @param mixed $status Status string.
+	 * @return bool
+	 */
+	private function should_poll_status( $status ): bool {
+		if ( ! is_string( $status ) || '' === $status ) {
+			return false;
+		}
+		$status = strtolower( $status );
+		return in_array( $status, [ 'starting', 'processing' ], true );
+	}
+
+	/**
 	 * Map plugin format slug to Replicate expected values.
 	 *
 	 * @param string $format Requested format.
@@ -480,6 +628,124 @@ final class Replicate_Provider implements Provider_Interface {
 			return 'png';
 		}
 		return '';
+	}
+
+	/**
+	 * Check if a haystack contains any of the provided needles.
+	 *
+	 * @param string   $haystack Lowercased haystack string.
+	 * @param string[] $needles  Lowercased needles to search for.
+	 * @return bool
+	 */
+	private function needle_contains_any( string $haystack, array $needles ): bool {
+		foreach ( $needles as $needle ) {
+			if ( '' !== $needle && false !== strpos( $haystack, $needle ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Map generic resolution choices to Replicate megapixel strings.
+	 *
+	 * @param string|null $resolution Resolution label.
+	 * @return string|null
+	 */
+	private function resolution_to_megapixels( ?string $resolution ): ?string {
+		if ( null === $resolution ) {
+			return null;
+		}
+		$canonical = strtoupper( trim( $resolution ) );
+		if ( '' === $canonical ) {
+			return null;
+		}
+		if ( '1K' === $canonical ) {
+			return '1 MP';
+		}
+		if ( '2K' === $canonical ) {
+			return '2 MP';
+		}
+		if ( '4K' === $canonical ) {
+			return '4 MP';
+		}
+		return null;
+	}
+
+	/**
+	 * Map generic resolution choices to Seedream size strings.
+	 *
+	 * @param string|null $resolution Resolution label.
+	 * @return string|null
+	 */
+	private function resolution_to_seedream_size( ?string $resolution ): ?string {
+		if ( null === $resolution ) {
+			return null;
+		}
+		$canonical = strtoupper( trim( $resolution ) );
+		if ( '' === $canonical ) {
+			return null;
+		}
+		if ( '4K' === $canonical ) {
+			return '4K';
+		}
+		if ( '2K' === $canonical || '1K' === $canonical ) {
+			return '2K';
+		}
+		return null;
+	}
+
+	/**
+	 * Determine the long edge to use for flux-2-dev given a resolution choice.
+	 *
+	 * @param string|null $resolution Resolution label.
+	 * @return int|null
+	 */
+	private function long_edge_for_resolution( ?string $resolution ): ?int {
+		$canonical = strtoupper( trim( (string) $resolution ) );
+		if ( '1K' === $canonical ) {
+			return 1024;
+		}
+		if ( '2K' === $canonical || '4K' === $canonical ) {
+			return 1440;
+		}
+		return null;
+	}
+
+	/**
+	 * Clamp flux-2-dev dimensions to supported bounds and optional resolution targets.
+	 *
+	 * @param int|null    $target_width  Requested width.
+	 * @param int|null    $target_height Requested height.
+	 * @param string|null $resolution    Resolution label.
+	 * @return array{0:int,1:int}
+	 */
+	private function resolve_flux_2_dev_dimensions( ?int $target_width, ?int $target_height, ?string $resolution ): array {
+		$min = 256;
+		$max = 1440;
+
+		$width  = is_int( $target_width ) ? $target_width : 1024;
+		$height = is_int( $target_height ) ? $target_height : 1024;
+
+		$width  = max( $min, min( $max, $width ) );
+		$height = max( $min, min( $max, $height ) );
+
+		$long_edge = $this->long_edge_for_resolution( $resolution );
+		if ( $long_edge ) {
+			if ( $width >= $height ) {
+				$scale  = $width > 0 ? ( $height / $width ) : 1.0;
+				$width  = $long_edge;
+				$height = (int) round( $long_edge * $scale );
+			} else {
+				$scale  = $height > 0 ? ( $width / $height ) : 1.0;
+				$width  = (int) round( $long_edge * $scale );
+				$height = $long_edge;
+			}
+			$width  = max( $min, min( $max, $width ) );
+			$height = max( $min, min( $max, $height ) );
+		}
+
+		return [ $width, $height ];
 	}
 
 	/**
@@ -507,11 +773,28 @@ final class Replicate_Provider implements Provider_Interface {
 			throw new RuntimeException( 'No valid reference images provided for Replicate.' );
 		}
 
-		$needle = strtolower( $model );
-		if ( false !== strpos( $needle, 'nano-banana' ) || false !== strpos( $needle, 'seedream' ) ) {
+		$needle           = strtolower( $model );
+		$banana_variants  = [
+			strtolower( Models_Catalog::REPLICATE_NANO_BANANA ),
+			strtolower( Models_Catalog::REPLICATE_NANO_BANANA_PRO ),
+		];
+		$flux_2_models    = [
+			strtolower( Models_Catalog::REPLICATE_FLUX_2_DEV ),
+			strtolower( Models_Catalog::REPLICATE_FLUX_2_PRO ),
+			strtolower( Models_Catalog::REPLICATE_FLUX_2_FLEX ),
+		];
+		$seedream_needles = [
+			strtolower( Models_Catalog::REPLICATE_SEEDREAM_4 ),
+			strtolower( Models_Catalog::REPLICATE_SEEDREAM_45 ),
+		];
+		$reve_remix_lower = strtolower( Models_Catalog::REPLICATE_REVE_REMIX );
+
+		if ( $this->needle_contains_any( $needle, $flux_2_models ) ) {
+			$input['input_images'] = $data_uris;
+		} elseif ( $this->needle_contains_any( $needle, $banana_variants ) || $this->needle_contains_any( $needle, $seedream_needles ) ) {
 			$input['image_input'] = $data_uris;
 			$input['image_input'] = array_reverse( $input['image_input'] );
-		} elseif ( $needle === 'reve/remix' ) {
+		} elseif ( $needle === $reve_remix_lower ) {
 			$input['reference_images'] = $data_uris;
 		} else {
 			$input['image'] = $data_uris[0];
@@ -559,29 +842,56 @@ final class Replicate_Provider implements Provider_Interface {
 			'output_quality' => 80,
 		];
 
-		$needle = strtolower( $model );
-		if ( $needle === 'reve/remix' ) {
+		$needle          = strtolower( $model );
+		$banana_variants = [
+			strtolower( Models_Catalog::REPLICATE_NANO_BANANA ),
+			strtolower( Models_Catalog::REPLICATE_NANO_BANANA_PRO ),
+		];
+		$seedream        = [
+			strtolower( Models_Catalog::REPLICATE_SEEDREAM_4 ),
+			strtolower( Models_Catalog::REPLICATE_SEEDREAM_45 ),
+		];
+		$flux_kontext    = [
+			strtolower( Models_Catalog::REPLICATE_FLUX_KONTEXT_MAX ),
+			strtolower( Models_Catalog::REPLICATE_FLUX_KONTEXT_DEV ),
+		];
+		$flux_2_models   = [
+			strtolower( Models_Catalog::REPLICATE_FLUX_2_DEV ),
+			strtolower( Models_Catalog::REPLICATE_FLUX_2_PRO ),
+			strtolower( Models_Catalog::REPLICATE_FLUX_2_FLEX ),
+		];
+		$seededit        = strtolower( Models_Catalog::REPLICATE_SEEDEDIT_30 );
+		$qwen_edit       = strtolower( Models_Catalog::REPLICATE_QWEN_IMAGE_EDIT );
+		$reve_remix      = strtolower( Models_Catalog::REPLICATE_REVE_REMIX );
+
+		if ( $this->needle_contains_any( $needle, $flux_2_models ) ) {
+			$defaults['input_images'] = [ $data_uri ];
+			$defaults['aspect_ratio'] = 'match_input_image';
+			if ( false !== strpos( $needle, strtolower( Models_Catalog::REPLICATE_FLUX_2_DEV ) ) ) {
+				$defaults['go_fast'] = true;
+			}
+		} elseif ( $needle === $reve_remix ) {
 			$defaults['reference_images'] = [
 				$data_uri,
 			];
-		} elseif ( false !== strpos( $needle, 'nano-banana' ) || false !== strpos( $needle, 'seedream' ) ) {
+		} elseif ( $this->needle_contains_any( $needle, $banana_variants ) || $this->needle_contains_any( $needle, $seedream ) ) {
 			$defaults['image_input'] = [ $data_uri ];
-		} elseif ( false !== strpos( $needle, 'flux-kontext' ) ) {
+		} elseif ( $this->needle_contains_any( $needle, $flux_kontext ) ) {
 			$defaults['input_image']   = $data_uri;
 			$defaults['aspect_ratio']  = 'match_input_image';
 			$defaults['output_format'] = 'jpg';
-			if ( false !== strpos( $needle, 'flux-kontext-max' ) ) {
+			if ( false !== strpos( $needle, $flux_kontext[0] ) ) {
 				$defaults['safety_tolerance'] = 2;
-			} elseif ( false !== strpos( $needle, 'flux-kontext-dev' ) ) {
+			} elseif ( false !== strpos( $needle, $flux_kontext[1] ) ) {
 				$defaults['go_fast']             = true;
 				$defaults['guidance']            = 2.5;
 				$defaults['num_inference_steps'] = 30;
 			}
-		} elseif ( false !== strpos( $needle, 'seededit' ) ) {
+		} elseif ( false !== strpos( $needle, $seededit ) ) {
 			$defaults['image'] = $data_uri;
 		} else {
 			$defaults['image'] = $data_uri;
-			if ( false !== strpos( $needle, 'qwen-image-edit' ) ) {
+			if ( false !== strpos( $needle, $qwen_edit ) ) {
 				$defaults['go_fast'] = true;
 			}
 		}

@@ -3,7 +3,7 @@ Contributors: pbalazs
 Tags: ai, images, openai, replicate, google
 Requires at least: 6.0
 Tested up to: 6.8
-Stable tag: 0.5
+Stable tag: 0.6
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -128,6 +128,13 @@ All images are saved directly into your WordPress Media Library. You can use the
 ---
 
 == Changelog ==
+
+= 0.6 =
+* UX improvements: added separate field for image resolution instead of using model suffixes
+* Added support for FLUX.2 models family via Replicate API
+* Added support for Seedream 4.0 model via Replicate API
+* Refactored Replicate provider response handling to allow longer requests
+* Refactored models catalog for better maintainability
 
 = 0.5 =
 * Added support for Google Gemini 3 Pro Image Preview model through Gemini API & Replicate

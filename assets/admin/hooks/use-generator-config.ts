@@ -9,7 +9,7 @@ import apiFetch from '@wordpress/api-fetch';
 import { __, _n, sprintf } from '@wordpress/i18n';
 
 import type { ProviderInfo } from '../types/generate';
-import { MULTI_IMAGE_MODEL_ALLOWLIST } from '../utils/ai-generate';
+import { MULTI_IMAGE_MODEL_ALLOWLIST, RESOLUTION_MODEL_ALLOWLIST } from '../utils/ai-generate';
 
 type ModelsResponse = {
 	models?: string[];
@@ -30,6 +30,8 @@ type UseGeneratorConfigArgs = {
 	defaultGeneratorProvider?: string;
 	aspectRatioOptions?: string[];
 	defaultAspectRatio?: string;
+	resolutionOptions?: string[];
+	defaultResolution?: string;
 	referenceCount: number;
 	multiReferenceMode: boolean;
 	purposeOverride?: 'generate' | 'edit';
@@ -42,6 +44,8 @@ export const useGeneratorConfig = ( {
 	defaultGeneratorProvider,
 	aspectRatioOptions,
 	defaultAspectRatio,
+	resolutionOptions,
+	defaultResolution,
 	referenceCount,
 	multiReferenceMode,
 	purposeOverride,
@@ -69,6 +73,25 @@ export const useGeneratorConfig = ( {
 		}
 		return aspectOptions[ 0 ] ?? '';
 	}, [ aspectOptions, defaultAspectRatio ] );
+
+	const resolutionOpts = useMemo( () => {
+		if ( ! Array.isArray( resolutionOptions ) ) {
+			return [] as string[];
+		}
+		return resolutionOptions
+			.map( ( option ) => ( typeof option === 'string' ? option.trim().toUpperCase() : '' ) )
+			.filter( ( option ): option is string => option.length > 0 );
+	}, [ resolutionOptions ] );
+
+	const preferredResolution = useMemo( () => {
+		if ( typeof defaultResolution === 'string' ) {
+			const canonical = defaultResolution.trim().toUpperCase();
+			if ( canonical && resolutionOpts.includes( canonical ) ) {
+				return canonical;
+			}
+		}
+		return resolutionOpts[ 0 ] ?? '';
+	}, [ resolutionOpts, defaultResolution ] );
 
 	const preferredProvider = useMemo( () => {
 		if ( defaultGeneratorProvider ) {
@@ -101,6 +124,17 @@ export const useGeneratorConfig = ( {
 	const [ modelsLoading, setModelsLoading ] = useState( false );
 	const [ loadError, setLoadError ] = useState< string | null >( null );
 	const [ aspectRatio, setAspectRatio ] = useState( preferredAspectRatio );
+	const [ resolution, setResolution ] = useState( preferredResolution );
+
+	const modelSupportsResolution = useMemo( () => {
+		if ( ! model || ! provider ) {
+			return false;
+		}
+		const modelLower = model.toLowerCase();
+		const allowlist = ( RESOLUTION_MODEL_ALLOWLIST[ provider ] ?? [] )
+			.map( ( entry ) => entry.toLowerCase() );
+		return allowlist.includes( modelLower );
+	}, [ model, provider ] );
 
 	useEffect( () => {
 		if ( provider && connectedProviders.some( ( item ) => item.slug === provider ) ) {
@@ -127,6 +161,21 @@ export const useGeneratorConfig = ( {
 			setAspectRatio( preferredAspectRatio );
 		}
 	}, [ aspectOptions, aspectRatio, preferredAspectRatio, referenceCount ] );
+
+	useEffect( () => {
+		if ( referenceCount > 0 || resolutionOpts.length === 0 || ! modelSupportsResolution ) {
+			if ( resolution !== '' ) {
+				setResolution( '' );
+			}
+			return;
+		}
+		if ( resolutionOpts.includes( resolution ) ) {
+			return;
+		}
+		if ( preferredResolution !== resolution ) {
+			setResolution( preferredResolution );
+		}
+	}, [ resolutionOpts, resolution, preferredResolution, referenceCount, modelSupportsResolution ] );
 
 	useEffect( () => {
 		if ( ! provider ) {
@@ -220,6 +269,7 @@ export const useGeneratorConfig = ( {
 	}, [ provider, providers, selectedProviderConfig ] );
 
 	const aspectRatioEnabled = referenceCount === 0 && aspectOptions.length > 0;
+	const resolutionEnabled = referenceCount === 0 && resolutionOpts.length > 0 && modelSupportsResolution;
 
 	const summary: GeneratorSummary = useMemo( () => {
 		const aspect = aspectRatioEnabled ? ( aspectRatio || __( 'Default aspect ratio', 'wp-banana' ) ) : '';
@@ -279,10 +329,15 @@ export const useGeneratorConfig = ( {
 		setAspectRatio,
 		aspectRatioEnabled,
 		aspectOptions,
+		resolution,
+		setResolution,
+		resolutionEnabled,
+		resolutionOptions: resolutionOpts,
 		connectedProviders,
 		selectedProviderConfig,
 		summary,
 		modelRequirementSatisfied,
 		preferredAspectRatio,
+		preferredResolution,
 	};
 };

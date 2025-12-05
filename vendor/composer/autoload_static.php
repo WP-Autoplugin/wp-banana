@@ -20,6 +20,7 @@ class ComposerStaticInitf1bfaf84312e744e7b9964884b4a0d41
         'WPBanana\\Domain\\Edit_Params' => __DIR__ . '/../..' . '/src/Domain/class-edit-params.php',
         'WPBanana\\Domain\\Image_Params' => __DIR__ . '/../..' . '/src/Domain/class-image-params.php',
         'WPBanana\\Domain\\Reference_Image' => __DIR__ . '/../..' . '/src/Domain/class-reference-image.php',
+        'WPBanana\\Domain\\Resolutions' => __DIR__ . '/../..' . '/src/Domain/class-resolutions.php',
         'WPBanana\\GitHub_Updater' => __DIR__ . '/../..' . '/src/class-github-updater.php',
         'WPBanana\\Plugin' => __DIR__ . '/../..' . '/src/class-plugin.php',
         'WPBanana\\Provider\\Gemini_Provider' => __DIR__ . '/../..' . '/src/Provider/class-gemini-provider.php',

@@ -13,6 +13,7 @@ use WPBanana\Services\Options;
 use WPBanana\Services\Models_Catalog;
 use WPBanana\Services\Attachment_Metadata;
 use WPBanana\Domain\Aspect_Ratios;
+use WPBanana\Domain\Resolutions;
 use WP_Post;
 
 // Prevent direct access.
@@ -319,29 +320,34 @@ final class Media_Hooks {
 			'slug'          => 'gemini',
 			'label'         => __( 'Gemini', 'wp-banana' ),
 			'connected'     => ! empty( $gemini['api_key'] ),
-			'default_model' => isset( $gemini['default_model'] ) ? (string) $gemini['default_model'] : 'gemini-2.5-flash-image-preview',
+			'default_model' => isset( $gemini['default_model'] ) ? (string) $gemini['default_model'] : Models_Catalog::provider_default_model( 'gemini' ),
 		];
 		$openai      = $this->options->get_provider_config( 'openai' );
 		$providers[] = [
 			'slug'          => 'openai',
 			'label'         => __( 'OpenAI', 'wp-banana' ),
 			'connected'     => ! empty( $openai['api_key'] ),
-			'default_model' => isset( $openai['default_model'] ) ? (string) $openai['default_model'] : 'gpt-image-1',
+			'default_model' => isset( $openai['default_model'] ) ? (string) $openai['default_model'] : Models_Catalog::provider_default_model( 'openai' ),
 		];
 		$replicate   = $this->options->get_provider_config( 'replicate' );
 		$providers[] = [
 			'slug'          => 'replicate',
 			'label'         => __( 'Replicate', 'wp-banana' ),
 			'connected'     => ! empty( $replicate['api_token'] ),
-			'default_model' => isset( $replicate['default_model'] ) ? (string) $replicate['default_model'] : 'black-forest-labs/flux',
+			'default_model' => isset( $replicate['default_model'] ) ? (string) $replicate['default_model'] : Models_Catalog::provider_default_model( 'replicate' ),
 		];
 
-		$default_generator_model = (string) $this->options->get( 'default_generator_model', 'gemini-2.5-flash-image-preview' );
-		$default_editor_model    = (string) $this->options->get( 'default_editor_model', 'gemini-2.5-flash-image-preview' );
+		$default_generator_model = (string) $this->options->get( 'default_generator_model', Models_Catalog::default_generator_model() );
+		$default_editor_model    = (string) $this->options->get( 'default_editor_model', Models_Catalog::default_editor_model() );
 		$default_aspect_ratio    = (string) $this->options->get( 'generation_defaults.aspect_ratio', Aspect_Ratios::default() );
 		$default_aspect_ratio    = Aspect_Ratios::sanitize( $default_aspect_ratio );
 		if ( '' === $default_aspect_ratio ) {
 			$default_aspect_ratio = Aspect_Ratios::default();
+		}
+		$default_resolution = (string) $this->options->get( 'generation_defaults.resolution', Resolutions::default() );
+		$default_resolution = Resolutions::sanitize( $default_resolution );
+		if ( '' === $default_resolution ) {
+			$default_resolution = Resolutions::default();
 		}
 
 		return [
@@ -351,8 +357,12 @@ final class Media_Hooks {
 			'defaultGeneratorProvider' => $this->detect_provider_for_model( $default_generator_model, 'generate' ),
 			'defaultAspectRatio'       => $default_aspect_ratio,
 			'aspectRatioOptions'       => Aspect_Ratios::all(),
+			'defaultResolution'        => $default_resolution,
+			'resolutionOptions'        => Resolutions::all(),
 			'defaultEditorModel'       => $default_editor_model,
 			'defaultEditorProvider'    => $this->detect_provider_for_model( $default_editor_model, 'edit' ),
+			'multiImageModelAllowlist' => Models_Catalog::multi_image_allowlist(),
+			'resolutionModelAllowlist' => Models_Catalog::resolution_model_allowlist(),
 			'iconUrl'                  => trailingslashit( $this->plugin_url ) . 'assets/images/banana-icon-2.svg',
 		];
 	}

@@ -150,20 +150,20 @@ final class Options {
 	private function merge_defaults( array $stored ): array {
 		$defaults = [
 			// Global default models used when no explicit model is provided.
-			'default_generator_model' => 'gemini-2.5-flash-image-preview',
-			'default_editor_model'    => 'gemini-2.5-flash-image-preview',
+			'default_generator_model' => Models_Catalog::default_generator_model(),
+			'default_editor_model'    => Models_Catalog::default_editor_model(),
 			'providers'               => [
 				'gemini'    => [
 					'api_key'       => '',
-					'default_model' => 'gemini-2.5-flash-image-preview',
+					'default_model' => Models_Catalog::provider_default_model( 'gemini' ),
 				],
 				'openai'    => [
 					'api_key'       => '',
-					'default_model' => 'gpt-image-1',
+					'default_model' => Models_Catalog::provider_default_model( 'openai' ),
 				],
 				'replicate' => [
 					'api_token'     => '',
-					'default_model' => 'black-forest-labs/flux',
+					'default_model' => Models_Catalog::provider_default_model( 'replicate' ),
 				],
 			],
 			'generation_defaults'     => [

@@ -828,6 +828,10 @@ const EditPanel = ( {
 					aspectRatio=""
 					onAspectRatioChange={ ( _value: string ) => {} }
 					aspectOptions={ [] }
+					resolutionEnabled={ false }
+					resolution=""
+					onResolutionChange={ ( _value: string ) => {} }
+					resolutionOptions={ [] }
 					isSubmitting={ isSubmitting }
 				/>
 			</CardBody>
@@ -895,6 +899,8 @@ type MediaData = {
 	defaultGeneratorProvider?: string;
 	defaultAspectRatio?: string;
 	aspectRatioOptions?: string[];
+	resolutionModelAllowlist?: Record< string, string[] >;
+	multiImageModelAllowlist?: Record< string, string[] >;
 	iconUrl?: string;
 };
 

@@ -12,6 +12,7 @@ use WPBanana\Plugin;
 use WPBanana\Services\Options;
 use WPBanana\Services\Models_Catalog;
 use WPBanana\Domain\Aspect_Ratios;
+use WPBanana\Domain\Resolutions;
 
 use function __;
 use function admin_url;
@@ -126,11 +127,16 @@ final class Generate_Page {
 			wp_register_script( $handle, $src, $deps, $ver, true );
 		}
 
-		$default_generator_model = (string) $this->options->get( 'default_generator_model', 'gemini-2.5-flash-image-preview' );
+		$default_generator_model = (string) $this->options->get( 'default_generator_model', Models_Catalog::default_generator_model() );
 		$default_aspect_ratio    = (string) $this->options->get( 'generation_defaults.aspect_ratio', Aspect_Ratios::default() );
 		$default_aspect_ratio    = Aspect_Ratios::sanitize( $default_aspect_ratio );
 		if ( '' === $default_aspect_ratio ) {
 			$default_aspect_ratio = Aspect_Ratios::default();
+		}
+		$default_resolution = (string) $this->options->get( 'generation_defaults.resolution', Resolutions::default() );
+		$default_resolution = Resolutions::sanitize( $default_resolution );
+		if ( '' === $default_resolution ) {
+			$default_resolution = Resolutions::default();
 		}
 
 		wp_localize_script(
@@ -144,6 +150,10 @@ final class Generate_Page {
 				'defaultGeneratorProvider' => $this->detect_provider_for_model( $default_generator_model ),
 				'defaultAspectRatio'       => $default_aspect_ratio,
 				'aspectRatioOptions'       => Aspect_Ratios::all(),
+				'defaultResolution'        => $default_resolution,
+				'resolutionOptions'        => Resolutions::all(),
+				'resolutionModelAllowlist' => Models_Catalog::resolution_model_allowlist(),
+				'multiImageModelAllowlist' => Models_Catalog::multi_image_allowlist(),
 			]
 		);
 
@@ -216,21 +226,21 @@ final class Generate_Page {
 			'slug'          => 'gemini',
 			'label'         => __( 'Gemini', 'wp-banana' ),
 			'connected'     => ! empty( $gemini['api_key'] ),
-			'default_model' => isset( $gemini['default_model'] ) ? (string) $gemini['default_model'] : 'gemini-2.5-flash-image-preview',
+			'default_model' => isset( $gemini['default_model'] ) ? (string) $gemini['default_model'] : Models_Catalog::provider_default_model( 'gemini' ),
 		];
 		$openai      = $this->options->get_provider_config( 'openai' );
 		$providers[] = [
 			'slug'          => 'openai',
 			'label'         => __( 'OpenAI', 'wp-banana' ),
 			'connected'     => ! empty( $openai['api_key'] ),
-			'default_model' => isset( $openai['default_model'] ) ? (string) $openai['default_model'] : 'gpt-image-1',
+			'default_model' => isset( $openai['default_model'] ) ? (string) $openai['default_model'] : Models_Catalog::provider_default_model( 'openai' ),
 		];
 		$replicate   = $this->options->get_provider_config( 'replicate' );
 		$providers[] = [
 			'slug'          => 'replicate',
 			'label'         => __( 'Replicate', 'wp-banana' ),
 			'connected'     => ! empty( $replicate['api_token'] ),
-			'default_model' => isset( $replicate['default_model'] ) ? (string) $replicate['default_model'] : 'black-forest-labs/flux',
+			'default_model' => isset( $replicate['default_model'] ) ? (string) $replicate['default_model'] : Models_Catalog::provider_default_model( 'replicate' ),
 		];
 
 		return $providers;
