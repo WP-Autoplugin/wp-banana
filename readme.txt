@@ -132,6 +132,8 @@ All images are saved directly into your WordPress Media Library. You can use the
 = 0.6 =
 * UX improvements: added separate field for image resolution instead of using model suffixes
 * Added support for FLUX.2 models family via Replicate API
+* Added support for Seedream 4.0 model via Replicate API
+* Refactored Replicate provider response handling to allow longer requests
 * Refactored models catalog for better maintainability
 
 = 0.5 =
