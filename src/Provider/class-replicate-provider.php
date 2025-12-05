@@ -57,6 +57,20 @@ final class Replicate_Provider implements Provider_Interface {
 	private $timeout;
 
 	/**
+	 * Poll interval in seconds when waiting on async predictions.
+	 *
+	 * @var int
+	 */
+	private $poll_interval = 2;
+
+	/**
+	 * Maximum additional poll duration in seconds.
+	 *
+	 * @var int
+	 */
+	private $poll_timeout = 60;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param string $api_token     API token.
@@ -317,7 +331,17 @@ final class Replicate_Provider implements Provider_Interface {
 			$message = 'Replicate API error: ' . $this->stringify_error( $data['error'] );
 			throw new RuntimeException( esc_html( $message ) );
 		}
+		if ( $this->should_poll_status( $data['status'] ?? '' ) && empty( $data['output'] ) ) {
+			$data = $this->poll_prediction(
+				$data,
+				$response,
+				$context
+			);
+		}
 		if ( empty( $data['output'] ) ) {
+			if ( $this->should_poll_status( $data['status'] ?? '' ) ) {
+				throw new RuntimeException( 'Replicate prediction did not finish in time.' );
+			}
 			throw new RuntimeException( 'Replicate API returned no output.' );
 		}
 
@@ -492,6 +516,99 @@ final class Replicate_Provider implements Provider_Interface {
 			return $info['mime'];
 		}
 		return 'image/png';
+	}
+
+	/**
+	 * Poll a pending prediction until completion or timeout.
+	 *
+	 * @param array $data      Initial prediction payload.
+	 * @param array $response  Initial HTTP response.
+	 * @param array $context   Request context metadata.
+	 * @return array
+	 */
+	private function poll_prediction( array $data, array $response, array $context ): array {
+		$poll_url = '';
+		if ( isset( $data['urls']['get'] ) && is_string( $data['urls']['get'] ) ) {
+			$poll_url = $data['urls']['get'];
+		}
+		if ( '' === $poll_url ) {
+			$location = wp_remote_retrieve_header( $response, 'location' );
+			if ( is_string( $location ) && '' !== $location ) {
+				$poll_url = $location;
+			}
+		}
+		if ( '' === $poll_url ) {
+			return $data;
+		}
+
+		$deadline = time() + $this->poll_timeout;
+		$attempt  = 0;
+
+		while ( $this->should_poll_status( $data['status'] ?? '' ) && time() < $deadline ) {
+			$attempt++;
+			$args = [
+				'method'  => 'GET',
+				'timeout' => $this->timeout,
+				'headers' => [
+					'Authorization' => 'Bearer ' . $this->api_token,
+					'Content-Type'  => 'application/json',
+				],
+			];
+			list( $url, $args, $_payload, $request_context ) = $this->prepare_request(
+				$poll_url,
+				$args,
+				null,
+				array_merge(
+					$context,
+					[
+						'operation'    => $context['operation'] ?? '',
+						'polling'      => true,
+						'poll_attempt' => $attempt,
+					]
+				),
+				'get',
+				false
+			);
+			$res = Http::request( $url, $args );
+			if ( is_wp_error( $res ) ) {
+				throw new RuntimeException( esc_html( $res->get_error_message() ) );
+			}
+			$body = wp_remote_retrieve_body( $res );
+			$decoded = json_decode( $body, true );
+			$decoded = apply_filters( 'wp_banana_provider_decoded_response', $decoded, $request_context, $res );
+			$decoded = apply_filters( 'wp_banana_replicate_decoded_response', $decoded, $request_context, $res );
+			if ( ! is_array( $decoded ) ) {
+				break;
+			}
+			$data = $decoded;
+			if ( isset( $data['error'] ) && ! empty( $data['error'] ) ) {
+				$message = 'Replicate API error: ' . $this->stringify_error( $data['error'] );
+				throw new RuntimeException( esc_html( $message ) );
+			}
+			if ( ! empty( $data['output'] ) ) {
+				return $data;
+			}
+			if ( ! $this->should_poll_status( $data['status'] ?? '' ) ) {
+				break;
+			}
+			sleep( $this->poll_interval );
+		}
+
+		return $data;
+	}
+
+	/**
+	 * Determine if a prediction status warrants polling.
+	 *
+	 * @param mixed $status Status string.
+	 * @return bool
+	 */
+	private function should_poll_status( $status ): bool {
+		if ( ! is_string( $status ) || '' === $status ) {
+			return false;
+		}
+		$status = strtolower( $status );
+		return in_array( $status, [ 'starting', 'processing' ], true );
 	}
 
 	/**

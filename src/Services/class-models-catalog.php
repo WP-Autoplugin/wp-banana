@@ -206,6 +206,7 @@ final class Models_Catalog {
 				self::REPLICATE_FLUX_2_PRO,
 				self::REPLICATE_FLUX_2_FLEX,
 				self::REPLICATE_SEEDREAM_45,
+				self::REPLICATE_SEEDREAM_4,
 			],
 		];
 	}
