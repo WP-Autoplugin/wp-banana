@@ -129,6 +129,11 @@ All images are saved directly into your WordPress Media Library. You can use the
 
 == Changelog ==
 
+= 0.7 =
+* Added support for Abilities API introduced in WP 6.9
+* Added custom user capabilities for better role management
+* Minor UI improvements and bug fixes
+
 = 0.6 =
 * UX improvements: added separate field for image resolution instead of using model suffixes
 * Added support for FLUX.2 models family via Replicate API

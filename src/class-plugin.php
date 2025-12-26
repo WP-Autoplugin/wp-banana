@@ -31,7 +31,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 final class Plugin {
 
-	public const VERSION = WP_BANANA_VERSION;
+	public const VERSION         = WP_BANANA_VERSION;
 	private const VERSION_OPTION = 'wp_banana_version';
 
 	/**
