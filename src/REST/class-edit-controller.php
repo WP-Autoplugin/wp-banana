@@ -100,7 +100,7 @@ final class Edit_Controller {
 			[
 				'methods'             => 'POST',
 				'callback'            => [ $this, 'handle' ],
-				'permission_callback' => [ $this, 'can_access' ],
+				'permission_callback' => [ $this, 'can_edit' ],
 				'args'                => [
 					'attachment_id'       => [
 						'type'     => 'integer',
@@ -147,7 +147,7 @@ final class Edit_Controller {
 			[
 				'methods'             => 'POST',
 				'callback'            => [ $this, 'save_as' ],
-				'permission_callback' => [ $this, 'can_access' ],
+				'permission_callback' => [ $this, 'can_save' ],
 				'args'                => [
 					'attachment_id' => [
 						'type'     => 'integer',
@@ -167,8 +167,17 @@ final class Edit_Controller {
 	 *
 	 * @return bool
 	 */
-	public function can_access(): bool {
-		return current_user_can( 'upload_files' );
+	public function can_edit(): bool {
+		return current_user_can( Caps::EDIT );
+	}
+
+	/**
+	 * Permission check for save-as access.
+	 *
+	 * @return bool
+	 */
+	public function can_save(): bool {
+		return current_user_can( Caps::SAVE );
 	}
 
 	/**

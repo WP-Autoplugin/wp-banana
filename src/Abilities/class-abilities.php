@@ -3,7 +3,7 @@
  * Abilities API registration for WP Nano Banana.
  *
  * @package WPBanana\Abilities
- * @since   0.6.0
+ * @since   0.7.0
  */
 
 namespace WPBanana\Abilities;
@@ -21,6 +21,7 @@ use WPBanana\REST\Models_Controller;
 use WPBanana\Services\Edit_Buffer;
 use WPBanana\Services\Logging_Service;
 use WPBanana\Services\Options;
+use WPBanana\Util\Caps;
 
 /**
  * Registers WP Banana abilities for the Abilities API.
@@ -112,7 +113,7 @@ final class Abilities {
 					return $this->execute_generate( $input );
 				},
 				'permission_callback' => function ( array $input = [] ) {
-					return current_user_can( 'upload_files' );
+					return current_user_can( Caps::GENERATE );
 				},
 				'meta'                => [
 					'annotations' => [
@@ -137,7 +138,7 @@ final class Abilities {
 					return $this->execute_edit( $input );
 				},
 				'permission_callback' => function ( array $input = [] ) {
-					return current_user_can( 'upload_files' );
+					return current_user_can( Caps::EDIT );
 				},
 				'meta'                => [
 					'annotations' => [
@@ -162,7 +163,7 @@ final class Abilities {
 					return $this->execute_models( $input );
 				},
 				'permission_callback' => function ( array $input = [] ) {
-					return current_user_can( 'upload_files' );
+					return current_user_can( Caps::MODELS );
 				},
 				'meta'                => [
 					'annotations' => [

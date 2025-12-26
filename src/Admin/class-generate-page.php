@@ -13,6 +13,7 @@ use WPBanana\Services\Options;
 use WPBanana\Services\Models_Catalog;
 use WPBanana\Domain\Aspect_Ratios;
 use WPBanana\Domain\Resolutions;
+use WPBanana\Util\Caps;
 
 use function __;
 use function admin_url;
@@ -97,7 +98,7 @@ final class Generate_Page {
 		$this->hook_suffix = add_media_page(
 			__( 'Generate Image', 'wp-banana' ),
 			__( 'Generate Image', 'wp-banana' ),
-			'upload_files',
+			Caps::GENERATE,
 			'wp-banana-generate',
 			[ $this, 'render' ]
 		);
@@ -169,7 +170,7 @@ final class Generate_Page {
 	 * @return void
 	 */
 	public function render(): void {
-		if ( ! current_user_can( 'upload_files' ) ) {
+		if ( ! current_user_can( Caps::GENERATE ) ) {
 			wp_die( esc_html__( 'You do not have permission to access this page.', 'wp-banana' ) );
 		}
 

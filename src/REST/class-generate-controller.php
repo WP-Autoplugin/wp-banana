@@ -30,6 +30,7 @@ use WPBanana\Services\Convert_Service;
 use WPBanana\Services\Attachment_Service;
 use WPBanana\Services\Logging_Service;
 use WPBanana\Services\Models_Catalog;
+use WPBanana\Util\Caps;
 use WPBanana\Util\Mime;
 
 use function get_current_user_id;
@@ -196,7 +197,7 @@ final class Generate_Controller {
 	 * @return bool
 	 */
 	public function can_access(): bool {
-		return current_user_can( 'upload_files' );
+		return current_user_can( Caps::GENERATE );
 	}
 
 	/**

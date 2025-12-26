@@ -19,6 +19,7 @@ use WPBanana\REST\Routes;
 use WPBanana\Services\Options;
 use WPBanana\Services\Edit_Buffer;
 use WPBanana\Services\Logging_Service;
+use WPBanana\Util\Caps;
 
 // Prevent direct access.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -31,6 +32,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class Plugin {
 
 	public const VERSION = WP_BANANA_VERSION;
+	private const VERSION_OPTION = 'wp_banana_version';
 
 	/**
 	 * Main plugin file path.
@@ -67,6 +69,8 @@ final class Plugin {
 		$options = new Options();
 		$buffer  = new Edit_Buffer();
 		$logger  = new Logging_Service( $options );
+
+		add_action( 'init', [ self::class, 'run_upgrades' ] );
 
 		// Register Abilities API definitions (WP 6.9+).
 		( new Abilities( $options, $buffer, $logger ) )->register();
@@ -130,6 +134,7 @@ final class Plugin {
 	public static function uninstall(): void {
 		// Remove options and transients; keep attachments by default.
 		delete_option( \WPBanana\Services\Options::OPTION_NAME );
+		delete_option( self::VERSION_OPTION );
 		// Remove models cache transients.
 		global $wpdb;
 		$transient_like         = $wpdb->esc_like( '_transient_wp_banana_models_' ) . '%';
@@ -145,5 +150,48 @@ final class Plugin {
 
 		// Remove logging table.
 		Logging_Service::drop_table();
+	}
+
+	/**
+	 * Grant custom capabilities to administrators on upgrade.
+	 *
+	 * @return void
+	 */
+	public static function run_upgrades(): void {
+		$stored_version = get_option( self::VERSION_OPTION, '' );
+		$from_version   = is_string( $stored_version ) && '' !== $stored_version ? $stored_version : '0.0.0';
+
+		$upgrades = self::upgrade_steps();
+		if ( empty( $upgrades ) ) {
+			update_option( self::VERSION_OPTION, self::VERSION );
+			return;
+		}
+
+		foreach ( $upgrades as $version => $callback ) {
+			if ( version_compare( $from_version, $version, '>=' ) ) {
+				continue;
+			}
+			call_user_func( $callback );
+		}
+
+		update_option( self::VERSION_OPTION, self::VERSION );
+	}
+
+	/**
+	 * Upgrade callbacks keyed by version.
+	 *
+	 * @return array<string,callable>
+	 */
+	private static function upgrade_steps(): array {
+		return [
+			'0.7.0' => static function (): void {
+				$role = get_role( 'administrator' );
+				if ( $role ) {
+					foreach ( Caps::all() as $cap ) {
+						$role->add_cap( $cap );
+					}
+				}
+			},
+		];
 	}
 }
