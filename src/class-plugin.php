@@ -14,6 +14,7 @@ use WPBanana\Admin\Generate_Page;
 use WPBanana\Admin\Logs_Page;
 use WPBanana\Admin\AI_Editor_Integration;
 use WPBanana\Admin\Updater;
+use WPBanana\Abilities\Abilities;
 use WPBanana\REST\Routes;
 use WPBanana\Services\Options;
 use WPBanana\Services\Edit_Buffer;
@@ -66,6 +67,9 @@ final class Plugin {
 		$options = new Options();
 		$buffer  = new Edit_Buffer();
 		$logger  = new Logging_Service( $options );
+
+		// Register Abilities API definitions (WP 6.9+).
+		( new Abilities( $options, $buffer, $logger ) )->register();
 
 		// Register REST routes.
 		add_action(

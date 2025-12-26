@@ -2,7 +2,7 @@
 Contributors: pbalazs
 Tags: ai, images, openai, replicate, google
 Requires at least: 6.0
-Tested up to: 6.8
+Tested up to: 6.9
 Stable tag: 0.6
 Requires PHP: 7.4
 License: GPLv2 or later
