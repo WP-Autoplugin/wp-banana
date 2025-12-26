@@ -91,7 +91,7 @@ final class Media_Hooks {
 	}
 
 	/**
-	 * Attach WP Nano Banana metadata to attachment JS responses.
+	 * Attach WP Banana metadata to attachment JS responses.
 	 *
 	 * @param array        $response   Prepared attachment response.
 	 * @param WP_Post|null $attachment Attachment object.
@@ -410,7 +410,7 @@ final class Media_Hooks {
 		$screen          = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
 		$is_media_screen = $screen && ( 'upload' === $screen->id );
 		if ( $is_media_screen && ! $this->options->is_connected() ) {
-			echo '<div class="notice notice-warning is-dismissible"><p>' . esc_html__( 'WP Nano Banana: No provider configured. Add a key in Settings → AI Images to enable the Media UI.', 'wp-banana' ) . '</p></div>';
+			echo '<div class="notice notice-warning is-dismissible"><p>' . esc_html__( 'WP Banana: No provider configured. Add a key in Settings → AI Images to enable the Media UI.', 'wp-banana' ) . '</p></div>';
 		}
 	}
 
@@ -444,7 +444,7 @@ final class Media_Hooks {
 		$recent  = array_slice( array_reverse( $history ), 0, $limit );
 
 		echo '<div class="misc-pub-section misc-pub-wp-banana">';
-		echo '<p class="wp-banana-submitbox-heading"><strong>' . esc_html__( 'WP Nano Banana', 'wp-banana' ) . '</strong></p>';
+		echo '<p class="wp-banana-submitbox-heading"><strong>' . esc_html__( 'WP Banana', 'wp-banana' ) . '</strong></p>';
 
 		if ( $derived && ! empty( $derived['id'] ) && (int) $derived['id'] !== $current_id ) {
 			$title = ! empty( $derived['title'] ) ? (string) $derived['title'] : '#' . (int) $derived['id'];

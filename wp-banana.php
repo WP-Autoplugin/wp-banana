@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: WP Nano Banana
+ * Plugin Name: WP Banana
  * Description: AI image generation and editing via Gemini, Replicate and OpenAI, right in your WordPress media library.
  * Version: 0.7
  * Requires at least: 6.0
@@ -31,7 +31,7 @@ if ( version_compare( PHP_VERSION, '7.2', '<' ) ) {
 	add_action(
 		'admin_notices',
 		function () {
-			echo '<div class="notice notice-error"><p>' . esc_html__( 'WP Nano Banana requires PHP 7.2 or higher.', 'wp-banana' ) . '</p></div>';
+			echo '<div class="notice notice-error"><p>' . esc_html__( 'WP Banana requires PHP 7.2 or higher.', 'wp-banana' ) . '</p></div>';
 		}
 	);
 	return;
@@ -42,7 +42,7 @@ if ( ! isset( $wp_version ) || version_compare( $wp_version, '6.6', '<' ) ) {
 	add_action(
 		'admin_notices',
 		function () {
-			echo '<div class="notice notice-error"><p>' . esc_html__( 'WP Nano Banana requires WordPress 6.6 or higher.', 'wp-banana' ) . '</p></div>';
+			echo '<div class="notice notice-error"><p>' . esc_html__( 'WP Banana requires WordPress 6.6 or higher.', 'wp-banana' ) . '</p></div>';
 		}
 	);
 	return;
@@ -52,7 +52,7 @@ if ( ! extension_loaded( 'imagick' ) ) {
 	add_action(
 		'admin_notices',
 		function () {
-			echo '<div class="notice notice-error"><p>' . esc_html__( 'WP Nano Banana requires the Imagick PHP extension. Please enable Imagick to use this plugin.', 'wp-banana' ) . '</p></div>';
+			echo '<div class="notice notice-error"><p>' . esc_html__( 'WP Banana requires the Imagick PHP extension. Please enable Imagick to use this plugin.', 'wp-banana' ) . '</p></div>';
 		}
 	);
 	return;
@@ -73,7 +73,7 @@ add_action(
 				add_action(
 					'admin_notices',
 					function () use ( $e ) {
-						echo '<div class="notice notice-error"><p>' . esc_html__( 'WP Nano Banana failed to initialize:', 'wp-banana' ) . ' ' . esc_html( $e->getMessage() ) . '</p></div>';
+						echo '<div class="notice notice-error"><p>' . esc_html__( 'WP Banana failed to initialize:', 'wp-banana' ) . ' ' . esc_html( $e->getMessage() ) . '</p></div>';
 					}
 				);
 			}

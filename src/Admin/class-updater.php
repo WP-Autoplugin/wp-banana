@@ -1,6 +1,6 @@
 <?php
 /**
- * WP Nano Banana Updater class.
+ * WP Banana Updater class.
  *
  * @package WPBanana
  */

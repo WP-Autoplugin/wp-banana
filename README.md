@@ -1,10 +1,10 @@
-<img src="assets/images/header.png" alt="WP Nano Banana Logo" width="400" />
+<img src="assets/images/header.png" alt="WP Banana Logo" width="400" />
 
 ---
 
-# WP Nano Banana
+# WP Banana
 
-WP Nano Banana is a free WordPress plugin that lets you generate and edit images with AI, right inside your WordPress admin. Connects directly to your AI image generation API of choice. No ads, no locked features, no upsells, no flashy UI — just clean, native-like integration that feels like part of WordPress core.
+WP Banana is a free WordPress plugin that lets you generate and edit images with AI, right inside your WordPress admin. Connects directly to your AI image generation API of choice. No ads, no locked features, no upsells, no flashy UI — just clean, native-like integration that feels like part of WordPress core.
 
 - Combine existing images from your Media Library with new uploads
 - Generate completely new images from text prompts
@@ -62,8 +62,8 @@ WP Nano Banana is a free WordPress plugin that lets you generate and edit images
    git clone https://github.com/WP-Autoplugin/wp-banana.git
    ```
 
-2. Activate **WP Nano Banana** from the **Plugins** menu in WordPress.
-3. Go to **Settings → WP Nano Banana** and add your API key (OpenAI, Replicate, etc.).
+2. Activate **WP Banana** from the **Plugins** menu in WordPress.
+3. Go to **Settings → WP Banana** and add your API key (OpenAI, Replicate, etc.).
 4. Start generating and editing images right inside your WordPress dashboard.
 
 For environments where you don’t want keys in the DB, you can define them in `wp-config.php`:
@@ -143,7 +143,7 @@ https://github.com/user-attachments/assets/28a5ef2d-682e-4206-99e7-6eb1f141146d
 
 ## Supported AI Models
 
-WP Nano Banana supports a wide range of state-of-the-art AI image models for both generation and editing. Below are some of the available models you can use:
+WP Banana supports a wide range of state-of-the-art AI image models for both generation and editing. Below are some of the available models you can use:
 
 - **Google Gemini 3 Pro Image Preview**, a.k.a. **Nano Banana Pro** (`gemini-3-pro-image-preview` / `google/nano-banana-pro`)
 - **Google Gemini 2.5 Flash Image**, a.k.a. **Google Nano Banana** (`gemini-2.5-flash-image` / `google/nano-banana`)
