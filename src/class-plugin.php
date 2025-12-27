@@ -184,7 +184,7 @@ final class Plugin {
 	 */
 	private static function upgrade_steps(): array {
 		return [
-			'0.7.0' => static function (): void {
+			'0.7' => static function (): void {
 				$role = get_role( 'administrator' );
 				if ( $role ) {
 					foreach ( Caps::all() as $cap ) {
