@@ -70,6 +70,7 @@ final class Plugin {
 		$buffer  = new Edit_Buffer();
 		$logger  = new Logging_Service( $options );
 
+		register_activation_hook( self::$plugin_file, [ self::class, 'activate' ] );
 		add_action( 'init', [ self::class, 'run_upgrades' ] );
 
 		// Register Abilities API definitions (WP 6.9+).
@@ -153,22 +154,34 @@ final class Plugin {
 	}
 
 	/**
-	 * Grant custom capabilities to administrators on upgrade.
+	 * Run initial setup on plugin activation.
+	 *
+	 * @return void
+	 */
+	public static function activate(): void {
+		// Only set version on fresh install; upgrades handled by run_upgrades().
+		if ( ! get_option( self::VERSION_OPTION ) ) {
+			self::grant_caps();
+			update_option( self::VERSION_OPTION, self::VERSION );
+		}
+	}
+
+	/**
+	 * Run version-specific upgrade callbacks when updating from older version.
 	 *
 	 * @return void
 	 */
 	public static function run_upgrades(): void {
 		$stored_version = get_option( self::VERSION_OPTION, '' );
-		$from_version   = is_string( $stored_version ) && '' !== $stored_version ? $stored_version : '0.0.0';
 
-		$upgrades = self::upgrade_steps();
-		if ( empty( $upgrades ) ) {
-			update_option( self::VERSION_OPTION, self::VERSION );
+		// Already up to date.
+		if ( version_compare( $stored_version, self::VERSION, '>=' ) ) {
 			return;
 		}
 
+		$upgrades = self::upgrade_steps();
 		foreach ( $upgrades as $version => $callback ) {
-			if ( version_compare( $from_version, $version, '>=' ) ) {
+			if ( version_compare( $stored_version, $version, '>=' ) ) {
 				continue;
 			}
 			call_user_func( $callback );
@@ -178,20 +191,27 @@ final class Plugin {
 	}
 
 	/**
+	 * Grant custom capabilities to administrators.
+	 *
+	 * @return void
+	 */
+	private static function grant_caps(): void {
+		$role = get_role( 'administrator' );
+		if ( $role ) {
+			foreach ( Caps::all() as $cap ) {
+				$role->add_cap( $cap );
+			}
+		}
+	}
+
+	/**
 	 * Upgrade callbacks keyed by version.
 	 *
 	 * @return array<string,callable>
 	 */
 	private static function upgrade_steps(): array {
 		return [
-			'0.7' => static function (): void {
-				$role = get_role( 'administrator' );
-				if ( $role ) {
-					foreach ( Caps::all() as $cap ) {
-						$role->add_cap( $cap );
-					}
-				}
-			},
+			'0.7' => [ self::class, 'grant_caps' ],
 		];
 	}
 }
