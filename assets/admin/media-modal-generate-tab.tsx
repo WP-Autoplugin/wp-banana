@@ -11,6 +11,7 @@ import type { ProviderInfo } from './types/generate';
 
 type MediaData = {
 	restNamespace: string;
+	canGenerate?: boolean;
 	providers: ProviderInfo[];
 	defaultGeneratorModel?: string;
 	defaultGeneratorProvider?: string;
@@ -40,12 +41,16 @@ const getData = (): MediaData | null => {
 	if ( ! data || ! Array.isArray( data.providers ) ) {
 		return null;
 	}
+	if ( data.canGenerate === false ) {
+		return null;
+	}
 	const connected = data.providers.filter( ( provider ) => provider.connected !== false );
 	if ( connected.length === 0 ) {
 		return null;
 	}
 	return {
 		restNamespace: data.restNamespace,
+		canGenerate: data.canGenerate,
 		providers: connected,
 		defaultGeneratorModel: data.defaultGeneratorModel,
 		defaultGeneratorProvider: data.defaultGeneratorProvider,

@@ -114,6 +114,9 @@ final class Generate_Page {
 		if ( empty( $this->hook_suffix ) || $hook !== $this->hook_suffix ) {
 			return;
 		}
+		if ( ! current_user_can( Caps::GENERATE ) ) {
+			return;
+		}
 		if ( ! $this->options->is_connected() ) {
 			return;
 		}

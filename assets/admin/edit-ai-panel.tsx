@@ -892,6 +892,7 @@ const renderPanel = ( {
 
 type MediaData = {
 	restNamespace: string;
+	canEdit?: boolean;
 	providers: ProviderInfo[];
 	defaultEditorModel?: string;
 	defaultEditorProvider?: string;
@@ -1074,6 +1075,9 @@ const observeImageEditor = ( context: SetupContext ) => {
 const init = () => {
 	const data = ( window as unknown as { wpBananaMedia?: MediaData } ).wpBananaMedia;
 	if ( ! data || ! Array.isArray( data.providers ) || data.providers.length === 0 ) {
+		return;
+	}
+	if ( data.canEdit === false ) {
 		return;
 	}
 	const connected = data.providers.filter( ( provider ) => provider.connected !== false );

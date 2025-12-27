@@ -14,7 +14,9 @@ use WPBanana\Services\Models_Catalog;
 use WPBanana\Services\Attachment_Metadata;
 use WPBanana\Domain\Aspect_Ratios;
 use WPBanana\Domain\Resolutions;
+use WPBanana\Util\Caps;
 use WP_Post;
+use function current_user_can;
 
 // Prevent direct access.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -69,10 +71,12 @@ final class Media_Hooks {
 	 * @return void
 	 */
 	public function enqueue_block_editor_assets(): void {
-		if ( $this->options->is_connected() ) {
+		if ( $this->options->is_connected() && $this->user_can_access_ai() ) {
 			$this->enqueue_block_editor_script();
 		}
-		$this->enqueue_modal_style();
+		if ( $this->user_can_access_ai() ) {
+			$this->enqueue_modal_style();
+		}
 	}
 
 	/**
@@ -122,6 +126,9 @@ final class Media_Hooks {
 		$is_upload_screen     = ( 'upload.php' === $hook );
 		$is_attachment_screen = false;
 		$is_post_editor       = false;
+		$can_generate         = $this->user_can_generate();
+		$can_edit             = $this->user_can_edit();
+		$can_access_ai        = $can_generate || $can_edit;
 
 		if ( 'post.php' === $hook ) {
 			$attachment_id = isset( $_GET['post'] ) ? (int) $_GET['post'] : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
@@ -134,15 +141,15 @@ final class Media_Hooks {
 			$is_post_editor = true;
 		}
 
-		if ( $is_upload_screen && $this->options->is_connected() ) {
+		if ( $is_upload_screen && $this->options->is_connected() && $can_access_ai ) {
 			$this->enqueue_media_library_script();
-		} elseif ( $is_attachment_screen && $this->options->is_connected() ) {
+		} elseif ( $is_attachment_screen && $this->options->is_connected() && $can_edit ) {
 			$this->enqueue_attachment_editor_script();
-		} elseif ( $is_post_editor && $this->options->is_connected() ) {
+		} elseif ( $is_post_editor && $this->options->is_connected() && $can_access_ai ) {
 			$this->enqueue_block_editor_script();
 		}
 
-		if ( $is_upload_screen || $is_attachment_screen || $is_post_editor ) {
+		if ( ( $is_upload_screen || $is_attachment_screen || $is_post_editor ) && $can_access_ai ) {
 			$this->enqueue_modal_style();
 		}
 
@@ -201,10 +208,12 @@ final class Media_Hooks {
 	 * @return void
 	 */
 	public function enqueue_elementor_editor_assets(): void {
-		if ( $this->options->is_connected() ) {
+		if ( $this->options->is_connected() && $this->user_can_access_ai() ) {
 			$this->enqueue_block_editor_script();
 		}
-		$this->enqueue_modal_style();
+		if ( $this->user_can_access_ai() ) {
+			$this->enqueue_modal_style();
+		}
 	}
 
 	/**
@@ -213,10 +222,12 @@ final class Media_Hooks {
 	 * @return void
 	 */
 	public function enqueue_media_modal_assets(): void {
-		if ( $this->options->is_connected() ) {
+		if ( $this->options->is_connected() && $this->user_can_access_ai() ) {
 			$this->enqueue_block_editor_script();
 		}
-		$this->enqueue_modal_style();
+		if ( $this->user_can_access_ai() ) {
+			$this->enqueue_modal_style();
+		}
 	}
 
 	/**
@@ -314,23 +325,25 @@ final class Media_Hooks {
 	 * @return array<string,mixed>
 	 */
 	private function get_localized_data(): array {
-		$providers   = [];
-		$gemini      = $this->options->get_provider_config( 'gemini' );
-		$providers[] = [
+		$can_generate = $this->user_can_generate();
+		$can_edit     = $this->user_can_edit();
+		$providers    = [];
+		$gemini       = $this->options->get_provider_config( 'gemini' );
+		$providers[]  = [
 			'slug'          => 'gemini',
 			'label'         => __( 'Gemini', 'wp-banana' ),
 			'connected'     => ! empty( $gemini['api_key'] ),
 			'default_model' => isset( $gemini['default_model'] ) ? (string) $gemini['default_model'] : Models_Catalog::provider_default_model( 'gemini' ),
 		];
-		$openai      = $this->options->get_provider_config( 'openai' );
-		$providers[] = [
+		$openai       = $this->options->get_provider_config( 'openai' );
+		$providers[]  = [
 			'slug'          => 'openai',
 			'label'         => __( 'OpenAI', 'wp-banana' ),
 			'connected'     => ! empty( $openai['api_key'] ),
 			'default_model' => isset( $openai['default_model'] ) ? (string) $openai['default_model'] : Models_Catalog::provider_default_model( 'openai' ),
 		];
-		$replicate   = $this->options->get_provider_config( 'replicate' );
-		$providers[] = [
+		$replicate    = $this->options->get_provider_config( 'replicate' );
+		$providers[]  = [
 			'slug'          => 'replicate',
 			'label'         => __( 'Replicate', 'wp-banana' ),
 			'connected'     => ! empty( $replicate['api_token'] ),
@@ -352,6 +365,8 @@ final class Media_Hooks {
 
 		return [
 			'restNamespace'            => 'wp-banana/v1',
+			'canGenerate'              => $can_generate,
+			'canEdit'                  => $can_edit,
 			'providers'                => $providers,
 			'defaultGeneratorModel'    => $default_generator_model,
 			'defaultGeneratorProvider' => $this->detect_provider_for_model( $default_generator_model, 'generate' ),
@@ -365,6 +380,33 @@ final class Media_Hooks {
 			'resolutionModelAllowlist' => Models_Catalog::resolution_model_allowlist(),
 			'iconUrl'                  => trailingslashit( $this->plugin_url ) . 'assets/images/banana-icon-2.svg',
 		];
+	}
+
+	/**
+	 * Determine if the current user can access any AI UI.
+	 *
+	 * @return bool
+	 */
+	private function user_can_access_ai(): bool {
+		return $this->user_can_generate() || $this->user_can_edit();
+	}
+
+	/**
+	 * Determine if the current user can generate AI images.
+	 *
+	 * @return bool
+	 */
+	private function user_can_generate(): bool {
+		return current_user_can( Caps::GENERATE );
+	}
+
+	/**
+	 * Determine if the current user can edit AI images.
+	 *
+	 * @return bool
+	 */
+	private function user_can_edit(): bool {
+		return current_user_can( Caps::EDIT );
 	}
 
 	/**
@@ -409,7 +451,7 @@ final class Media_Hooks {
 	public function maybe_show_notice(): void {
 		$screen          = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
 		$is_media_screen = $screen && ( 'upload' === $screen->id );
-		if ( $is_media_screen && ! $this->options->is_connected() ) {
+		if ( $is_media_screen && $this->user_can_access_ai() && ! $this->options->is_connected() ) {
 			echo '<div class="notice notice-warning is-dismissible"><p>' . esc_html__( 'WP Banana: No provider configured. Add a key in Settings → AI Images to enable the Media UI.', 'wp-banana' ) . '</p></div>';
 		}
 	}
