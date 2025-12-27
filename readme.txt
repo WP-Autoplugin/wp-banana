@@ -3,7 +3,7 @@ Contributors: pbalazs
 Tags: ai, images, openai, replicate, google
 Requires at least: 6.0
 Tested up to: 6.9
-Stable tag: 0.7
+Stable tag: 0.7.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -129,31 +129,31 @@ All images are saved directly into your WordPress Media Library. You can use the
 
 == Changelog ==
 
-= 0.7 =
+= 0.7.0 =
 * Added support for Abilities API introduced in WP 6.9
 * Added custom user capabilities for better role management
 * Minor UI improvements and bug fixes
 
-= 0.6 =
+= 0.6.0 =
 * UX improvements: added separate field for image resolution instead of using model suffixes
 * Added support for FLUX.2 models family via Replicate API
 * Added support for Seedream 4.0 model via Replicate API
 * Refactored Replicate provider response handling to allow longer requests
 * Refactored models catalog for better maintainability
 
-= 0.5 =
+= 0.5.0 =
 * Added support for Google Gemini 3 Pro Image Preview model through Gemini API & Replicate
 * Improved error handling for API requests
 * Fixed minor bugs causing PHP warnings in certain environments
 
-= 0.4 =
+= 0.4.0 =
 * Added multi-image generation and preview options
 * Added optional API logging for debugging and monitoring
 * Added option to remove meta data from attachments
 * UI enhancements for better user experience
 * Bug fixes and performance improvements
 
-= 0.3 =
+= 0.3.0 =
 * Added Reve Create, Edit, and Remix models via Replicate API
 * Added Imagen 4 models via Gemini API
 * Added gpt-image-1-mini model support via OpenAI API

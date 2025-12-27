@@ -3,7 +3,7 @@
  * Abilities API registration for WP Banana.
  *
  * @package WPBanana\Abilities
- * @since   0.7
+ * @since   0.7.0
  */
 
 namespace WPBanana\Abilities;

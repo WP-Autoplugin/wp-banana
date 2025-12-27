@@ -267,7 +267,7 @@ final class Plugin {
 	 */
 	private static function upgrade_steps(): array {
 		return [
-			'0.7' => [ self::class, 'grant_caps' ],
+			'0.7.0' => [ self::class, 'grant_caps' ],
 		];
 	}
 
