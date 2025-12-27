@@ -18,6 +18,25 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 final class Caps {
 
+	public const GENERATE = 'wp_banana_generate';
+	public const EDIT     = 'wp_banana_edit';
+	public const SAVE     = 'wp_banana_save';
+	public const MODELS   = 'wp_banana_models';
+
+	/**
+	 * List all custom capabilities provided by this plugin.
+	 *
+	 * @return string[]
+	 */
+	public static function all(): array {
+		return [
+			self::GENERATE,
+			self::EDIT,
+			self::SAVE,
+			self::MODELS,
+		];
+	}
+
 	/**
 	 * Whether the current user can replace the original file for an attachment.
 	 *

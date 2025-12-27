@@ -1,9 +1,9 @@
-=== WP Nano Banana ===
+=== WP Banana ===
 Contributors: pbalazs
 Tags: ai, images, openai, replicate, google
 Requires at least: 6.0
-Tested up to: 6.8
-Stable tag: 0.6
+Tested up to: 6.9
+Stable tag: 0.7.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -12,7 +12,7 @@ Free plugin for generating and editing images with AI. Works with Google Nano Ba
 
 == Description ==
 
-WP Nano Banana is a clean, free, and open-source WordPress plugin that brings AI image generation and editing directly into your WordPress admin area.  
+WP Banana is a clean, free, and open-source WordPress plugin that brings AI image generation and editing directly into your WordPress admin area.  
 
 **Key capabilities**:
 - Generate images from text prompts
@@ -20,7 +20,7 @@ WP Nano Banana is a clean, free, and open-source WordPress plugin that brings AI
 - Combine multiple images from your Media Library or uploads
 - Seamlessly integrates with Gutenberg, Classic Editor, and most page builders
 
-Unlike many AI plugins, WP Nano Banana has:
+Unlike many AI plugins, WP Banana has:
 - **No ads, no locked features, no upsells**
 - **Native-like UI** that blends into WordPress core
 - **Secure, performant code** built for speed and reliability
@@ -50,7 +50,7 @@ Unlike many AI plugins, WP Nano Banana has:
 
 ### Supported AI Models
 
-WP Nano Banana supports a wide range of AI image models:
+WP Banana supports a wide range of AI image models:
 
 - **Google Gemini 3 Pro Image Preview** (`gemini-3-pro-image-preview`), a.k.a. *Google Nano Banana Pro* (`google/nano-banana-pro`)
 - **Google Gemini 2.5 Flash Image**, a.k.a. *Google Nano Banana* (`gemini-2.5-flash-image`)
@@ -88,22 +88,22 @@ No data is transmitted until you configure your API credentials in settings.
 == Installation ==
 
 1. Upload the `wp-banana` folder to your `/wp-content/plugins/` directory, or install it via the Plugins screen in WordPress.
-2. Activate **WP Nano Banana** from the Plugins menu.
-3. Go to **Settings → WP Nano Banana** and enter your API key(s).
+2. Activate **WP Banana** from the Plugins menu.
+3. Go to **Settings → WP Banana** and enter your API key(s).
 4. Start generating and editing images directly inside WordPress.
 
 ---
 
 == Frequently Asked Questions ==
 
-= Does WP Nano Banana require an API key? =
+= Does WP Banana require an API key? =
 Yes. You will need your own API key from OpenAI, Google AI Studio, Replicate, or another supported provider.
 
 = Are there any restrictions or locked features? =
-No. WP Nano Banana is 100% free and open source, with no ads or premium upsells.
+No. WP Banana is 100% free and open source, with no ads or premium upsells.
 
 = Does it work with my page builder? =
-Yes. WP Nano Banana works with Gutenberg, Classic Editor, and all major page builders since it integrates directly with the Media Library.
+Yes. WP Banana works with Gutenberg, Classic Editor, and all major page builders since it integrates directly with the Media Library.
 
 = Where are my generated images stored? =
 All images are saved directly into your WordPress Media Library. You can use them like any other image in WordPress or download them.
@@ -129,26 +129,31 @@ All images are saved directly into your WordPress Media Library. You can use the
 
 == Changelog ==
 
-= 0.6 =
+= 0.7.0 =
+* Added support for Abilities API introduced in WP 6.9
+* Added custom user capabilities for better role management
+* Minor UI improvements and bug fixes
+
+= 0.6.0 =
 * UX improvements: added separate field for image resolution instead of using model suffixes
 * Added support for FLUX.2 models family via Replicate API
 * Added support for Seedream 4.0 model via Replicate API
 * Refactored Replicate provider response handling to allow longer requests
 * Refactored models catalog for better maintainability
 
-= 0.5 =
+= 0.5.0 =
 * Added support for Google Gemini 3 Pro Image Preview model through Gemini API & Replicate
 * Improved error handling for API requests
 * Fixed minor bugs causing PHP warnings in certain environments
 
-= 0.4 =
+= 0.4.0 =
 * Added multi-image generation and preview options
 * Added optional API logging for debugging and monitoring
 * Added option to remove meta data from attachments
 * UI enhancements for better user experience
 * Bug fixes and performance improvements
 
-= 0.3 =
+= 0.3.0 =
 * Added Reve Create, Edit, and Remix models via Replicate API
 * Added Imagen 4 models via Gemini API
 * Added gpt-image-1-mini model support via OpenAI API

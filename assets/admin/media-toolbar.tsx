@@ -13,6 +13,8 @@ declare global {
 	interface Window {
 		wpBananaMedia?: {
 			restNamespace: string;
+			canGenerate?: boolean;
+			canEdit?: boolean;
 			providers: ProviderInfo[];
 			defaultGeneratorModel?: string;
 			defaultGeneratorProvider?: string;
@@ -73,6 +75,7 @@ const mountGeneratePanel = (
 	container: HTMLElement,
 	data: {
 		restNamespace: string;
+		canGenerate?: boolean;
 		providers: ProviderInfo[];
 		defaultGeneratorModel?: string;
 		defaultGeneratorProvider?: string;
@@ -155,6 +158,9 @@ const init = () => {
 
 	const data = window.wpBananaMedia;
 	if ( ! data || ! Array.isArray( data.providers ) || data.providers.length === 0 ) {
+		return;
+	}
+	if ( data.canGenerate === false ) {
 		return;
 	}
 

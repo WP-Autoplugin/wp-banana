@@ -85,8 +85,8 @@ final class Settings_Page {
 	 */
 	public function add_menu(): void {
 		add_options_page(
-			__( 'WP Nano Banana', 'wp-banana' ),
-			__( 'WP Nano Banana', 'wp-banana' ),
+			__( 'WP Banana', 'wp-banana' ),
+			__( 'WP Banana', 'wp-banana' ),
 			'manage_options',
 			'wp-banana',
 			[ $this, 'render' ]
@@ -287,7 +287,7 @@ final class Settings_Page {
 		$logs_url              = admin_url( 'admin.php?page=' . Logs_Page::SLUG );
 		?>
 		<div class="wrap">
-			<h1><?php echo esc_html__( 'WP Nano Banana', 'wp-banana' ); ?></h1>
+			<h1><?php echo esc_html__( 'WP Banana', 'wp-banana' ); ?></h1>
 
 			<?php if ( ! $this->options->is_connected() ) : ?>
 				<div class="notice notice-warning"><p><?php echo esc_html__( 'No provider key set. The Media Library UI will appear after adding a key below.', 'wp-banana' ); ?></p></div>
@@ -317,8 +317,8 @@ final class Settings_Page {
 									data-target="<?php echo esc_attr( $gemini_input_id ); ?>"
 									data-label-default="<?php esc_attr_e( 'Test', 'wp-banana' ); ?>"
 									data-label-loading="<?php esc_attr_e( 'Testing...', 'wp-banana' ); ?>"
-									data-label-success="<?php esc_attr_e( 'Success', 'wp-banana' ); ?>"
-									data-label-error="<?php esc_attr_e( 'Retry', 'wp-banana' ); ?>"
+									data-label-success="<?php esc_attr_e( 'OK', 'wp-banana' ); ?>"
+									data-label-error="<?php esc_attr_e( 'Fail', 'wp-banana' ); ?>"
 									data-status-loading="<?php echo esc_attr( $gemini_loading_label ); ?>"
 									data-status-success="<?php echo esc_attr( $gemini_success_label ); ?>"
 									data-status-error="<?php echo esc_attr( $gemini_error_label ); ?>"
@@ -354,8 +354,8 @@ final class Settings_Page {
 									data-target="<?php echo esc_attr( $openai_input_id ); ?>"
 									data-label-default="<?php esc_attr_e( 'Test', 'wp-banana' ); ?>"
 									data-label-loading="<?php esc_attr_e( 'Testing...', 'wp-banana' ); ?>"
-									data-label-success="<?php esc_attr_e( 'Success', 'wp-banana' ); ?>"
-									data-label-error="<?php esc_attr_e( 'Retry', 'wp-banana' ); ?>"
+									data-label-success="<?php esc_attr_e( 'OK', 'wp-banana' ); ?>"
+									data-label-error="<?php esc_attr_e( 'Fail', 'wp-banana' ); ?>"
 									data-status-loading="<?php echo esc_attr( $openai_loading_label ); ?>"
 									data-status-success="<?php echo esc_attr( $openai_success_label ); ?>"
 									data-status-error="<?php echo esc_attr( $openai_error_label ); ?>"
@@ -391,8 +391,8 @@ final class Settings_Page {
 									data-target="<?php echo esc_attr( $replicate_input_id ); ?>"
 									data-label-default="<?php esc_attr_e( 'Test', 'wp-banana' ); ?>"
 									data-label-loading="<?php esc_attr_e( 'Testing...', 'wp-banana' ); ?>"
-									data-label-success="<?php esc_attr_e( 'Success', 'wp-banana' ); ?>"
-									data-label-error="<?php esc_attr_e( 'Retry', 'wp-banana' ); ?>"
+									data-label-success="<?php esc_attr_e( 'OK', 'wp-banana' ); ?>"
+									data-label-error="<?php esc_attr_e( 'Fail', 'wp-banana' ); ?>"
 									data-status-loading="<?php echo esc_attr( $replicate_loading_label ); ?>"
 									data-status-success="<?php echo esc_attr( $replicate_success_label ); ?>"
 									data-status-error="<?php echo esc_attr( $replicate_error_label ); ?>"
@@ -638,13 +638,13 @@ final class Settings_Page {
 			if ( 'cleared' === $status ) {
 				?>
 				<div class="notice notice-success is-dismissible">
-					<p><?php echo esc_html__( 'All WP Nano Banana logs were cleared.', 'wp-banana' ); ?></p>
+					<p><?php echo esc_html__( 'All WP Banana logs were cleared.', 'wp-banana' ); ?></p>
 				</div>
 				<?php
 			} elseif ( 'failed' === $status ) {
 				?>
 				<div class="notice notice-error">
-					<p><?php echo esc_html__( 'Failed to clear the WP Nano Banana logs. Please try again.', 'wp-banana' ); ?></p>
+					<p><?php echo esc_html__( 'Failed to clear the WP Banana logs. Please try again.', 'wp-banana' ); ?></p>
 				</div>
 				<?php
 			} elseif ( 'missing' === $status ) {

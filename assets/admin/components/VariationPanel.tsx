@@ -61,7 +61,7 @@ const VariationPanel = ( {
 			>
 				<h3 style={ { margin: 0 } }>{ __( 'Generated Variations', 'wp-banana' ) }</h3>
 				<button type="button" className="button" onClick={ onClear }>
-					{ __( 'Clear previews', 'wp-banana' ) }
+					{ __( 'Discard unsaved', 'wp-banana' ) }
 				</button>
 			</div>
 			{ previewAction && previewAction.type !== 'success' && (

@@ -18,6 +18,7 @@ use WP_REST_Request;
 use WP_REST_Response;
 use WPBanana\Services\Models_Catalog;
 use WPBanana\Services\Options;
+use WPBanana\Util\Caps;
 
 /**
  * Returns available provider models (static for now).
@@ -74,7 +75,7 @@ final class Models_Controller {
 	 * @return bool
 	 */
 	public function can_access(): bool {
-		return current_user_can( 'upload_files' );
+		return current_user_can( Caps::MODELS );
 	}
 
 	/**

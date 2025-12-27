@@ -545,7 +545,7 @@ final class Replicate_Provider implements Provider_Interface {
 		$attempt  = 0;
 
 		while ( $this->should_poll_status( $data['status'] ?? '' ) && time() < $deadline ) {
-			$attempt++;
+			++$attempt;
 			$args = [
 				'method'  => 'GET',
 				'timeout' => $this->timeout,
@@ -573,7 +573,7 @@ final class Replicate_Provider implements Provider_Interface {
 			if ( is_wp_error( $res ) ) {
 				throw new RuntimeException( esc_html( $res->get_error_message() ) );
 			}
-			$body = wp_remote_retrieve_body( $res );
+			$body    = wp_remote_retrieve_body( $res );
 			$decoded = json_decode( $body, true );
 			$decoded = apply_filters( 'wp_banana_provider_decoded_response', $decoded, $request_context, $res );
 			$decoded = apply_filters( 'wp_banana_replicate_decoded_response', $decoded, $request_context, $res );

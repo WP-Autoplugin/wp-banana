@@ -30,6 +30,7 @@ use WPBanana\Services\Convert_Service;
 use WPBanana\Services\Attachment_Service;
 use WPBanana\Services\Logging_Service;
 use WPBanana\Services\Models_Catalog;
+use WPBanana\Util\Caps;
 use WPBanana\Util\Mime;
 
 use function get_current_user_id;
@@ -98,39 +99,46 @@ final class Generate_Controller {
 				'callback'            => [ $this, 'handle' ],
 				'permission_callback' => [ $this, 'can_access' ],
 				'args'                => [
-					'prompt'       => [
+					'prompt'              => [
 						'type'     => 'string',
 						'required' => true,
 					],
-					'provider'     => [
+					'provider'            => [
 						'type'     => 'string',
 						'required' => false,
 					],
-					'model'        => [
+					'model'               => [
 						'type'     => 'string',
 						'required' => false,
 					],
-					'aspect_ratio' => [
+					'aspect_ratio'        => [
 						'type'     => 'string',
 						'required' => false,
 					],
-					'resolution'   => [
+					'resolution'          => [
 						'type'     => 'string',
 						'required' => false,
 					],
-					'width'        => [
+					'width'               => [
 						'type'     => 'integer',
 						'required' => false,
 					],
-					'height'       => [
+					'height'              => [
 						'type'     => 'integer',
 						'required' => false,
 					],
-					'format'       => [
+					'format'              => [
 						'type'     => 'string',
 						'required' => false,
 					], // png|webp|jpeg.
-					'preview_only' => [
+					'reference_image_ids' => [
+						'type'     => 'array',
+						'required' => false,
+						'items'    => [
+							'type' => 'integer',
+						],
+					],
+					'preview_only'        => [
 						'type'     => 'boolean',
 						'required' => false,
 					],
@@ -189,7 +197,7 @@ final class Generate_Controller {
 	 * @return bool
 	 */
 	public function can_access(): bool {
-		return current_user_can( 'upload_files' );
+		return current_user_can( Caps::GENERATE );
 	}
 
 	/**
@@ -845,7 +853,11 @@ final class Generate_Controller {
 	private function collect_reference_images( WP_REST_Request $req ) {
 		$files = $req->get_file_params();
 		if ( empty( $files['reference_images'] ) || ! is_array( $files['reference_images'] ) ) {
-			return [];
+			$reference_ids = $req->get_param( 'reference_image_ids' );
+			if ( empty( $reference_ids ) ) {
+				return [];
+			}
+			return $this->collect_reference_images_from_ids( $reference_ids, $req );
 		}
 
 		$max_allowed   = (int) apply_filters( 'wp_banana_generate_max_reference_images', self::MAX_REFERENCE_IMAGES, $req );
@@ -952,6 +964,94 @@ final class Generate_Controller {
 				(int) $dimensions[0],
 				(int) $dimensions[1],
 				$original ?: basename( $target )
+			);
+		}
+
+		return $collected;
+	}
+
+	/**
+	 * Collect reference images from attachment IDs.
+	 *
+	 * @param mixed           $reference_ids Attachment IDs to load.
+	 * @param WP_REST_Request $req           Request instance.
+	 * @return Reference_Image[]|WP_Error
+	 */
+	private function collect_reference_images_from_ids( $reference_ids, WP_REST_Request $req ) {
+		$ids = is_array( $reference_ids ) ? $reference_ids : [ $reference_ids ];
+		$ids = array_values( array_filter( array_map( 'absint', $ids ) ) );
+		if ( empty( $ids ) ) {
+			return [];
+		}
+
+		$max_allowed   = (int) apply_filters( 'wp_banana_generate_max_reference_images', self::MAX_REFERENCE_IMAGES, $req );
+		$max_allowed   = $max_allowed >= 0 ? $max_allowed : self::MAX_REFERENCE_IMAGES;
+		$allowed_mimes = apply_filters( 'wp_banana_generate_supported_reference_mime_types', self::SUPPORTED_REFERENCE_MIME, $req );
+		if ( ! is_array( $allowed_mimes ) ) {
+			$allowed_mimes = self::SUPPORTED_REFERENCE_MIME;
+		}
+		$allowed_mimes = array_values( array_filter( array_map( 'strval', $allowed_mimes ) ) );
+		if ( empty( $allowed_mimes ) ) {
+			$allowed_mimes = self::SUPPORTED_REFERENCE_MIME;
+		}
+		$allowed_lookup = array_map( 'strtolower', $allowed_mimes );
+
+		if ( ! function_exists( 'wp_tempnam' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+		}
+
+		$collected = [];
+		foreach ( $ids as $id ) {
+			if ( $max_allowed >= 0 && count( $collected ) >= $max_allowed ) {
+				break;
+			}
+
+			$post = get_post( $id );
+			if ( ! ( $post instanceof \WP_Post ) || 'attachment' !== $post->post_type ) {
+				$this->cleanup_reference_images( $collected );
+				return new WP_Error( 'wp_banana_reference_missing', __( 'Reference image attachment not found.', 'wp-banana' ) );
+			}
+
+			if ( ! current_user_can( 'edit_post', $id ) ) {
+				$this->cleanup_reference_images( $collected );
+				return new WP_Error( 'wp_banana_reference_forbidden', __( 'You cannot access this reference image.', 'wp-banana' ) );
+			}
+
+			$file = get_attached_file( $id );
+			if ( ! $file || ! file_exists( $file ) ) {
+				$this->cleanup_reference_images( $collected );
+				return new WP_Error( 'wp_banana_reference_missing', __( 'Reference image file not found.', 'wp-banana' ) );
+			}
+
+			$mime       = (string) get_post_mime_type( $id );
+			$mime_lower = strtolower( $mime );
+			if ( '' === $mime_lower || ! in_array( $mime_lower, $allowed_lookup, true ) ) {
+				$this->cleanup_reference_images( $collected );
+				return new WP_Error( 'wp_banana_reference_type', __( 'Reference image type is not allowed.', 'wp-banana' ) );
+			}
+
+			$tmp = wp_tempnam( 'wp-banana-reference-' . $id );
+			if ( ! $tmp || ! copy( $file, $tmp ) ) {
+				if ( $tmp ) {
+					wp_delete_file( $tmp );
+				}
+				$this->cleanup_reference_images( $collected );
+				return new WP_Error( 'wp_banana_reference_copy_failed', __( 'Failed to prepare reference image.', 'wp-banana' ) );
+			}
+
+			$dimensions = @getimagesize( $tmp ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- suppress warnings for invalid files.
+			if ( ! is_array( $dimensions ) || empty( $dimensions[0] ) || empty( $dimensions[1] ) ) {
+				wp_delete_file( $tmp );
+				$this->cleanup_reference_images( $collected );
+				return new WP_Error( 'wp_banana_reference_invalid', __( 'Reference image could not be read.', 'wp-banana' ) );
+			}
+
+			$collected[] = new Reference_Image(
+				$tmp,
+				$mime,
+				(int) $dimensions[0],
+				(int) $dimensions[1],
+				basename( $file )
 			);
 		}
 

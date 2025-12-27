@@ -63,8 +63,8 @@ final class Logs_Page {
 	public function add_page(): void {
 		$hook = add_submenu_page(
 			'-', // Passing null or an empty string causes PHP warnings, so we use a dash.
-			__( 'WP Nano Banana Logs', 'wp-banana' ),
-			__( 'WP Nano Banana Logs', 'wp-banana' ),
+			__( 'WP Banana Logs', 'wp-banana' ),
+			__( 'WP Banana Logs', 'wp-banana' ),
 			'manage_options',
 			self::SLUG,
 			[ $this, 'render' ]
@@ -332,7 +332,7 @@ JS;
 			return $admin_title;
 		}
 
-		$page_title = __( 'WP Nano Banana Logs', 'wp-banana' );
+		$page_title = __( 'WP Banana Logs', 'wp-banana' );
 		$site_title = get_bloginfo( 'name', 'display' );
 
 		return sprintf(
