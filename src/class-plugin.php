@@ -73,6 +73,9 @@ final class Plugin {
 		register_activation_hook( self::$plugin_file, [ self::class, 'activate' ] );
 		add_action( 'init', [ self::class, 'run_upgrades' ] );
 
+		// Handle new sites created on multisite after network activation.
+		add_action( 'wp_initialize_site', [ self::class, 'on_new_site' ], 10, 1 );
+
 		// Register Abilities API definitions (WP 6.9+).
 		( new Abilities( $options, $buffer, $logger ) )->register();
 
@@ -133,9 +136,31 @@ final class Plugin {
 	 * @return void
 	 */
 	public static function uninstall(): void {
+		if ( is_multisite() ) {
+			self::run_on_all_sites( [ self::class, 'uninstall_single_site' ] );
+		} else {
+			self::uninstall_single_site();
+		}
+	}
+
+	/**
+	 * Remove plugin data for a single site.
+	 *
+	 * @return void
+	 */
+	private static function uninstall_single_site(): void {
 		// Remove options and transients; keep attachments by default.
 		delete_option( \WPBanana\Services\Options::OPTION_NAME );
 		delete_option( self::VERSION_OPTION );
+
+		// Remove custom capabilities from administrator role.
+		$role = get_role( 'administrator' );
+		if ( $role ) {
+			foreach ( Caps::all() as $cap ) {
+				$role->remove_cap( $cap );
+			}
+		}
+
 		// Remove models cache transients.
 		global $wpdb;
 		$transient_like         = $wpdb->esc_like( '_transient_wp_banana_models_' ) . '%';
@@ -156,14 +181,45 @@ final class Plugin {
 	/**
 	 * Run initial setup on plugin activation.
 	 *
+	 * @param bool $network_wide Whether this is a network-wide activation.
 	 * @return void
 	 */
-	public static function activate(): void {
+	public static function activate( bool $network_wide = false ): void {
+		if ( is_multisite() && $network_wide ) {
+			self::run_on_all_sites( [ self::class, 'activate_single_site' ] );
+		} else {
+			self::activate_single_site();
+		}
+	}
+
+	/**
+	 * Activate plugin for a single site.
+	 *
+	 * @return void
+	 */
+	private static function activate_single_site(): void {
 		// Only set version on fresh install; upgrades handled by run_upgrades().
 		if ( ! get_option( self::VERSION_OPTION ) ) {
 			self::grant_caps();
 			update_option( self::VERSION_OPTION, self::VERSION );
 		}
+	}
+
+	/**
+	 * Handle new site creation on multisite.
+	 *
+	 * @param \WP_Site $new_site New site object.
+	 * @return void
+	 */
+	public static function on_new_site( \WP_Site $new_site ): void {
+		// Only run if plugin is network-activated.
+		if ( ! is_plugin_active_for_network( plugin_basename( self::$plugin_file ) ) ) {
+			return;
+		}
+
+		switch_to_blog( (int) $new_site->blog_id );
+		self::activate_single_site();
+		restore_current_blog();
 	}
 
 	/**
@@ -213,5 +269,27 @@ final class Plugin {
 		return [
 			'0.7' => [ self::class, 'grant_caps' ],
 		];
+	}
+
+	/**
+	 * Run a callback on all sites in the network.
+	 *
+	 * @param callable $callback Callback to run on each site.
+	 * @return void
+	 */
+	private static function run_on_all_sites( callable $callback ): void {
+		$site_ids = get_sites(
+			[
+				'fields'     => 'ids',
+				'network_id' => get_current_network_id(),
+				'number'     => 0, // All sites.
+			]
+		);
+
+		foreach ( $site_ids as $site_id ) {
+			switch_to_blog( $site_id );
+			call_user_func( $callback );
+			restore_current_blog();
+		}
 	}
 }
