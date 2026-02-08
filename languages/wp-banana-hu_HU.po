@@ -1,0 +1,1334 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: WP Banana 0.7.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/wp-banana\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: Magyar <hu@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-02-07T15:32:30+00:00\n"
+"PO-Revision-Date: 2026-02-07 16:00+0000\n"
+"Language: hu_HU\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: wp-banana\n"
+
+#. Plugin Name of the plugin
+#: wp-banana.php
+#: src/Admin/class-media-hooks.php:490
+#: src/Admin/class-settings-page.php:88
+#: src/Admin/class-settings-page.php:89
+#: src/Admin/class-settings-page.php:290
+msgid "WP Banana"
+msgstr "WP Banana"
+
+#. Description of the plugin
+#: wp-banana.php
+#: src/Admin/class-updater.php:47
+msgid "AI image generation and editing via Gemini, Replicate and OpenAI, right in your WordPress media library."
+msgstr "AI képgenerálás és -szerkesztés Gemini, Replicate és OpenAI segítségével, közvetlenül a WordPress médiatárból."
+
+#. Author of the plugin
+#: wp-banana.php
+msgid "Balázs Piller"
+msgstr "Balázs Piller"
+
+#: src/Abilities/class-abilities.php:88
+msgid "AI Images"
+msgstr "AI Képek"
+
+#: src/Abilities/class-abilities.php:89
+msgid "Abilities for generating and editing images with AI."
+msgstr "Képek generálásához és szerkesztéséhez szükséges AI képességek."
+
+#: src/Abilities/class-abilities.php:107
+#: src/Admin/class-generate-page.php:99
+#: src/Admin/class-generate-page.php:100
+#: src/Admin/class-generate-page.php:182
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "Generate Image"
+msgstr "Kép generálása"
+
+#: src/Abilities/class-abilities.php:108
+msgid "Generate an image from a prompt and save it as a WordPress attachment."
+msgstr "Kép generálása egy leírásból és mentése WordPress csatolmányként."
+
+#: src/Abilities/class-abilities.php:132
+msgid "Edit Image"
+msgstr "Kép szerkesztése"
+
+#: src/Abilities/class-abilities.php:133
+msgid "Apply an AI edit to an existing attachment and save the result."
+msgstr "AI szerkesztés alkalmazása meglévő csatolmányra és az eredmény mentése."
+
+#: src/Abilities/class-abilities.php:157
+msgid "List Models"
+msgstr "Modellek listázása"
+
+#: src/Abilities/class-abilities.php:158
+msgid "List available provider models for image generation or editing."
+msgstr "Elérhető szolgáltatói modellek listázása képgeneráláshoz vagy szerkesztéshez."
+
+#: src/Admin/class-generate-page.php:178
+#: src/Admin/class-logs-page.php:96
+#: src/Admin/class-settings-page.php:224
+msgid "You do not have permission to access this page."
+msgstr "Nincs jogosultságod az oldal megtekintéséhez."
+
+#: src/Admin/class-generate-page.php:183
+msgid "Create AI-generated images and they will appear in your Media Library automatically. Use the \"Edit Image\" button to modify them with AI."
+msgstr "Hozz létre AI-vel generált képeket, és automatikusan megjelennek a médiatárban. Használd a \"Kép szerkesztése\" gombot az AI-alapú módosításhoz."
+
+#. translators: 1: opening anchor tag linking to the plugin settings page, 2: closing anchor tag
+#: src/Admin/class-generate-page.php:190
+#, php-format
+msgid "Connect a provider in %1$sSettings → AI Images%2$s to start generating images."
+msgstr "Csatlakoztass egy szolgáltatót a %1$sBeállítások → AI Képek%2$s menüpontban a képgenerálás megkezdéséhez."
+
+#: src/Admin/class-generate-page.php:232
+#: src/Admin/class-media-hooks.php:335
+#: src/Admin/class-media-hooks.php:616
+msgid "Gemini"
+msgstr "Gemini"
+
+#: src/Admin/class-generate-page.php:239
+#: src/Admin/class-media-hooks.php:342
+#: src/Admin/class-media-hooks.php:620
+#: src/Admin/class-settings-page.php:1211
+msgid "OpenAI"
+msgstr "OpenAI"
+
+#: src/Admin/class-generate-page.php:246
+#: src/Admin/class-media-hooks.php:349
+#: src/Admin/class-media-hooks.php:618
+#: src/Admin/class-settings-page.php:1212
+msgid "Replicate"
+msgstr "Replicate"
+
+#: src/Admin/class-logs-list-table.php:65
+msgid "Operation"
+msgstr "Művelet"
+
+#: src/Admin/class-logs-list-table.php:66
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "Provider"
+msgstr "Szolgáltató"
+
+#: src/Admin/class-logs-list-table.php:67
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "Model"
+msgstr "Modell"
+
+#: src/Admin/class-logs-list-table.php:68
+msgid "Status"
+msgstr "Állapot"
+
+#: src/Admin/class-logs-list-table.php:69
+msgid "Response Time"
+msgstr "Válaszidő"
+
+#: src/Admin/class-logs-list-table.php:70
+msgid "User"
+msgstr "Felhasználó"
+
+#: src/Admin/class-logs-list-table.php:71
+msgid "Attachment"
+msgstr "Csatolmány"
+
+#: src/Admin/class-logs-list-table.php:72
+msgid "Prompt"
+msgstr "Leírás"
+
+#: src/Admin/class-logs-list-table.php:73
+msgid "Timestamp"
+msgstr "Időbélyeg"
+
+#: src/Admin/class-logs-list-table.php:74
+msgid "Details"
+msgstr "Részletek"
+
+#: src/Admin/class-logs-list-table.php:139
+msgid "No API activity recorded yet."
+msgstr "Még nincs rögzített API tevékenység."
+
+#: src/Admin/class-logs-list-table.php:160
+msgid "All providers"
+msgstr "Minden szolgáltató"
+
+#: src/Admin/class-logs-list-table.php:166
+msgid "All operations"
+msgstr "Minden művelet"
+
+#: src/Admin/class-logs-list-table.php:174
+msgid "All statuses"
+msgstr "Minden állapot"
+
+#: src/Admin/class-logs-list-table.php:175
+#: src/Admin/class-logs-list-table.php:272
+msgid "Success"
+msgstr "Sikeres"
+
+#: src/Admin/class-logs-list-table.php:176
+#: src/Admin/class-logs-list-table.php:274
+#: src/Admin/class-logs-page.php:218
+msgid "Error"
+msgstr "Hiba"
+
+#: src/Admin/class-logs-list-table.php:177
+#: src/Admin/class-logs-list-table.php:277
+msgid "Info"
+msgstr "Információ"
+
+#: src/Admin/class-logs-list-table.php:181
+msgid "Filter by provider"
+msgstr "Szűrés szolgáltató szerint"
+
+#: src/Admin/class-logs-list-table.php:190
+msgid "Filter by operation"
+msgstr "Szűrés művelet szerint"
+
+#: src/Admin/class-logs-list-table.php:199
+msgid "Filter by status"
+msgstr "Szűrés állapot szerint"
+
+#: src/Admin/class-logs-list-table.php:208
+msgid "Filter"
+msgstr "Szűrés"
+
+#: src/Admin/class-logs-list-table.php:295
+msgid "—"
+msgstr "—"
+
+#: src/Admin/class-logs-list-table.php:297
+#, php-format
+msgid "%d ms"
+msgid_plural "%d ms"
+msgstr[0] "%d ms"
+msgstr[1] "%d ms"
+
+#: src/Admin/class-logs-list-table.php:308
+msgid "System"
+msgstr "Rendszer"
+
+#: src/Admin/class-logs-list-table.php:406
+msgid "View details"
+msgstr "Részletek megtekintése"
+
+#: src/Admin/class-logs-list-table.php:407
+msgid "Hide details"
+msgstr "Részletek elrejtése"
+
+#: src/Admin/class-logs-page.php:66
+#: src/Admin/class-logs-page.php:67
+#: src/Admin/class-logs-page.php:335
+msgid "WP Banana Logs"
+msgstr "WP Banana Naplók"
+
+#: src/Admin/class-logs-page.php:110
+msgid "API Logs"
+msgstr "API Naplók"
+
+#: src/Admin/class-logs-page.php:114
+msgid "Logging is currently disabled. Enable it in the plugin settings to capture new events."
+msgstr "A naplózás jelenleg ki van kapcsolva. Kapcsold be a bővítmény beállításaiban az új események rögzítéséhez."
+
+#: src/Admin/class-logs-page.php:120
+msgid "The logging table does not exist yet. Enable logging to create it automatically."
+msgstr "A naplózási tábla még nem létezik. Kapcsold be a naplózást az automatikus létrehozáshoz."
+
+#: src/Admin/class-logs-page.php:126
+msgid "Search logs"
+msgstr "Keresés a naplókban"
+
+#: src/Admin/class-logs-page.php:216
+msgid "Input (normalized)"
+msgstr "Bemenet (normalizált)"
+
+#: src/Admin/class-logs-page.php:217
+msgid "Output (normalized)"
+msgstr "Kimenet (normalizált)"
+
+#. translators: 1: Page title, 2: Site name.
+#: src/Admin/class-logs-page.php:340
+#, php-format
+msgid "%1$s ‹ %2$s — WordPress"
+msgstr "%1$s ‹ %2$s — WordPress"
+
+#: src/Admin/class-media-hooks.php:456
+msgid "WP Banana: No provider configured. Add a key in Settings → AI Images to enable the Media UI."
+msgstr "WP Banana: Nincs beállított szolgáltató. Adj meg kulcsot a Beállítások → AI Képek menüben a médiatár felület aktiválásához."
+
+#: src/Admin/class-media-hooks.php:495
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/media-library.js:1
+msgid "Derived from:"
+msgstr "Alapja:"
+
+#. translators: 1: Number of entries.
+#: src/Admin/class-media-hooks.php:507
+#, php-format
+msgid "AI history (%s entry)"
+msgid_plural "AI history (%s entries)"
+msgstr[0] "AI előzmények (%s bejegyzés)"
+msgstr[1] "AI előzmények (%s bejegyzés)"
+
+#. translators: %s: Provider name.
+#: src/Admin/class-media-hooks.php:524
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/media-library.js:1
+#, php-format,js-format
+msgid "via %s"
+msgstr "%s által"
+
+#. translators: %s: User name.
+#: src/Admin/class-media-hooks.php:543
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/media-library.js:1
+#, php-format,js-format
+msgid "by %s"
+msgstr "Létrehozta: %s"
+
+#: src/Admin/class-media-hooks.php:561
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/media-library.js:1
+msgid "Source:"
+msgstr "Forrás:"
+
+#. translators: 1: Number of entries, 2: Total number of entries.
+#: src/Admin/class-media-hooks.php:578
+#, php-format
+msgid "Showing latest %1$s of %2$s entries."
+msgstr "A legutóbbi %1$s bejegyzés megjelenítése az összesen %2$s közül."
+
+#: src/Admin/class-media-hooks.php:583
+msgid "No AI history recorded for this attachment yet."
+msgstr "Még nincs rögzített AI előzmény ehhez a csatolmányhoz."
+
+#: src/Admin/class-media-hooks.php:585
+msgid "AI history logging is disabled for this site."
+msgstr "Az AI előzmények naplózása ki van kapcsolva ezen az oldalon."
+
+#: src/Admin/class-media-hooks.php:600
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/media-library.js:1
+msgid "Generated"
+msgstr "Generálva"
+
+#: src/Admin/class-media-hooks.php:602
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/media-library.js:1
+msgid "Edited"
+msgstr "Szerkesztve"
+
+#: src/Admin/class-media-hooks.php:634
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/media-library.js:1
+msgid "New copy"
+msgstr "Új másolat"
+
+#: src/Admin/class-media-hooks.php:636
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/media-library.js:1
+msgid "Replaced original"
+msgstr "Eredeti lecserélve"
+
+#: src/Admin/class-media-hooks.php:638
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/media-library.js:1
+msgid "Saved as copy"
+msgstr "Másolatként mentve"
+
+#: src/Admin/class-media-hooks.php:640
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/media-library.js:1
+msgid "Buffered edit"
+msgstr "Pufferelt szerkesztés"
+
+#: src/Admin/class-settings-page.php:171
+msgid "Unable to initialize the logging table. The logging option has been disabled."
+msgstr "Nem sikerült inicializálni a naplózási táblát. A naplózás funkció ki lett kapcsolva."
+
+#. Translators: %s is provider name.
+#: src/Admin/class-settings-page.php:253
+#: src/Admin/class-settings-page.php:256
+#: src/Admin/class-settings-page.php:259
+#, php-format
+msgid "Test connection for %s"
+msgstr "Kapcsolat tesztelése: %s"
+
+#. Translators: %s is provider name.
+#: src/Admin/class-settings-page.php:262
+#: src/Admin/class-settings-page.php:265
+#: src/Admin/class-settings-page.php:268
+#, php-format
+msgid "Testing connection to %s..."
+msgstr "Kapcsolódás tesztelése: %s…"
+
+#. Translators: %s is provider name.
+#. Translators: %s is the provider label.
+#: src/Admin/class-settings-page.php:271
+#: src/Admin/class-settings-page.php:274
+#: src/Admin/class-settings-page.php:277
+#: src/Admin/class-settings-page.php:1108
+#, php-format
+msgid "Connected to %s successfully."
+msgstr "Sikeresen csatlakozva: %s."
+
+#. Translators: %s is provider name.
+#: src/Admin/class-settings-page.php:280
+#: src/Admin/class-settings-page.php:283
+#: src/Admin/class-settings-page.php:286
+#, php-format
+msgid "Connection to %s failed."
+msgstr "Sikertelen csatlakozás: %s."
+
+#: src/Admin/class-settings-page.php:293
+msgid "No provider key set. The Media Library UI will appear after adding a key below."
+msgstr "Nincs beállított szolgáltatói kulcs. A médiatár felület megjelenik a kulcs megadása után."
+
+#: src/Admin/class-settings-page.php:298
+msgid "API Setup"
+msgstr "API Beállítás"
+
+#: src/Admin/class-settings-page.php:318
+#: src/Admin/class-settings-page.php:329
+#: src/Admin/class-settings-page.php:355
+#: src/Admin/class-settings-page.php:366
+#: src/Admin/class-settings-page.php:392
+#: src/Admin/class-settings-page.php:403
+msgid "Test"
+msgstr "Tesztelés"
+
+#: src/Admin/class-settings-page.php:319
+#: src/Admin/class-settings-page.php:356
+#: src/Admin/class-settings-page.php:393
+msgid "Testing..."
+msgstr "Tesztelés…"
+
+#: src/Admin/class-settings-page.php:320
+#: src/Admin/class-settings-page.php:357
+#: src/Admin/class-settings-page.php:394
+msgid "OK"
+msgstr "OK"
+
+#: src/Admin/class-settings-page.php:321
+#: src/Admin/class-settings-page.php:358
+#: src/Admin/class-settings-page.php:395
+msgid "Fail"
+msgstr "Sikertelen"
+
+#: src/Admin/class-settings-page.php:413
+msgid "Defaults"
+msgstr "Alapértelmezések"
+
+#: src/Admin/class-settings-page.php:421
+msgid "Default Generator Model"
+msgstr "Alapértelmezett generátor modell"
+
+#: src/Admin/class-settings-page.php:441
+msgid "Default Editor Model"
+msgstr "Alapértelmezett szerkesztő modell"
+
+#: src/Admin/class-settings-page.php:461
+msgid "Preferred Aspect Ratio"
+msgstr "Preferált képarány"
+
+#: src/Admin/class-settings-page.php:474
+msgid "Preferred Output Format"
+msgstr "Preferált kimeneti formátum"
+
+#: src/Admin/class-settings-page.php:485
+msgid "Advanced"
+msgstr "Speciális"
+
+#: src/Admin/class-settings-page.php:488
+msgid "Store history"
+msgstr "Előzmények tárolása"
+
+#: src/Admin/class-settings-page.php:491
+msgid "Enable attachment history metadata"
+msgstr "Csatolmány előzmények metaadatainak engedélyezése"
+
+#: src/Admin/class-settings-page.php:493
+msgid "When enabled, information about generated images is stored in attachment metadata and displayed in the media UI."
+msgstr "Ha engedélyezed, a generált képek adatai a csatolmány metaadataiban kerülnek tárolásra és megjelennek a médiatár felületén."
+
+#: src/Admin/class-settings-page.php:498
+msgid "Clear metadata"
+msgstr "Metaadatok törlése"
+
+#: src/Admin/class-settings-page.php:504
+msgid "Are you sure you want to delete all attachment metadata?"
+msgstr "Biztos törlöd az összes csatolmány metaadatot?"
+
+#: src/Admin/class-settings-page.php:505
+msgid "Clear history"
+msgstr "Előzmények törlése"
+
+#: src/Admin/class-settings-page.php:506
+msgid "Delete all AI metadata and history stored on attachments."
+msgstr "Az összes AI metaadat és előzmény törlése a csatolmányokról."
+
+#: src/Admin/class-settings-page.php:511
+msgid "API logging"
+msgstr "API naplózás"
+
+#: src/Admin/class-settings-page.php:515
+msgid "Record provider requests and responses for debugging"
+msgstr "Szolgáltatói kérések és válaszok rögzítése hibakereséshez"
+
+#: src/Admin/class-settings-page.php:518
+msgid "When enabled, API calls are stored in a dedicated database table."
+msgstr "Ha engedélyezed, az API hívások egy dedikált adatbázis táblába kerülnek."
+
+#: src/Admin/class-settings-page.php:520
+msgid "View logs"
+msgstr "Naplók megtekintése"
+
+#: src/Admin/class-settings-page.php:522
+msgid "The table is created the first time logging is enabled."
+msgstr "A tábla a naplózás első bekapcsolásakor jön létre."
+
+#: src/Admin/class-settings-page.php:529
+#: src/Admin/class-settings-page.php:536
+msgid "Clear logs"
+msgstr "Naplók törlése"
+
+#: src/Admin/class-settings-page.php:535
+msgid "Are you sure you want to delete all stored logs?"
+msgstr "Biztos törlöd az összes tárolt naplót?"
+
+#: src/Admin/class-settings-page.php:537
+msgid "Remove all stored API log entries from the database."
+msgstr "Az összes tárolt API naplóbejegyzés törlése az adatbázisból."
+
+#: src/Admin/class-settings-page.php:581
+#: src/Admin/class-settings-page.php:607
+msgid "You do not have permission to perform this action."
+msgstr "Nincs jogosultságod a művelet végrehajtásához."
+
+#: src/Admin/class-settings-page.php:641
+msgid "All WP Banana logs were cleared."
+msgstr "Minden WP Banana napló törölve."
+
+#: src/Admin/class-settings-page.php:647
+msgid "Failed to clear the WP Banana logs. Please try again."
+msgstr "Nem sikerült törölni a WP Banana naplókat. Kérlek, próbáld újra."
+
+#: src/Admin/class-settings-page.php:653
+msgid "No logging table was found to clear."
+msgstr "Nem található törlendő naplózási tábla."
+
+#: src/Admin/class-settings-page.php:664
+msgid "Attachment metadata was cleared."
+msgstr "Csatolmány metaadatok törölve."
+
+#: src/Admin/class-settings-page.php:670
+msgid "Failed to clear attachment metadata. Please try again."
+msgstr "Nem sikerült törölni a csatolmány metaadatokat. Kérlek, próbáld újra."
+
+#: src/Admin/class-settings-page.php:676
+msgid "No attachment metadata was found to clear."
+msgstr "Nem található törlendő csatolmány metaadat."
+
+#: src/Admin/class-settings-page.php:701
+msgid "Testing connection..."
+msgstr "Kapcsolat tesztelése…"
+
+#: src/Admin/class-settings-page.php:702
+msgid "Connection successful."
+msgstr "Sikeres kapcsolódás."
+
+#: src/Admin/class-settings-page.php:703
+#: src/Admin/class-settings-page.php:1092
+msgid "Connection test failed. Check the key and try again."
+msgstr "Kapcsolódási teszt sikertelen. Ellenőrizd a kulcsot és próbáld újra."
+
+#: src/Admin/class-settings-page.php:1030
+msgid "You are not allowed to perform this action."
+msgstr "Nem hajthatod végre ezt a műveletet."
+
+#: src/Admin/class-settings-page.php:1039
+msgid "Security check failed. Reload the page and try again."
+msgstr "Biztonsági ellenőrzés sikertelen. Töltsd újra az oldalt és próbáld újra."
+
+#: src/Admin/class-settings-page.php:1050
+#: src/Admin/class-settings-page.php:1181
+msgid "Unknown provider."
+msgstr "Ismeretlen szolgáltató."
+
+#. Translators: %s is the provider label.
+#: src/Admin/class-settings-page.php:1065
+#, php-format
+msgid "Add a value for the %s key in wp-config.php before testing."
+msgstr "Adj meg értéket a %s kulcshoz a wp-config.php fájlban a tesztelés előtt."
+
+#: src/Admin/class-settings-page.php:1075
+msgid "Enter an API key before testing."
+msgstr "Adj meg API kulcsot a tesztelés előtt."
+
+#: src/Admin/class-settings-page.php:1088
+msgid "Authentication failed. Double-check the API key."
+msgstr "Hitelesítés sikertelen. Ellenőrizd az API kulcsot."
+
+#: src/Admin/class-settings-page.php:1090
+msgid "The provider timed out. Try again shortly."
+msgstr "A szolgáltató időtúllépés miatt nem válaszolt. Próbáld újra hamarosan."
+
+#: src/Admin/class-settings-page.php:1158
+msgid "Missing API key."
+msgstr "Hiányzó API kulcs."
+
+#: src/Admin/class-settings-page.php:1209
+#: src/Admin/class-settings-page.php:1210
+msgid "Google"
+msgstr "Google"
+
+#. Translators: %s is "wp-config.php" in a code tag.
+#: src/Admin/class-settings-page.php:1258
+#, php-format
+msgid "Managed via constant in %s."
+msgstr "Konstans segítségével kezelve: %s."
+
+#: src/Admin/class-settings-page.php:1261
+msgid "The constant is currently empty."
+msgstr "A konstans jelenleg üres."
+
+#: src/Admin/class-settings-page.php:1275
+msgid "Settings"
+msgstr "Beállítások"
+
+#: src/class-github-updater.php:408
+msgid "Plugin Information"
+msgstr "Bővítmény információk"
+
+#: src/class-github-updater.php:409
+msgid "See the GitHub page for details."
+msgstr "Részletekért látogasd meg a GitHub oldalt."
+
+#: src/class-github-updater.php:410
+msgid "GitHub Repository"
+msgstr "GitHub Tárhely"
+
+#: src/class-github-updater.php:638
+msgid "The plugin has been updated, but could not be reactivated. Please reactivate it manually."
+msgstr "A bővítmény frissítve lett, de nem sikerült újraaktiválni. Kérlek, aktiváld kézzel."
+
+#: src/class-github-updater.php:639
+msgid "Plugin reactivated successfully."
+msgstr "Bővítmény sikeresen újraaktiválva."
+
+#: src/REST/class-edit-controller.php:191
+#: src/REST/class-generate-controller.php:211
+#: src/REST/class-generate-controller.php:648
+#: src/REST/class-models-controller.php:89
+msgid "No provider configured. Add a key in settings."
+msgstr "Nincs beállított szolgáltató. Adj meg kulcsot a beállításokban."
+
+#: src/REST/class-edit-controller.php:197
+#: src/REST/class-edit-controller.php:710
+msgid "Attachment not found."
+msgstr "Csatolmány nem található."
+
+#: src/REST/class-edit-controller.php:200
+#: src/REST/class-edit-controller.php:713
+msgid "You cannot edit this attachment."
+msgstr "Nem szerkesztheted ezt a csatolmányt."
+
+#: src/REST/class-edit-controller.php:204
+msgid "Attachment is not an image."
+msgstr "A csatolmány nem kép."
+
+#: src/REST/class-edit-controller.php:209
+#: src/REST/class-generate-controller.php:216
+#: src/REST/class-generate-controller.php:672
+msgid "Invalid prompt."
+msgstr "Érvénytelen leírás."
+
+#: src/REST/class-edit-controller.php:218
+#: src/REST/class-edit-controller.php:732
+msgid "Source file not found."
+msgstr "Forrásfájl nem található."
+
+#: src/REST/class-edit-controller.php:222
+msgid "Could not read image size."
+msgstr "Nem sikerült beolvasni a kép méretét."
+
+#: src/REST/class-edit-controller.php:235
+#: src/REST/class-edit-controller.php:239
+msgid "Previous AI edit is no longer available. Reapply the edit before continuing."
+msgstr "Az előző AI szerkesztés már nem elérhető. Alkalmazd újra a szerkesztést a folytatás előtt."
+
+#: src/REST/class-edit-controller.php:243
+msgid "Failed to load buffered edit for chaining."
+msgstr "Nem sikerült betölteni a pufferelt szerkesztést a láncoláshoz."
+
+#: src/REST/class-edit-controller.php:289
+#: src/REST/class-generate-controller.php:235
+#: src/REST/class-generate-controller.php:681
+#: src/REST/class-models-controller.php:94
+msgid "Unsupported provider."
+msgstr "Nem támogatott szolgáltató."
+
+#: src/REST/class-edit-controller.php:301
+#: src/REST/class-generate-controller.php:325
+msgid "Selected model does not support multiple reference images."
+msgstr "A kiválasztott modell nem támogatja a több referenciakép használatát."
+
+#: src/REST/class-edit-controller.php:315
+msgid "Replacing the original is not allowed."
+msgstr "Az eredeti lecserélése nem engedélyezett."
+
+#: src/REST/class-edit-controller.php:330
+#: src/REST/class-generate-controller.php:336
+msgid "Gemini API key missing."
+msgstr "Hiányzó Gemini API kulcs."
+
+#: src/REST/class-edit-controller.php:336
+#: src/REST/class-generate-controller.php:349
+msgid "Replicate API token missing."
+msgstr "Hiányzó Replicate API token."
+
+#: src/REST/class-edit-controller.php:342
+#: src/REST/class-generate-controller.php:355
+msgid "OpenAI API key missing."
+msgstr "Hiányzó OpenAI API kulcs."
+
+#: src/REST/class-edit-controller.php:392
+#: src/REST/class-generate-controller.php:442
+#: src/REST/class-generate-controller.php:454
+msgid "Filtered provider output is invalid."
+msgstr "A szűrt szolgáltatói kimenet érvénytelen."
+
+#: src/REST/class-edit-controller.php:529
+#: src/REST/class-edit-controller.php:534
+msgid "Failed to overwrite file."
+msgstr "Nem sikerült felülírni a fájlt."
+
+#: src/REST/class-edit-controller.php:619
+#: src/REST/class-edit-controller.php:800
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/media-library.js:1
+msgid "AI Edit"
+msgstr "AI Szerkesztés"
+
+#: src/REST/class-edit-controller.php:719
+msgid "Nothing to save."
+msgstr "Nincs mit menteni."
+
+#: src/REST/class-edit-controller.php:724
+msgid "Invalid history payload."
+msgstr "Érvénytelen előzmény adat."
+
+#: src/REST/class-edit-controller.php:750
+msgid "AI edit buffer expired. Try applying the edit again."
+msgstr "Az AI szerkesztési puffer lejárt. Próbáld újra alkalmazni a szerkesztést."
+
+#: src/REST/class-edit-controller.php:776
+msgid "Could not allocate temporary file."
+msgstr "Nem sikerült lefoglalni ideiglenes fájlt."
+
+#: src/REST/class-edit-controller.php:792
+msgid "Failed to read rendered image."
+msgstr "Nem sikerült beolvasni a renderelt képet."
+
+#: src/REST/class-edit-controller.php:935
+#: src/REST/class-generate-controller.php:911
+msgid "Failed to upload reference image."
+msgstr "Nem sikerült feltölteni a referencia képet."
+
+#: src/REST/class-edit-controller.php:941
+#: src/REST/class-generate-controller.php:917
+msgid "Uploaded reference image is missing."
+msgstr "A feltöltött referencia kép hiányzik."
+
+#: src/REST/class-edit-controller.php:950
+#: src/REST/class-edit-controller.php:1054
+#: src/REST/class-generate-controller.php:926
+#: src/REST/class-generate-controller.php:1030
+msgid "Reference image type is not allowed."
+msgstr "A referencia kép típusa nem engedélyezett."
+
+#: src/REST/class-edit-controller.php:973
+#: src/REST/class-generate-controller.php:949
+msgid "Failed to persist uploaded reference image."
+msgstr "Nem sikerült menteni a feltöltött referencia képet."
+
+#: src/REST/class-edit-controller.php:982
+#: src/REST/class-edit-controller.php:1070
+#: src/REST/class-generate-controller.php:958
+#: src/REST/class-generate-controller.php:1046
+msgid "Reference image could not be read."
+msgstr "A referencia képet nem sikerült beolvasni."
+
+#: src/REST/class-edit-controller.php:1036
+#: src/REST/class-generate-controller.php:1012
+msgid "Reference image attachment not found."
+msgstr "Referencia kép csatolmány nem található."
+
+#: src/REST/class-edit-controller.php:1041
+#: src/REST/class-generate-controller.php:1017
+msgid "You cannot access this reference image."
+msgstr "Nem férhetsz hozzá ehhez a referencia képhez."
+
+#: src/REST/class-edit-controller.php:1047
+#: src/REST/class-generate-controller.php:1023
+msgid "Reference image file not found."
+msgstr "Referencia kép fájl nem található."
+
+#: src/REST/class-edit-controller.php:1063
+#: src/REST/class-generate-controller.php:1039
+msgid "Failed to prepare reference image."
+msgstr "Nem sikerült előkészíteni a referencia képet."
+
+#: src/REST/class-generate-controller.php:219
+#: src/REST/class-generate-controller.php:675
+msgid "Prompt contains control characters."
+msgstr "A leírás vezérlőkaraktereket tartalmaz."
+
+#: src/REST/class-generate-controller.php:479
+#: src/REST/class-generate-controller.php:709
+msgid "AI Image"
+msgstr "AI Kép"
+
+#: src/REST/class-generate-controller.php:654
+#: src/REST/class-generate-controller.php:662
+#: src/REST/class-generate-controller.php:667
+msgid "Invalid preview payload."
+msgstr "Érvénytelen előnézeti adat."
+
+#: src/Util/class-http.php:65
+msgid "The provider timed out."
+msgstr "A szolgáltató időtúllépés miatt nem válaszolt."
+
+#: wp-banana.php:34
+msgid "WP Banana requires PHP 7.2 or higher."
+msgstr "A WP Banana PHP 7.2 vagy újabb verziót igényel."
+
+#: wp-banana.php:45
+msgid "WP Banana requires WordPress 6.6 or higher."
+msgstr "A WP Banana WordPress 6.6 vagy újabb verziót igényel."
+
+#: wp-banana.php:55
+msgid "WP Banana requires the Imagick PHP extension. Please enable Imagick to use this plugin."
+msgstr "A WP Banana az Imagick PHP bővítményt igényli. Kérlek, engedélyezd az Imagick-et a bővítmény használatához."
+
+#: wp-banana.php:76
+msgid "WP Banana failed to initialize:"
+msgstr "A WP Banana inicializálása sikertelen:"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "Describe the image"
+msgstr "Írd le a képet"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "A cat surfing a wave at sunset…"
+msgstr "Egy macska szörföl naplementekor…"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "Generate one image and save to Media Library"
+msgstr "Egy kép generálása és mentése a médiatárba"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "Drop files to attach"
+msgstr "Húzd ide a csatolandó fájlokat"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "Add reference images"
+msgstr "Referencia képek hozzáadása"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "Generate multiple variations"
+msgstr "Több variáció generálása"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "Generate multiple variations and preview before saving"
+msgstr "Több variáció generálása és előnézete mentés előtt"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "Hide options"
+msgstr "Opciók elrejtése"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "Change"
+msgstr "Módosítás"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "Remove reference image"
+msgstr "Referencia kép eltávolítása"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "No models available"
+msgstr "Nincsenek elérhető modellek"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "Aspect ratio"
+msgstr "Képarány"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "Resolution"
+msgstr "Felbontás"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "Loading models…"
+msgstr "Modellek betöltése…"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "Generating…"
+msgstr "Generálás…"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "Ready"
+msgstr "Kész"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "Saving…"
+msgstr "Mentés…"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "Saved"
+msgstr "Mentve"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "Failed"
+msgstr "Sikertelen"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "Failed to load models."
+msgstr "Nem sikerült betölteni a modelleket."
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "Default aspect ratio"
+msgstr "Alapértelmezett képarány"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "Loading model…"
+msgstr "Modell betöltése…"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "Provider default model"
+msgstr "Szolgáltató alapértelmezett modellje"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "No compatible model"
+msgstr "Nincs kompatibilis modell"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+#, js-format
+msgid "%d reference"
+msgid_plural "%d references"
+msgstr[0] "%d referencia"
+msgstr[1] "%d referencia"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "Using provider defaults"
+msgstr "Szolgáltató alapértelmezéseinek használata"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "You can upload up to 4 reference images."
+msgstr "Legfeljebb 4 referencia képet tölthetsz fel."
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "Could not load the selected images."
+msgstr "Nem sikerült betölteni a kiválasztott képeket."
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "Only the first 4 selected images were attached as references."
+msgstr "Csak az első 4 kiválasztott kép lett csatolva referenciaként."
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/media-library.js:1
+msgid "Open image in new tab"
+msgstr "Kép megnyitása új lapon"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "Switch to a supported model to send multiple reference images."
+msgstr "Válts támogatott modellre több referencia kép küldéséhez."
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "Please enter a longer prompt."
+msgstr "Kérlek, adj meg hosszabb leírást."
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "Choose a model that supports multiple reference images."
+msgstr "Válassz olyan modellt, amely támogatja a több referencia képet."
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/media-library.js:1
+msgid "Image editor not ready."
+msgstr "A képszerkesztő nem áll készen."
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/media-library.js:1
+msgid "Editor security token missing."
+msgstr "Hiányzó szerkesztői biztonsági token."
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/media-library.js:1
+msgid "AI edit applied. Use Save Edits or Save As to keep these changes."
+msgstr "AI szerkesztés alkalmazva. Használd a Módosítások mentése vagy Mentés másként gombot a változtatások megtartásához."
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/media-library.js:1
+msgid "Failed to apply edit in editor."
+msgstr "Nem sikerült alkalmazni a szerkesztést a szerkesztőben."
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/media-library.js:1
+msgid "Edited image saved."
+msgstr "Szerkesztett kép mentve."
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/media-library.js:1
+msgid "Edit completed."
+msgstr "Szerkesztés befejezve."
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/media-library.js:1
+msgid "Failed to edit image."
+msgstr "Nem sikerült szerkeszteni a képet."
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/media-library.js:1
+msgid "Describe the desired changes"
+msgstr "Írd le a kívánt módosításokat"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/media-library.js:1
+msgid "Add a glowing neon outline…"
+msgstr "Adj hozzá világító neon körvonalat…"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/media-library.js:1
+msgid "Apply AI Edit"
+msgstr "AI Szerkesztés alkalmazása"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/media-library.js:1
+msgid "Apply AI edits and stage them in the editor buffer"
+msgstr "AI szerkesztések alkalmazása és előkészítése a szerkesztői pufferben"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/media-library.js:1
+msgid "Save As Copy"
+msgstr "Mentés másolatként"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/media-library.js:1
+msgid "No edits to save."
+msgstr "Nincs mentendő szerkesztés."
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/media-library.js:1
+#, js-format
+msgid "Copy saved: %s"
+msgstr "Másolat mentve: %s"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/media-library.js:1
+msgid "Copy saved."
+msgstr "Másolat mentve."
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/media-library.js:1
+msgid "Open image"
+msgstr "Kép megnyitása"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/media-library.js:1
+msgid "Failed to save copy."
+msgstr "Nem sikerült menteni a másolatot."
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/media-library.js:1
+#, js-format
+msgid "View history (%d entry)"
+msgid_plural "View history (%d entries)"
+msgstr[0] "Előzmények megtekintése (%d bejegyzés)"
+msgstr[1] "Előzmények megtekintése (%d bejegyzés)"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/media-library.js:1
+msgid "Hide history"
+msgstr "Előzmények elrejtése"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/media-library.js:1
+msgid "No AI history events recorded yet."
+msgstr "Még nincsenek rögzített AI előzmény események."
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/media-library.js:1
+msgid "AI history:"
+msgstr "AI előzmények:"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/media-library.js:1
+msgid "History tracking is disabled for this site."
+msgstr "Az előzmények követése ki van kapcsolva ezen az oldalon."
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+#, js-format
+msgid "%d image"
+msgid_plural "%d images"
+msgstr[0] "%d kép"
+msgstr[1] "%d kép"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "Generate and Preview Images"
+msgstr "Képek generálása és előnézete"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "Generated Variations"
+msgstr "Generált variációk"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "Discard unsaved"
+msgstr "Mentetlen elvetése"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "Undo"
+msgstr "Visszavonás"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "Preview unavailable"
+msgstr "Előnézet nem érhető el"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+#, js-format
+msgid "Variation %d"
+msgstr "%d. variáció"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "Failed to generate image."
+msgstr "Nem sikerült generálni a képet."
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "No preview selected."
+msgstr "Nincs kiválasztott előnézet."
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "Save"
+msgstr "Mentés"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "Discard"
+msgstr "Elvetés"
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "Image saved to Media Library."
+msgstr "Kép mentve a médiatárba."
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "Failed to save image."
+msgstr "Nem sikerült menteni a képet."
+
+#: build/attachment-editor.js:1
+#: build/block-editor.js:1
+#: build/generate-page.js:1
+#: build/media-library.js:1
+msgid "Deleted."
+msgstr "Törölve."
+
+#: build/generate-page.js:1
+msgid "No connected providers available. Add a key in Settings → AI Images."
+msgstr "Nincsenek csatlakoztatott szolgáltatók. Adj meg kulcsot a Beállítások → AI Képek menüben."
+
+#: build/media-library.js:1
+msgid "Create AI Variant"
+msgstr "AI Variáció létrehozása"
+
+#: build/media-library.js:1
+msgid "Combine with AI"
+msgstr "Kombinálás AI-val"
+
+#: build/media-library.js:1
+msgid "Selected items must be images to use them as AI references."
+msgstr "A kiválasztott elemeknek képeknek kell lenniük AI referenciaként való használathoz."
+
+#: build/media-library.js:1
+msgid "Select up to four images for AI references."
+msgstr "Válassz legfeljebb négy képet AI referenciaként."
+
+#: build/media-library.js:1
+msgid "Unable to load the selected images."
+msgstr "Nem sikerült betölteni a kiválasztott képeket."

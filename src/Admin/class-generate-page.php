@@ -129,6 +129,7 @@ final class Generate_Page {
 			$ver   = isset( $asset['version'] ) ? (string) $asset['version'] : Plugin::VERSION;
 
 			wp_register_script( $handle, $src, $deps, $ver, true );
+			wp_set_script_translations( $handle, 'wp-banana', $this->plugin_dir . '/languages' );
 		}
 
 		$default_generator_model = (string) $this->options->get( 'default_generator_model', Models_Catalog::default_generator_model() );
