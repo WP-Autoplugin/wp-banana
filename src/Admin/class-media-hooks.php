@@ -245,7 +245,7 @@ final class Media_Hooks {
 			$ver   = isset( $asset['version'] ) ? (string) $asset['version'] : Plugin::VERSION;
 
 			wp_register_script( $handle, $src, $deps, $ver, true );
-            wp_set_script_translations( $handle, 'wp-banana', $this->plugin_dir . '/languages' );
+			wp_set_script_translations( $handle, 'wp-banana', $this->plugin_dir . '/languages' );
 		}
 	}
 
