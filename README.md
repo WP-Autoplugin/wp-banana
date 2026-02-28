@@ -145,8 +145,10 @@ https://github.com/user-attachments/assets/28a5ef2d-682e-4206-99e7-6eb1f141146d
 
 WP Banana supports a wide range of state-of-the-art AI image models for both generation and editing. Below are some of the available models you can use:
 
+- **Google Gemini 3.1 Flash Image Preview**, a.k.a. **Nano Banana 2** (`gemini-3.1-flash-image-preview` / `google/nano-banana-2`)
 - **Google Gemini 3 Pro Image Preview**, a.k.a. **Nano Banana Pro** (`gemini-3-pro-image-preview` / `google/nano-banana-pro`)
 - **Google Gemini 2.5 Flash Image**, a.k.a. **Google Nano Banana** (`gemini-2.5-flash-image` / `google/nano-banana`)
+- **OpenAI GPT-Image-1.5** (`gpt-image-1.5`) - latest OpenAI image generation model
 - **OpenAI GPT-Image-1** (`gpt-image-1`) - the same model used by ChatGPT for image generation and editing
 - **OpenAI GPT-Image-1-Mini** (`gpt-image-1-mini`)
 - **Google Imagen 4** (`google/imagen-4`, `google/imagen-4-ultra`, `google/imagen-4-fast`) - through Google Gemini API or Replicate
@@ -158,6 +160,7 @@ WP Banana supports a wide range of state-of-the-art AI image models for both gen
 - **Recraft v3** (`recraft-ai/recraft-v3`)
 - **Reve Create, Edit, Remix** (`reve/create`, `reve/edit`, `reve/remix`)
 - **Ideogram v3** (`ideogram-ai/ideogram-v3-turbo`, `ideogram-ai/ideogram-v3-quality`, `ideogram-ai/ideogram-v3-balanced`)
+- **Bytedance Seedream 5** (`bytedance/seedream-5`)
 - **Bytedance Seedream 4.5** (`bytedance/seedream-4.5`)
 - **Bytedance Seedream 4** (`bytedance/seedream-4`)
 - **Bytedance Seededit 3.0** (`bytedance/seededit-3.0`)
