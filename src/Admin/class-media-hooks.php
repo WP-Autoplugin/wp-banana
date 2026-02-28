@@ -238,16 +238,15 @@ final class Media_Hooks {
 	 * @return void
 	 */
 	private function register_script( string $handle, string $basename ): void {
-		if ( wp_script_is( $handle, 'registered' ) ) {
-			return;
+		if ( ! wp_script_is( $handle, 'registered' ) ) {
+			$asset = $this->get_asset_metadata( $basename );
+			$src   = trailingslashit( $this->plugin_url ) . 'build/' . $basename . '.js';
+			$deps  = isset( $asset['dependencies'] ) && is_array( $asset['dependencies'] ) ? $asset['dependencies'] : [];
+			$ver   = isset( $asset['version'] ) ? (string) $asset['version'] : Plugin::VERSION;
+
+			wp_register_script( $handle, $src, $deps, $ver, true );
+			wp_set_script_translations( $handle, 'wp-banana', $this->plugin_dir . '/languages' );
 		}
-
-		$asset = $this->get_asset_metadata( $basename );
-		$src   = trailingslashit( $this->plugin_url ) . 'build/' . $basename . '.js';
-		$deps  = isset( $asset['dependencies'] ) && is_array( $asset['dependencies'] ) ? $asset['dependencies'] : [];
-		$ver   = isset( $asset['version'] ) ? (string) $asset['version'] : Plugin::VERSION;
-
-		wp_register_script( $handle, $src, $deps, $ver, true );
 	}
 
 	/**
