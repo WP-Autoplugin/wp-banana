@@ -1,6 +1,6 @@
 {
   "name": "wp-banana",
-  "version": "0.1.0",
+  "version": "0.7.1",
   "private": true,
   "scripts": {
     "build": "wp-scripts build --source-path=assets/admin",

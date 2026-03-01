@@ -8,7 +8,7 @@ WP Banana is a free WordPress plugin that lets you generate and edit images with
 
 - Combine existing images from your Media Library with new uploads
 - Generate completely new images from text prompts
-- Edit, enhance, and transform images using state-of-the-art models like **Google Nano Banana Pro** (with 4K resolution support)
+- Edit, enhance, and transform images using state-of-the-art models like **Google Nano Banana 2** (with 4K resolution support)
 - Native-like integration in Gutenberg, Classic Editor, and most page builders
 
 [▼ **See Screenshots & Demo**](#screenshots--demo)
@@ -18,7 +18,7 @@ WP Banana is a free WordPress plugin that lets you generate and edit images with
 - **Native Integration**: Looks and feels like WordPress core — no flashy UI, no distractions
 - **Free & Open Source**: 100% free, GPL-licensed, no upsells
 - **Bring Your Own Key**: Connect your own Google, OpenAI or Replicate API key (no middleman fees)
-- **Multiple AI Models**: Supports OpenAI’s `gpt-image-1`, Google's Nano Banana Pro (`gemini-3-pro-image`), and more
+- **Multiple AI Models**: Supports OpenAI’s `gpt-image-1`, Google's Nano Banana 2 (`gemini-3.1-flash-image`), and more
 - **Secure & Performant**: Clean codebase, minimal overhead, optimized for WordPress best practices
 - **Universal Compatibility**: Works with Gutenberg, Classic Editor, Elementor, WooCommerce, ACF, and more
 
@@ -28,7 +28,7 @@ WP Banana is a free WordPress plugin that lets you generate and edit images with
 - Create new images from simple text prompts
 - Attach optional reference images from your computer or the Media Library to guide generation
 - Use AI to generate featured images, blog graphics, product photos, and more
-- Multiple model support: ChatGPT Image model, Seedream 4.5, Gemini 3 Pro Image, FLUX.2 models
+- Multiple model support: ChatGPT Image model, Seedream 5, Gemini 3 Pro Image, FLUX.2 models
 
 ### AI Image Editing
 - Select images from your Media Library or upload new ones
