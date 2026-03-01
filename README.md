@@ -160,7 +160,7 @@ WP Banana supports a wide range of state-of-the-art AI image models for both gen
 - **Recraft v3** (`recraft-ai/recraft-v3`)
 - **Reve Create, Edit, Remix** (`reve/create`, `reve/edit`, `reve/remix`)
 - **Ideogram v3** (`ideogram-ai/ideogram-v3-turbo`, `ideogram-ai/ideogram-v3-quality`, `ideogram-ai/ideogram-v3-balanced`)
-- **Bytedance Seedream 5** (`bytedance/seedream-5`)
+- **Bytedance Seedream 5 Lite** (`bytedance/seedream-5-lite`)
 - **Bytedance Seedream 4.5** (`bytedance/seedream-4.5`)
 - **Bytedance Seedream 4** (`bytedance/seedream-4`)
 - **Bytedance Seededit 3.0** (`bytedance/seededit-3.0`)

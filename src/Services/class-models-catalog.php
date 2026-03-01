@@ -52,7 +52,7 @@ final class Models_Catalog {
 	public const REPLICATE_SD35_LARGE           = 'stability-ai/stable-diffusion-3.5-large';
 	public const REPLICATE_SEEDREAM_45          = 'bytedance/seedream-4.5';
 	public const REPLICATE_SEEDREAM_4           = 'bytedance/seedream-4';
-	public const REPLICATE_SEEDREAM_5           = 'bytedance/seedream-5';
+	public const REPLICATE_SEEDREAM_5_LITE      = 'bytedance/seedream-5-lite';
 	public const REPLICATE_HUNYUAN_IMAGE_3      = 'tencent/hunyuan-image-3';
 	public const REPLICATE_QWEN_IMAGE           = 'qwen/qwen-image';
 	public const REPLICATE_MINIMAX_IMAGE        = 'minimax/image-01';
@@ -189,7 +189,7 @@ final class Models_Catalog {
 				self::REPLICATE_NANO_BANANA_2,
 				self::REPLICATE_SEEDREAM_45,
 				self::REPLICATE_SEEDREAM_4,
-				self::REPLICATE_SEEDREAM_5,
+				self::REPLICATE_SEEDREAM_5_LITE,
 				self::REPLICATE_FLUX_2_DEV,
 				self::REPLICATE_FLUX_2_PRO,
 				self::REPLICATE_FLUX_2_FLEX,
@@ -216,7 +216,7 @@ final class Models_Catalog {
 				self::REPLICATE_FLUX_2_FLEX,
 				self::REPLICATE_SEEDREAM_45,
 				self::REPLICATE_SEEDREAM_4,
-				self::REPLICATE_SEEDREAM_5,
+				self::REPLICATE_SEEDREAM_5_LITE,
 			],
 		];
 	}
@@ -262,7 +262,7 @@ final class Models_Catalog {
 				self::REPLICATE_SD35_LARGE,
 				self::REPLICATE_SEEDREAM_45,
 				self::REPLICATE_SEEDREAM_4,
-				self::REPLICATE_SEEDREAM_5,
+				self::REPLICATE_SEEDREAM_5_LITE,
 				self::REPLICATE_HUNYUAN_IMAGE_3,
 				self::REPLICATE_QWEN_IMAGE,
 				self::REPLICATE_MINIMAX_IMAGE,
@@ -293,7 +293,7 @@ final class Models_Catalog {
 				self::REPLICATE_NANO_BANANA_2,
 				self::REPLICATE_SEEDREAM_45,
 				self::REPLICATE_SEEDREAM_4,
-				self::REPLICATE_SEEDREAM_5,
+				self::REPLICATE_SEEDREAM_5_LITE,
 				self::REPLICATE_SEEDEDIT_30,
 				self::REPLICATE_QWEN_IMAGE_EDIT,
 				self::REPLICATE_FLUX_2_DEV,

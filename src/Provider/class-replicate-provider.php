@@ -240,7 +240,7 @@ final class Replicate_Provider implements Provider_Interface {
 		$flux_2_pro      = strtolower( Models_Catalog::REPLICATE_FLUX_2_PRO );
 		$flux_2_flex     = strtolower( Models_Catalog::REPLICATE_FLUX_2_FLEX );
 		$seedream_45     = strtolower( Models_Catalog::REPLICATE_SEEDREAM_45 );
-		$seedream_5      = strtolower( Models_Catalog::REPLICATE_SEEDREAM_5 );
+		$seedream_5_lite      = strtolower( Models_Catalog::REPLICATE_SEEDREAM_5_LITE );
 
 		if ( 0 === strpos( $normalized, $flux_2_dev ) ) {
 			$config['api_model']                        = Models_Catalog::REPLICATE_FLUX_2_DEV;
@@ -260,8 +260,8 @@ final class Replicate_Provider implements Provider_Interface {
 			if ( null !== $resolution_param && '' !== $resolution_param ) {
 				$config['size'] = $this->resolution_to_seedream_size( $resolution_param );
 			}
-		} elseif ( 0 === strpos( $normalized, $seedream_5 ) ) {
-			$config['api_model'] = Models_Catalog::REPLICATE_SEEDREAM_5;
+		} elseif ( 0 === strpos( $normalized, $seedream_5_lite ) ) {
+			$config['api_model'] = Models_Catalog::REPLICATE_SEEDREAM_5_LITE;
 			if ( null !== $resolution_param && '' !== $resolution_param ) {
 				$config['size'] = $this->resolution_to_seedream_size( $resolution_param );
 			}
@@ -799,7 +799,7 @@ final class Replicate_Provider implements Provider_Interface {
 		$seedream_needles = [
 			strtolower( Models_Catalog::REPLICATE_SEEDREAM_4 ),
 			strtolower( Models_Catalog::REPLICATE_SEEDREAM_45 ),
-			strtolower( Models_Catalog::REPLICATE_SEEDREAM_5 ),
+			strtolower( Models_Catalog::REPLICATE_SEEDREAM_5_LITE ),
 		];
 		$reve_remix_lower = strtolower( Models_Catalog::REPLICATE_REVE_REMIX );
 
@@ -865,7 +865,7 @@ final class Replicate_Provider implements Provider_Interface {
 		$seedream        = [
 			strtolower( Models_Catalog::REPLICATE_SEEDREAM_4 ),
 			strtolower( Models_Catalog::REPLICATE_SEEDREAM_45 ),
-			strtolower( Models_Catalog::REPLICATE_SEEDREAM_5 ),
+			strtolower( Models_Catalog::REPLICATE_SEEDREAM_5_LITE ),
 		];
 		$flux_kontext    = [
 			strtolower( Models_Catalog::REPLICATE_FLUX_KONTEXT_MAX ),
