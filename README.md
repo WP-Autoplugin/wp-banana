@@ -145,18 +145,53 @@ https://github.com/user-attachments/assets/28a5ef2d-682e-4206-99e7-6eb1f141146d
 
 WP Banana supports a wide range of state-of-the-art AI image models for both generation and editing. Below are some of the available models you can use:
 
-- **Google Gemini 3.1 Flash Image Preview**, a.k.a. **Nano Banana 2** (`gemini-3.1-flash-image-preview` / `google/nano-banana-2`)
-- **Google Gemini 3 Pro Image Preview**, a.k.a. **Nano Banana Pro** (`gemini-3-pro-image-preview` / `google/nano-banana-pro`)
-- **Google Gemini 2.5 Flash Image**, a.k.a. **Google Nano Banana** (`gemini-2.5-flash-image` / `google/nano-banana`)
+### Via fal.ai (Recommended - Fast & Cost-Effective)
+
+- **FLUX.2 [dev]** (`fal-ai/flux-2`) - Enhanced realism, crisper text generation, native editing
+- **FLUX.2 [pro]** (`fal-ai/flux-2-pro`) - Maximum quality, exceptional photorealism
+- **FLUX.2 [max]** (`fal-ai/flux-2-max`) - State-of-the-art image generation with precision
+- **FLUX.2 [turbo]** (`fal-ai/flux-2/turbo`) - Fast generation with quality preserved
+- **FLUX.2 [flash]** (`fal-ai/flux-2/flash`) - Ultra-fast generation
+- **FLUX.2 [flex]** (`fal-ai/flux-2-flex`) - Adjustable inference steps for fine-tuned control
+- **FLUX.2 [lora]** (`fal-ai/flux-2/lora`) - With LoRA support for custom styles
+- **Nano Banana 2** (`fal-ai/nano-banana-2`) - Google's state-of-the-art fast generation
+- **Nano Banana Pro** (`fal-ai/nano-banana-pro`) - High-fidelity generation and editing
+- **Gemini 3.1 Flash Image** (`fal-ai/gemini-3.1-flash-image-preview`) - Fast, high-quality generation
+- **Gemini 3 Pro Image** (`fal-ai/gemini-3-pro-image-preview`) - Premium quality with 4K support
+- **Imagen 4** (`fal-ai/imagen4/preview`) - Google's highest quality image generation
+- **Imagen 4 Fast** (`fal-ai/imagen4/preview/fast`) - Faster Imagen 4 variant
+- **Imagen 4 Ultra** (`fal-ai/imagen4/preview/ultra`) - Maximum quality Imagen 4
+- **GPT-Image-1.5** (`fal-ai/gpt-image-1.5`) - OpenAI's high-fidelity image generation
+- **GPT-Image-1 Mini** (`fal-ai/gpt-image-1-mini`) - Efficient OpenAI image generation
+- **Reve** (`fal-ai/reve/text-to-image`) - Detailed visuals with accurate text rendering
+- **Recraft V3** (`fal-ai/recraft/v3/text-to-image`) - Professional design and vector art
+- **Ideogram V3** (`fal-ai/ideogram/v3`) - Exceptional typography and realistic outputs
+- **Hidream I1** (`fal-ai/hidream-i1-full`, `fal-ai/hidream-i1-dev`, `fal-ai/hidream-i1-fast`) - 17B parameter open-source model
+
+### Via Google AI Studio (Gemini API)
+
+- **Google Gemini 3.1 Flash Image Preview**, a.k.a. **Nano Banana 2** (`gemini-3.1-flash-image-preview`)
+- **Google Gemini 3 Pro Image Preview**, a.k.a. **Nano Banana Pro** (`gemini-3-pro-image-preview`)
+- **Google Gemini 2.5 Flash Image**, a.k.a. **Google Nano Banana** (`gemini-2.5-flash-image`)
+- **Google Imagen 4** (`imagen-4.0-generate-001`, `imagen-4.0-ultra-generate-001`, `imagen-4.0-fast-generate-001`)
+
+### Via OpenAI
+
 - **OpenAI GPT-Image-1.5** (`gpt-image-1.5`) - latest OpenAI image generation model
 - **OpenAI GPT-Image-1** (`gpt-image-1`) - the same model used by ChatGPT for image generation and editing
 - **OpenAI GPT-Image-1-Mini** (`gpt-image-1-mini`)
-- **Google Imagen 4** (`google/imagen-4`, `google/imagen-4-ultra`, `google/imagen-4-fast`) - through Google Gemini API or Replicate
+
+### Via Replicate
+
 - **FLUX.2** (`black-forest-labs/flux-2-dev`, `black-forest-labs/flux-2-pro`, `black-forest-labs/flux-2-flex`)
 - **FLUX Kontext** (`black-forest-labs/flux-kontext-max`, `black-forest-labs/flux-kontext-dev`)
 - **FLUX 1.1 Pro** (`black-forest-labs/flux-1.1-pro`)
 - **FLUX Schnell** (`black-forest-labs/flux-schnell`)
 - **FLUX Dev** (`black-forest-labs/flux-dev`)
+- **Nano Banana 2** (`google/nano-banana-2`)
+- **Nano Banana Pro** (`google/nano-banana-pro`)
+- **Nano Banana** (`google/nano-banana`)
+- **Google Imagen 4** (`google/imagen-4`, `google/imagen-4-ultra`, `google/imagen-4-fast`)
 - **Recraft v3** (`recraft-ai/recraft-v3`)
 - **Reve Create, Edit, Remix** (`reve/create`, `reve/edit`, `reve/remix`)
 - **Ideogram v3** (`ideogram-ai/ideogram-v3-turbo`, `ideogram-ai/ideogram-v3-quality`, `ideogram-ai/ideogram-v3-balanced`)
