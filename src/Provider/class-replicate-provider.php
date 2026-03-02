@@ -240,7 +240,7 @@ final class Replicate_Provider implements Provider_Interface {
 		$flux_2_pro      = strtolower( Models_Catalog::REPLICATE_FLUX_2_PRO );
 		$flux_2_flex     = strtolower( Models_Catalog::REPLICATE_FLUX_2_FLEX );
 		$seedream_45     = strtolower( Models_Catalog::REPLICATE_SEEDREAM_45 );
-		$seedream_5_lite      = strtolower( Models_Catalog::REPLICATE_SEEDREAM_5_LITE );
+		$seedream_5_lite = strtolower( Models_Catalog::REPLICATE_SEEDREAM_5_LITE );
 
 		if ( 0 === strpos( $normalized, $flux_2_dev ) ) {
 			$config['api_model']                        = Models_Catalog::REPLICATE_FLUX_2_DEV;
