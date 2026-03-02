@@ -132,6 +132,7 @@ All images are saved directly into your WordPress Media Library. You can use the
 = 0.7.1 =
 * Added support for Google Gemini 3.1 Flash Image model (a.k.a. Google Nano Banana 2) via Gemini API & Replicate
 * Added support for Bytedance Seedream 5 Lite model via Replicate API
+* Added support for OpenAI gpt-image-1.5 model via OpenAI API
 
 = 0.7.0 =
 * Added support for Abilities API introduced in WP 6.9
