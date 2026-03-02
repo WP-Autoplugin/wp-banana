@@ -80,7 +80,6 @@ final class Models_Catalog {
 	public const FAL_FLUX_2_TURBO               = 'fal-ai/flux-2/turbo';
 	public const FAL_FLUX_2_FLASH               = 'fal-ai/flux-2/flash';
 	public const FAL_FLUX_2_FLEX                = 'fal-ai/flux-2-flex';
-	public const FAL_FLUX_2_LORA                = 'fal-ai/flux-2/lora';
 
 	// Google Nano Banana Models
 	public const FAL_NANO_BANANA                = 'fal-ai/nano-banana';
@@ -96,6 +95,7 @@ final class Models_Catalog {
 
 	// Other Top Models
 	public const FAL_REVE                       = 'fal-ai/reve/text-to-image';
+	public const FAL_REVE_REMIX                 = 'fal-ai/reve/remix';
 	public const FAL_RECRAFT_V3                = 'fal-ai/recraft/v3/text-to-image';
 	public const FAL_IDEOGRAM_V3                = 'fal-ai/ideogram/v3';
 	public const FAL_GPT_IMAGE_15               = 'fal-ai/gpt-image-1.5';
@@ -111,12 +111,12 @@ final class Models_Catalog {
 	public const FAL_FLUX_2_TURBO_EDIT          = 'fal-ai/flux-2/turbo/edit';
 	public const FAL_FLUX_2_FLASH_EDIT          = 'fal-ai/flux-2/flash/edit';
 	public const FAL_FLUX_2_FLEX_EDIT           = 'fal-ai/flux-2-flex/edit';
-	public const FAL_FLUX_2_LORA_EDIT           = 'fal-ai/flux-2/lora/edit';
 	public const FAL_NANO_BANANA_2_EDIT         = 'fal-ai/nano-banana-2/edit';
 	public const FAL_NANO_BANANA_PRO_EDIT       = 'fal-ai/nano-banana-pro/edit';
 	public const FAL_GEMINI_31_FLASH_IMAGE_EDIT = 'fal-ai/gemini-3.1-flash-image-preview/edit';
 	public const FAL_GEMINI_3_PRO_IMAGE_EDIT    = 'fal-ai/gemini-3-pro-image-preview/edit';
 	public const FAL_REVE_EDIT                  = 'fal-ai/reve/edit';
+	public const FAL_REVE_REMIX_EDIT            = 'fal-ai/reve/remix';
 
 	public const DEFAULT_GENERATOR_MODEL = self::GEMINI_FLASH_IMAGE_PREVIEW;
 	public const DEFAULT_EDITOR_MODEL    = self::GEMINI_FLASH_IMAGE_PREVIEW;
@@ -256,7 +256,6 @@ final class Models_Catalog {
 				self::FAL_FLUX_2_TURBO,
 				self::FAL_FLUX_2_FLASH,
 				self::FAL_FLUX_2_FLEX,
-				self::FAL_FLUX_2_LORA,
 				// Google Models
 				self::FAL_NANO_BANANA_2,
 				self::FAL_NANO_BANANA_PRO,
@@ -372,7 +371,6 @@ final class Models_Catalog {
 				self::FAL_FLUX_2_TURBO,
 				self::FAL_FLUX_2_FLASH,
 				self::FAL_FLUX_2_FLEX,
-				self::FAL_FLUX_2_LORA,
 				// Google Nano Banana Models (Fast & High Quality)
 				self::FAL_NANO_BANANA_2,
 				self::FAL_NANO_BANANA_PRO,
@@ -387,6 +385,7 @@ final class Models_Catalog {
 				self::FAL_IMAGEN_4_FULL,
 				// Other Top Models
 				self::FAL_REVE,
+				self::FAL_REVE_REMIX,
 				self::FAL_RECRAFT_V3,
 				self::FAL_IDEOGRAM_V3,
 				self::FAL_GPT_IMAGE_15,
@@ -446,7 +445,6 @@ final class Models_Catalog {
 				self::FAL_FLUX_2_TURBO_EDIT,
 				self::FAL_FLUX_2_FLASH_EDIT,
 				self::FAL_FLUX_2_FLEX_EDIT,
-				self::FAL_FLUX_2_LORA_EDIT,
 				// Google Nano Banana Editing
 				self::FAL_NANO_BANANA_2_EDIT,
 				self::FAL_NANO_BANANA_PRO_EDIT,
@@ -454,6 +452,7 @@ final class Models_Catalog {
 				self::FAL_GEMINI_3_PRO_IMAGE_EDIT,
 				// Reve Editing
 				self::FAL_REVE_EDIT,
+				self::FAL_REVE_REMIX_EDIT,
 				// FLUX 1.x Editing Models
 				self::FAL_FLUX_PRO_ULTRA,
 				self::FAL_FLUX_PRO_V11,

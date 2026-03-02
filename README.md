@@ -153,7 +153,6 @@ WP Banana supports a wide range of state-of-the-art AI image models for both gen
 - **FLUX.2 [turbo]** (`fal-ai/flux-2/turbo`) - Fast generation with quality preserved
 - **FLUX.2 [flash]** (`fal-ai/flux-2/flash`) - Ultra-fast generation
 - **FLUX.2 [flex]** (`fal-ai/flux-2-flex`) - Adjustable inference steps for fine-tuned control
-- **FLUX.2 [lora]** (`fal-ai/flux-2/lora`) - With LoRA support for custom styles
 - **Nano Banana 2** (`fal-ai/nano-banana-2`) - Google's state-of-the-art fast generation
 - **Nano Banana Pro** (`fal-ai/nano-banana-pro`) - High-fidelity generation and editing
 - **Gemini 3.1 Flash Image** (`fal-ai/gemini-3.1-flash-image-preview`) - Fast, high-quality generation
@@ -164,6 +163,7 @@ WP Banana supports a wide range of state-of-the-art AI image models for both gen
 - **GPT-Image-1.5** (`fal-ai/gpt-image-1.5`) - OpenAI's high-fidelity image generation
 - **GPT-Image-1 Mini** (`fal-ai/gpt-image-1-mini`) - Efficient OpenAI image generation
 - **Reve** (`fal-ai/reve/text-to-image`) - Detailed visuals with accurate text rendering
+- **Reve Remix** (`fal-ai/reve/remix`) - Remix and transform images with Reve
 - **Recraft V3** (`fal-ai/recraft/v3/text-to-image`) - Professional design and vector art
 - **Ideogram V3** (`fal-ai/ideogram/v3`) - Exceptional typography and realistic outputs
 - **Hidream I1** (`fal-ai/hidream-i1-full`, `fal-ai/hidream-i1-dev`, `fal-ai/hidream-i1-fast`) - 17B parameter open-source model
