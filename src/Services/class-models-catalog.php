@@ -65,6 +65,13 @@ final class Models_Catalog {
 	public const REPLICATE_REVE_EDIT            = 'reve/edit';
 	public const REPLICATE_REVE_REMIX           = 'reve/remix';
 	public const REPLICATE_FLUX                 = 'black-forest-labs/flux';
+	public const FAL_FLUX_DEV                   = 'fal-ai/flux/dev';
+	public const FAL_FLUX_SCHNELL               = 'fal-ai/flux/schnell';
+	public const FAL_FLUX_PRO_ULTRA             = 'fal-ai/flux-pro/v1.1-ultra';
+	public const FAL_IMAGEN_4_PREVIEW           = 'fal-ai/imagen4/preview';
+	public const FAL_IMAGEN_4_FULL              = 'fal-ai/imagen4/full';
+	public const FAL_FLUX_PRO_V11               = 'fal-ai/flux-pro/v1.1';
+	public const FAL_FLUX_DEV_V15               = 'fal-ai/flux/dev/v1.5';
 
 	public const DEFAULT_GENERATOR_MODEL = self::GEMINI_FLASH_IMAGE_PREVIEW;
 	public const DEFAULT_EDITOR_MODEL    = self::GEMINI_FLASH_IMAGE_PREVIEW;
@@ -103,6 +110,7 @@ final class Models_Catalog {
 			'gemini'    => self::GEMINI_FLASH_IMAGE_PREVIEW,
 			'openai'    => self::OPENAI_GPT_IMAGE_1,
 			'replicate' => self::REPLICATE_FLUX,
+			'fal'       => self::FAL_FLUX_DEV,
 		];
 	}
 
@@ -195,6 +203,13 @@ final class Models_Catalog {
 				self::REPLICATE_FLUX_2_FLEX,
 				self::REPLICATE_REVE_REMIX,
 			],
+			'fal'       => [
+				self::FAL_FLUX_DEV,
+				self::FAL_FLUX_SCHNELL,
+				self::FAL_FLUX_PRO_ULTRA,
+				self::FAL_FLUX_PRO_V11,
+				self::FAL_FLUX_DEV_V15,
+			],
 		];
 	}
 
@@ -218,6 +233,13 @@ final class Models_Catalog {
 				self::REPLICATE_SEEDREAM_45,
 				self::REPLICATE_SEEDREAM_4,
 				self::REPLICATE_SEEDREAM_5_LITE,
+			],
+			'fal'       => [
+				self::FAL_FLUX_DEV,
+				self::FAL_FLUX_SCHNELL,
+				self::FAL_FLUX_PRO_ULTRA,
+				self::FAL_FLUX_PRO_V11,
+				self::FAL_FLUX_DEV_V15,
 			],
 		];
 	}
@@ -268,6 +290,15 @@ final class Models_Catalog {
 				self::REPLICATE_QWEN_IMAGE,
 				self::REPLICATE_MINIMAX_IMAGE,
 			],
+			'fal'       => [
+				self::FAL_FLUX_DEV,
+				self::FAL_FLUX_SCHNELL,
+				self::FAL_FLUX_PRO_ULTRA,
+				self::FAL_IMAGEN_4_PREVIEW,
+				self::FAL_IMAGEN_4_FULL,
+				self::FAL_FLUX_PRO_V11,
+				self::FAL_FLUX_DEV_V15,
+			],
 		];
 	}
 
@@ -304,6 +335,13 @@ final class Models_Catalog {
 				self::REPLICATE_FLUX_KONTEXT_DEV,
 				self::REPLICATE_REVE_EDIT,
 				self::REPLICATE_REVE_REMIX,
+			],
+			'fal'       => [
+				self::FAL_FLUX_DEV,
+				self::FAL_FLUX_SCHNELL,
+				self::FAL_FLUX_PRO_ULTRA,
+				self::FAL_FLUX_PRO_V11,
+				self::FAL_FLUX_DEV_V15,
 			],
 		];
 	}

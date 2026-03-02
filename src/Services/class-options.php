@@ -38,6 +38,10 @@ final class Options {
 			'constant'   => 'WP_BANANA_REPLICATE_API_KEY',
 			'option_key' => 'api_token',
 		],
+		'fal'       => [
+			'constant'   => 'WP_BANANA_FAL_API_KEY',
+			'option_key' => 'api_key',
+		],
 	];
 
 	/**
@@ -125,9 +129,11 @@ final class Options {
 		$gemini    = isset( $providers['gemini']['api_key'] ) ? $providers['gemini']['api_key'] : '';
 		$replicate = isset( $providers['replicate']['api_token'] ) ? $providers['replicate']['api_token'] : '';
 		$openai    = isset( $providers['openai']['api_key'] ) ? $providers['openai']['api_key'] : '';
+		$fal       = isset( $providers['fal']['api_key'] ) ? $providers['fal']['api_key'] : '';
 		return ( is_string( $gemini ) && '' !== $gemini )
 			|| ( is_string( $replicate ) && '' !== $replicate )
-			|| ( is_string( $openai ) && '' !== $openai );
+			|| ( is_string( $openai ) && '' !== $openai )
+			|| ( is_string( $fal ) && '' !== $fal );
 	}
 
 	/**
@@ -164,6 +170,10 @@ final class Options {
 				'replicate' => [
 					'api_token'     => '',
 					'default_model' => Models_Catalog::provider_default_model( 'replicate' ),
+				],
+				'fal'       => [
+					'api_key'       => '',
+					'default_model' => Models_Catalog::provider_default_model( 'fal' ),
 				],
 			],
 			'generation_defaults'     => [
