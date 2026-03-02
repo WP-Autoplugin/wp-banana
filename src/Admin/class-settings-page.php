@@ -1241,7 +1241,7 @@ CSS;
 				];
 				break;
 			case 'fal':
-				$url     = 'https://api.fal.ai/v1/models';
+				$url     = 'https://api.fal.ai/v1/models/requests/by-endpoint';
 				$headers = [
 					'Authorization' => 'Key ' . $secret,
 				];

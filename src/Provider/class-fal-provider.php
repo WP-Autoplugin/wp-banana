@@ -33,7 +33,7 @@ final class Fal_Provider implements Provider_Interface {
 	 *
 	 * @var string
 	 */
-	private $api_url = 'https://api.fal.ai/v1/models';
+	private $api_url = 'https://fal.run';
 
 	/**
 	 * Fal.ai API key.
@@ -274,7 +274,7 @@ final class Fal_Provider implements Provider_Interface {
 			throw new RuntimeException( 'Fal.ai API key missing.' );
 		}
 
-		$url     = trailingslashit( $this->api_url ) . $model . '/run';
+		$url     = trailingslashit( $this->api_url ) . ltrim( $model, '/' );
 		$args    = [
 			'method'  => 'POST',
 			'timeout' => $this->timeout,
