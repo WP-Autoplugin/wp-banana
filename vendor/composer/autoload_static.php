@@ -24,6 +24,7 @@ class ComposerStaticInitf1bfaf84312e744e7b9964884b4a0d41
         'WPBanana\\Domain\\Resolutions' => __DIR__ . '/../..' . '/src/Domain/class-resolutions.php',
         'WPBanana\\GitHub_Updater' => __DIR__ . '/../..' . '/src/class-github-updater.php',
         'WPBanana\\Plugin' => __DIR__ . '/../..' . '/src/class-plugin.php',
+        'WPBanana\\Provider\\Fal_Provider' => __DIR__ . '/../..' . '/src/Provider/class-fal-provider.php',
         'WPBanana\\Provider\\Gemini_Provider' => __DIR__ . '/../..' . '/src/Provider/class-gemini-provider.php',
         'WPBanana\\Provider\\OpenAI_Provider' => __DIR__ . '/../..' . '/src/Provider/class-openai-provider.php',
         'WPBanana\\Provider\\Provider_Interface' => __DIR__ . '/../..' . '/src/Provider/class-provider-interface.php',

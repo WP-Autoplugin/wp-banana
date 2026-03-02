@@ -23,6 +23,7 @@ return array(
     'WPBanana\\Domain\\Resolutions' => $baseDir . '/src/Domain/class-resolutions.php',
     'WPBanana\\GitHub_Updater' => $baseDir . '/src/class-github-updater.php',
     'WPBanana\\Plugin' => $baseDir . '/src/class-plugin.php',
+    'WPBanana\\Provider\\Fal_Provider' => $baseDir . '/src/Provider/class-fal-provider.php',
     'WPBanana\\Provider\\Gemini_Provider' => $baseDir . '/src/Provider/class-gemini-provider.php',
     'WPBanana\\Provider\\OpenAI_Provider' => $baseDir . '/src/Provider/class-openai-provider.php',
     'WPBanana\\Provider\\Provider_Interface' => $baseDir . '/src/Provider/class-provider-interface.php',

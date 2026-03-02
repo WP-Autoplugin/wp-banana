@@ -444,7 +444,7 @@ final class Settings_Page {
 									style="width:420px"
 									name="<?php echo esc_attr( Options::OPTION_NAME ); ?>[providers][fal][api_key]"
 									value="<?php echo esc_attr( $fal_value ); ?>"
-									placeholder="<?php esc_attr_e( 'fal_...', 'wp-banana' ); ?>"
+									placeholder="<?php esc_attr_e( '...', 'wp-banana' ); ?>"
 									<?php echo $fal_state['defined'] ? ' disabled="disabled" aria-disabled="true"' : ''; ?>
 								/>
 								<button
@@ -1241,7 +1241,7 @@ CSS;
 				];
 				break;
 			case 'fal':
-				$url     = 'https://queue.fal.run/fal-ai/flux/schnell';
+				$url     = 'https://api.fal.ai/v1/models';
 				$headers = [
 					'Authorization' => 'Key ' . $secret,
 				];

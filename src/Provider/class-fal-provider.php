@@ -102,7 +102,7 @@ final class Fal_Provider implements Provider_Interface {
 			$input = $this->apply_reference_images( $model, $input, $p->reference_images );
 		}
 
-		$data   = $this->request_generation(
+		$data                 = $this->request_generation(
 			$model,
 			$input,
 			[
@@ -111,7 +111,7 @@ final class Fal_Provider implements Provider_Interface {
 				'prompt'    => $prompt,
 			]
 		);
-		$url    = $this->extract_output_url( $data );
+		$url                  = $this->extract_output_url( $data );
 		list( $bytes, $mime ) = $this->download_image( $url );
 
 		$size = getimagesizefromstring( $bytes );
@@ -140,9 +140,9 @@ final class Fal_Provider implements Provider_Interface {
 			throw new RuntimeException( 'Source image not found.' );
 		}
 
-		$prompt    = $this->normalize_prompt( $p->prompt );
-		$data_uri  = $this->data_uri_for_file( $p->source_file );
-		$input     = $this->build_edit_payload( $model, $prompt, $data_uri, $p );
+		$prompt   = $this->normalize_prompt( $p->prompt );
+		$data_uri = $this->data_uri_for_file( $p->source_file );
+		$input    = $this->build_edit_payload( $model, $prompt, $data_uri, $p );
 
 		$data = $this->request_generation(
 			$model,
@@ -155,7 +155,7 @@ final class Fal_Provider implements Provider_Interface {
 			]
 		);
 
-		$url = $this->extract_output_url( $data );
+		$url                  = $this->extract_output_url( $data );
 		list( $bytes, $mime ) = $this->download_image( $url );
 
 		$size = getimagesizefromstring( $bytes );
@@ -279,7 +279,7 @@ final class Fal_Provider implements Provider_Interface {
 			'method'  => 'POST',
 			'timeout' => $this->timeout,
 			'headers' => [
-				'Authorization' => 'Bearer ' . $this->api_key,
+				'Authorization' => 'Key ' . $this->api_key,
 				'Content-Type'  => 'application/json',
 			],
 		];
@@ -553,7 +553,7 @@ final class Fal_Provider implements Provider_Interface {
 		}
 		$type    = wp_check_filetype( basename( $file_path ) );
 		$mime    = is_array( $type ) && ! empty( $type['type'] ) ? $type['type'] : ( function_exists( 'mime_content_type' ) ? (string) mime_content_type( $file_path ) : 'image/png' );
-		$encoded  = base64_encode( $bytes );
+		$encoded = base64_encode( $bytes );
 		if ( false === $encoded ) {
 			throw new RuntimeException( 'Failed to encode image for Fal.ai.' );
 		}
@@ -563,9 +563,9 @@ final class Fal_Provider implements Provider_Interface {
 	/**
 	 * Build input payload for edit requests.
 	 *
-	 * @param string     $model    Model name.
-	 * @param string     $prompt   Prompt text.
-	 * @param string     $data_uri Data URI for source image.
+	 * @param string      $model    Model name.
+	 * @param string      $prompt   Prompt text.
+	 * @param string      $data_uri Data URI for source image.
 	 * @param Edit_Params $params   Edit parameters.
 	 * @return array
 	 */

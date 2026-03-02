@@ -348,6 +348,13 @@ final class Media_Hooks {
 			'connected'     => ! empty( $replicate['api_token'] ),
 			'default_model' => isset( $replicate['default_model'] ) ? (string) $replicate['default_model'] : Models_Catalog::provider_default_model( 'replicate' ),
 		];
+		$fal          = $this->options->get_provider_config( 'fal' );
+		$providers[]  = [
+			'slug'          => 'fal',
+			'label'         => __( 'Fal.ai', 'wp-banana' ),
+			'connected'     => ! empty( $fal['api_key'] ),
+			'default_model' => isset( $fal['default_model'] ) ? (string) $fal['default_model'] : Models_Catalog::provider_default_model( 'fal' ),
+		];
 
 		$default_generator_model = (string) $this->options->get( 'default_generator_model', Models_Catalog::default_generator_model() );
 		$default_editor_model    = (string) $this->options->get( 'default_editor_model', Models_Catalog::default_editor_model() );

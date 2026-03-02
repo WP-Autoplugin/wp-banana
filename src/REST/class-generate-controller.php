@@ -232,7 +232,7 @@ final class Generate_Controller {
 
 			$provider = $req->get_param( 'provider' );
 			$provider = is_string( $provider ) ? sanitize_key( $provider ) : 'gemini';
-if ( ! in_array( $provider, [ 'gemini', 'replicate', 'openai', 'fal' ], true ) ) {
+			if ( ! in_array( $provider, [ 'gemini', 'replicate', 'openai', 'fal' ], true ) ) {
 				return new WP_Error( 'wp_banana_invalid_provider', __( 'Unsupported provider.', 'wp-banana' ) );
 			}
 
@@ -684,7 +684,7 @@ if ( ! in_array( $provider, [ 'gemini', 'replicate', 'openai', 'fal' ], true ) )
 
 		$provider_param = $req->get_param( 'provider' );
 		$provider       = is_string( $provider_param ) ? sanitize_key( $provider_param ) : 'gemini';
-		if ( ! in_array( $provider, [ 'gemini', 'replicate', 'openai' ], true ) ) {
+		if ( ! in_array( $provider, [ 'gemini', 'replicate', 'openai', 'fal' ], true ) ) {
 			return new WP_Error( 'wp_banana_invalid_provider', __( 'Unsupported provider.', 'wp-banana' ) );
 		}
 
