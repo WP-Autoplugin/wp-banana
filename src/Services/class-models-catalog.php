@@ -207,6 +207,7 @@ final class Models_Catalog {
 		return [
 			'gemini'    => [
 				self::GEMINI_3_PRO_IMAGE_PREVIEW,
+				self::GEMINI_31_FLASH_IMAGE_PREVIEW,
 			],
 			'replicate' => [
 				self::REPLICATE_NANO_BANANA_PRO,
