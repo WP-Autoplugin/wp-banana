@@ -17,7 +17,7 @@ WP Banana is a free WordPress plugin that lets you generate and edit images with
 
 - **Native Integration**: Looks and feels like WordPress core — no flashy UI, no distractions
 - **Free & Open Source**: 100% free, GPL-licensed, no upsells
-- **Bring Your Own Key**: Connect your own Google, OpenAI or Replicate API key (no middleman fees)
+- **Bring Your Own Key**: Connect your own Google, OpenAI, Fal or Replicate API key (no middleman fees)
 - **Multiple AI Models**: Supports OpenAI’s `gpt-image-1`, Google's Nano Banana 2 (`gemini-3.1-flash-image`), and more
 - **Secure & Performant**: Clean codebase, minimal overhead, optimized for WordPress best practices
 - **Universal Compatibility**: Works with Gutenberg, Classic Editor, Elementor, WooCommerce, ACF, and more
@@ -72,6 +72,7 @@ For environments where you don’t want keys in the DB, you can define them in `
 define( 'WP_BANANA_OPENAI_API_KEY', 'sk-...' );
 define( 'WP_BANANA_GOOGLE_API_KEY', 'AIza...' );
 define( 'WP_BANANA_REPLICATE_API_KEY', 'r8_...' );
+define( 'WP_BANANA_FAL_API_KEY', '...' );
 ```
 
 Constants (if present) take priority over saved settings.
@@ -139,34 +140,34 @@ https://github.com/user-attachments/assets/28a5ef2d-682e-4206-99e7-6eb1f141146d
 * WordPress 6.0+
 * PHP 7.4+
 * ImageMagick enabled on your server
-* API key for supported AI providers (OpenAI, Replicate API, Google AI Studio)
+* API key for supported AI providers (OpenAI, Replicate, Fal, Google AI Studio)
 
 ## Supported AI Models
 
 WP Banana supports a wide range of state-of-the-art AI image models for both generation and editing. Below are some of the available models you can use:
 
-### Via fal.ai (Recommended - Fast & Cost-Effective)
+### Via fal.ai
 
-- **FLUX.2 [dev]** (`fal-ai/flux-2`) - Enhanced realism, crisper text generation, native editing
-- **FLUX.2 [pro]** (`fal-ai/flux-2-pro`) - Maximum quality, exceptional photorealism
-- **FLUX.2 [max]** (`fal-ai/flux-2-max`) - State-of-the-art image generation with precision
-- **FLUX.2 [turbo]** (`fal-ai/flux-2/turbo`) - Fast generation with quality preserved
-- **FLUX.2 [flash]** (`fal-ai/flux-2/flash`) - Ultra-fast generation
-- **FLUX.2 [flex]** (`fal-ai/flux-2-flex`) - Adjustable inference steps for fine-tuned control
-- **Nano Banana 2** (`fal-ai/nano-banana-2`) - Google's state-of-the-art fast generation
-- **Nano Banana Pro** (`fal-ai/nano-banana-pro`) - High-fidelity generation and editing
-- **Gemini 3.1 Flash Image** (`fal-ai/gemini-3.1-flash-image-preview`) - Fast, high-quality generation
-- **Gemini 3 Pro Image** (`fal-ai/gemini-3-pro-image-preview`) - Premium quality with 4K support
-- **Imagen 4** (`fal-ai/imagen4/preview`) - Google's highest quality image generation
-- **Imagen 4 Fast** (`fal-ai/imagen4/preview/fast`) - Faster Imagen 4 variant
-- **Imagen 4 Ultra** (`fal-ai/imagen4/preview/ultra`) - Maximum quality Imagen 4
-- **GPT-Image-1.5** (`fal-ai/gpt-image-1.5`) - OpenAI's high-fidelity image generation
-- **GPT-Image-1 Mini** (`fal-ai/gpt-image-1-mini`) - Efficient OpenAI image generation
-- **Reve** (`fal-ai/reve/text-to-image`) - Detailed visuals with accurate text rendering
-- **Reve Remix** (`fal-ai/reve/remix`) - Remix and transform images with Reve
-- **Recraft V3** (`fal-ai/recraft/v3/text-to-image`) - Professional design and vector art
-- **Ideogram V3** (`fal-ai/ideogram/v3`) - Exceptional typography and realistic outputs
-- **Hidream I1** (`fal-ai/hidream-i1-full`, `fal-ai/hidream-i1-dev`, `fal-ai/hidream-i1-fast`) - 17B parameter open-source model
+- **FLUX.2 [dev]** (`fal-ai/flux-2`)
+- **FLUX.2 [pro]** (`fal-ai/flux-2-pro`)
+- **FLUX.2 [max]** (`fal-ai/flux-2-max`)
+- **FLUX.2 [turbo]** (`fal-ai/flux-2/turbo`)
+- **FLUX.2 [flash]** (`fal-ai/flux-2/flash`)
+- **FLUX.2 [flex]** (`fal-ai/flux-2-flex`)
+- **Nano Banana 2** (`fal-ai/nano-banana-2`)
+- **Nano Banana Pro** (`fal-ai/nano-banana-pro`)
+- **Gemini 3.1 Flash Image** (`fal-ai/gemini-3.1-flash-image-preview`)
+- **Gemini 3 Pro Image** (`fal-ai/gemini-3-pro-image-preview`)
+- **Imagen 4** (`fal-ai/imagen4/preview`)
+- **Imagen 4 Fast** (`fal-ai/imagen4/preview/fast`)
+- **Imagen 4 Ultra** (`fal-ai/imagen4/preview/ultra`)
+- **GPT-Image-1.5** (`fal-ai/gpt-image-1.5`)
+- **GPT-Image-1 Mini** (`fal-ai/gpt-image-1-mini`)
+- **Reve** (`fal-ai/reve/text-to-image`)
+- **Reve Remix** (`fal-ai/reve/remix`)
+- **Recraft V3** (`fal-ai/recraft/v3/text-to-image`)
+- **Ideogram V3** (`fal-ai/ideogram/v3`)
+- **Hidream I1** (`fal-ai/hidream-i1-full`, `fal-ai/hidream-i1-dev`, `fal-ai/hidream-i1-fast`)
 
 ### Via Google AI Studio (Gemini API)
 
@@ -179,7 +180,7 @@ WP Banana supports a wide range of state-of-the-art AI image models for both gen
 
 - **OpenAI GPT-Image-1.5** (`gpt-image-1.5`) - latest OpenAI image generation model
 - **OpenAI GPT-Image-1** (`gpt-image-1`) - the same model used by ChatGPT for image generation and editing
-- **OpenAI GPT-Image-1-Mini** (`gpt-image-1-mini`)
+- **OpenAI GPT-Image-1-Mini** (`gpt-image-1-mini`) - a smaller, faster version of the GPT-Image-1 model, ideal for quick iterations and previews
 
 ### Via Replicate
 

@@ -3,7 +3,7 @@ Contributors: pbalazs
 Tags: ai, images, openai, replicate, google
 Requires at least: 6.0
 Tested up to: 6.9
-Stable tag: 0.7.1
+Stable tag: 0.8.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -128,6 +128,9 @@ All images are saved directly into your WordPress Media Library. You can use the
 ---
 
 == Changelog ==
+
+= 0.8.0 =
+* Added support for FAL AI models via FAL API integration
 
 = 0.7.1 =
 * Added support for Google Gemini 3.1 Flash Image model (a.k.a. Google Nano Banana 2) via Gemini API & Replicate
