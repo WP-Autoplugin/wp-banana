@@ -247,6 +247,13 @@ final class Generate_Page {
 			'connected'     => ! empty( $replicate['api_token'] ),
 			'default_model' => isset( $replicate['default_model'] ) ? (string) $replicate['default_model'] : Models_Catalog::provider_default_model( 'replicate' ),
 		];
+		$fal         = $this->options->get_provider_config( 'fal' );
+		$providers[] = [
+			'slug'          => 'fal',
+			'label'         => __( 'Fal.ai', 'wp-banana' ),
+			'connected'     => ! empty( $fal['api_key'] ),
+			'default_model' => isset( $fal['default_model'] ) ? (string) $fal['default_model'] : Models_Catalog::provider_default_model( 'fal' ),
+		];
 
 		return $providers;
 	}

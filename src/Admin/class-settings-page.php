@@ -146,6 +146,13 @@ final class Settings_Page {
 
 		$current['providers']['replicate']['default_model'] = isset( $providers['replicate']['default_model'] ) ? sanitize_text_field( $providers['replicate']['default_model'] ) : ( isset( $current['providers']['replicate']['default_model'] ) ? $current['providers']['replicate']['default_model'] : Models_Catalog::provider_default_model( 'replicate' ) );
 
+		if ( $this->options->provider_constant_defined( 'fal' ) ) {
+			$current['providers']['fal']['api_key'] = '';
+		} else {
+			$current['providers']['fal']['api_key'] = isset( $providers['fal']['api_key'] ) ? sanitize_text_field( $providers['fal']['api_key'] ) : ( isset( $current['providers']['fal']['api_key'] ) ? $current['providers']['fal']['api_key'] : '' );
+		}
+		$current['providers']['fal']['default_model'] = isset( $providers['fal']['default_model'] ) ? sanitize_text_field( $providers['fal']['default_model'] ) : ( isset( $current['providers']['fal']['default_model'] ) ? $current['providers']['fal']['default_model'] : Models_Catalog::provider_default_model( 'fal' ) );
+
 		$gen             = isset( $input['generation_defaults'] ) && is_array( $input['generation_defaults'] ) ? $input['generation_defaults'] : [];
 		$aspect          = isset( $gen['aspect_ratio'] ) ? (string) $gen['aspect_ratio'] : $current['generation_defaults']['aspect_ratio'];
 		$sanitized_ratio = Aspect_Ratios::sanitize( $aspect );
@@ -231,6 +238,7 @@ final class Settings_Page {
 		$gemini_state    = $this->get_constant_state( 'gemini' );
 		$openai_state    = $this->get_constant_state( 'openai' );
 		$replicate_state = $this->get_constant_state( 'replicate' );
+		$fal_state       = $this->get_constant_state( 'fal' );
 		$gemini_value    = $gemini_state['defined']
 
 			? ( $gemini_state['has_value'] ? '********' : '' )
@@ -241,13 +249,18 @@ final class Settings_Page {
 		$replicate_value = $replicate_state['defined']
 			? ( $replicate_state['has_value'] ? '********' : '' )
 			: ( isset( $opts['providers']['replicate']['api_token'] ) ? (string) $opts['providers']['replicate']['api_token'] : '' );
+		$fal_value       = $fal_state['defined']
+			? ( $fal_state['has_value'] ? '********' : '' )
+			: ( isset( $opts['providers']['fal']['api_key'] ) ? (string) $opts['providers']['fal']['api_key'] : '' );
 
 		$gemini_input_id    = 'wp-banana-gemini-api-key';
 		$openai_input_id    = 'wp-banana-openai-api-key';
 		$replicate_input_id = 'wp-banana-replicate-api-token';
+		$fal_input_id       = 'wp-banana-fal-api-key';
 		$gemini_label       = $this->provider_label( 'gemini' );
 		$openai_label       = $this->provider_label( 'openai' );
 		$replicate_label    = $this->provider_label( 'replicate' );
+		$fal_label          = $this->provider_label( 'fal' );
 
 		// Translators: %s is provider name.
 		$gemini_test_label = sprintf( esc_html__( 'Test connection for %s', 'wp-banana' ), $gemini_label );
@@ -284,7 +297,20 @@ final class Settings_Page {
 
 		// Translators: %s is provider name.
 		$replicate_error_label = sprintf( esc_html__( 'Connection to %s failed.', 'wp-banana' ), $replicate_label );
-		$logs_url              = admin_url( 'admin.php?page=' . Logs_Page::SLUG );
+
+		// Translators: %s is provider name.
+		$fal_test_label = sprintf( esc_html__( 'Test connection for %s', 'wp-banana' ), $fal_label );
+
+		// Translators: %s is provider name.
+		$fal_loading_label = sprintf( esc_html__( 'Testing connection to %s...', 'wp-banana' ), $fal_label );
+
+		// Translators: %s is provider name.
+		$fal_success_label = sprintf( esc_html__( 'Connected to %s successfully.', 'wp-banana' ), $fal_label );
+
+		// Translators: %s is provider name.
+		$fal_error_label = sprintf( esc_html__( 'Connection to %s failed.', 'wp-banana' ), $fal_label );
+
+		$logs_url = admin_url( 'admin.php?page=' . Logs_Page::SLUG );
 		?>
 		<div class="wrap">
 			<h1><?php echo esc_html__( 'WP Banana', 'wp-banana' ); ?></h1>
@@ -405,6 +431,43 @@ final class Settings_Page {
 							</div>
 							<?php if ( $replicate_state['defined'] ) : ?>
 								<?php $this->render_constant_notice( $replicate_state['constant'], $replicate_state['has_value'] ); ?>
+							<?php endif; ?>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row">Fal.ai API Key</th>
+						<td>
+							<div class="wp-banana-provider-credentials">
+								<input
+									id="<?php echo esc_attr( $fal_input_id ); ?>"
+									type="password"
+									style="width:420px"
+									name="<?php echo esc_attr( Options::OPTION_NAME ); ?>[providers][fal][api_key]"
+									value="<?php echo esc_attr( $fal_value ); ?>"
+									placeholder="<?php esc_attr_e( '...', 'wp-banana' ); ?>"
+									<?php echo $fal_state['defined'] ? ' disabled="disabled" aria-disabled="true"' : ''; ?>
+								/>
+								<button
+									type="button"
+									class="button wp-banana-test-provider"
+									data-provider="fal"
+									data-target="<?php echo esc_attr( $fal_input_id ); ?>"
+									data-label-default="<?php esc_attr_e( 'Test', 'wp-banana' ); ?>"
+									data-label-loading="<?php esc_attr_e( 'Testing...', 'wp-banana' ); ?>"
+									data-label-success="<?php esc_attr_e( 'OK', 'wp-banana' ); ?>"
+									data-label-error="<?php esc_attr_e( 'Fail', 'wp-banana' ); ?>"
+									data-status-loading="<?php echo esc_attr( $fal_loading_label ); ?>"
+									data-status-success="<?php echo esc_attr( $fal_success_label ); ?>"
+									data-status-error="<?php echo esc_attr( $fal_error_label ); ?>"
+									data-aria-default="<?php echo esc_attr( $fal_test_label ); ?>"
+									data-aria-loading="<?php echo esc_attr( $fal_loading_label ); ?>"
+									data-aria-success="<?php echo esc_attr( $fal_success_label ); ?>"
+									data-aria-error="<?php echo esc_attr( $fal_error_label ); ?>"
+								><?php esc_html_e( 'Test', 'wp-banana' ); ?></button>
+								<span class="wp-banana-test-status description" aria-live="polite"></span>
+							</div>
+							<?php if ( $fal_state['defined'] ) : ?>
+								<?php $this->render_constant_notice( $fal_state['constant'], $fal_state['has_value'] ); ?>
 							<?php endif; ?>
 						</td>
 					</tr>
@@ -1177,6 +1240,12 @@ CSS;
 					'Authorization' => 'Bearer ' . $secret,
 				];
 				break;
+			case 'fal':
+				$url     = 'https://api.fal.ai/v1/models/requests/by-endpoint';
+				$headers = [
+					'Authorization' => 'Key ' . $secret,
+				];
+				break;
 			default:
 				return new WP_Error( 'wp_banana_unknown_provider', esc_html__( 'Unknown provider.', 'wp-banana' ) );
 		}
@@ -1210,6 +1279,7 @@ CSS;
 			'google'    => __( 'Google', 'wp-banana' ),
 			'openai'    => __( 'OpenAI', 'wp-banana' ),
 			'replicate' => __( 'Replicate', 'wp-banana' ),
+			'fal'       => __( 'Fal.ai', 'wp-banana' ),
 		];
 		if ( isset( $map[ $provider ] ) ) {
 			return $map[ $provider ];

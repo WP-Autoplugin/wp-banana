@@ -23,6 +23,7 @@ use WPBanana\Domain\Edit_Params;
 use WPBanana\Domain\Aspect_Ratios;
 use WPBanana\Domain\Resolutions;
 use WPBanana\Domain\Binary_Image;
+use WPBanana\Provider\Fal_Provider;
 use WPBanana\Provider\Gemini_Provider;
 use WPBanana\Provider\OpenAI_Provider;
 use WPBanana\Provider\Replicate_Provider;
@@ -231,7 +232,7 @@ final class Generate_Controller {
 
 			$provider = $req->get_param( 'provider' );
 			$provider = is_string( $provider ) ? sanitize_key( $provider ) : 'gemini';
-			if ( ! in_array( $provider, [ 'gemini', 'replicate', 'openai' ], true ) ) {
+			if ( ! in_array( $provider, [ 'gemini', 'replicate', 'openai', 'fal' ], true ) ) {
 				return new WP_Error( 'wp_banana_invalid_provider', __( 'Unsupported provider.', 'wp-banana' ) );
 			}
 
@@ -349,6 +350,12 @@ final class Generate_Controller {
 					return new WP_Error( 'wp_banana_not_connected', __( 'Replicate API token missing.', 'wp-banana' ) );
 				}
 				$provider_inst = new Replicate_Provider( $api_token, $model_eff );
+			} elseif ( 'fal' === $provider ) {
+				$api_key = isset( $provider_conf['api_key'] ) ? (string) $provider_conf['api_key'] : '';
+				if ( '' === $api_key ) {
+					return new WP_Error( 'wp_banana_not_connected', __( 'fal.ai API key missing.', 'wp-banana' ) );
+				}
+				$provider_inst = new Fal_Provider( $api_key, $model_eff );
 			} else {
 				$api_key = isset( $provider_conf['api_key'] ) ? (string) $provider_conf['api_key'] : '';
 				if ( '' === $api_key ) {
@@ -677,7 +684,7 @@ final class Generate_Controller {
 
 		$provider_param = $req->get_param( 'provider' );
 		$provider       = is_string( $provider_param ) ? sanitize_key( $provider_param ) : 'gemini';
-		if ( ! in_array( $provider, [ 'gemini', 'replicate', 'openai' ], true ) ) {
+		if ( ! in_array( $provider, [ 'gemini', 'replicate', 'openai', 'fal' ], true ) ) {
 			return new WP_Error( 'wp_banana_invalid_provider', __( 'Unsupported provider.', 'wp-banana' ) );
 		}
 

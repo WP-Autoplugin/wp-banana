@@ -65,6 +65,62 @@ final class Models_Catalog {
 	public const REPLICATE_REVE_EDIT            = 'reve/edit';
 	public const REPLICATE_REVE_REMIX           = 'reve/remix';
 	public const REPLICATE_FLUX                 = 'black-forest-labs/flux';
+	public const FAL_FLUX_DEV                   = 'fal-ai/flux/dev';
+	public const FAL_FLUX_SCHNELL               = 'fal-ai/flux/schnell';
+	public const FAL_FLUX_PRO_ULTRA             = 'fal-ai/flux-pro/v1.1-ultra';
+	public const FAL_IMAGEN_4_PREVIEW           = 'fal-ai/imagen4/preview';
+	public const FAL_IMAGEN_4_FULL              = 'fal-ai/imagen4/full';
+	public const FAL_FLUX_PRO_V11               = 'fal-ai/flux-pro/v1.1';
+	public const FAL_FLUX_DEV_V15               = 'fal-ai/flux/dev/v1.5';
+
+	// FLUX.2 Models (Latest Generation)
+	public const FAL_FLUX_2       = 'fal-ai/flux-2';
+	public const FAL_FLUX_2_PRO   = 'fal-ai/flux-2-pro';
+	public const FAL_FLUX_2_MAX   = 'fal-ai/flux-2-max';
+	public const FAL_FLUX_2_TURBO = 'fal-ai/flux-2/turbo';
+	public const FAL_FLUX_2_FLASH = 'fal-ai/flux-2/flash';
+	public const FAL_FLUX_2_FLEX  = 'fal-ai/flux-2-flex';
+
+	// Google Nano Banana Models
+	public const FAL_NANO_BANANA           = 'fal-ai/nano-banana';
+	public const FAL_NANO_BANANA_2         = 'fal-ai/nano-banana-2';
+	public const FAL_NANO_BANANA_PRO       = 'fal-ai/nano-banana-pro';
+	public const FAL_GEMINI_25_FLASH_IMAGE = 'fal-ai/gemini-25-flash-image';
+	public const FAL_GEMINI_31_FLASH_IMAGE = 'fal-ai/gemini-3.1-flash-image-preview';
+	public const FAL_GEMINI_3_PRO_IMAGE    = 'fal-ai/gemini-3-pro-image-preview';
+
+	// Imagen 4 Variants
+	public const FAL_IMAGEN_4_FAST  = 'fal-ai/imagen4/preview/fast';
+	public const FAL_IMAGEN_4_ULTRA = 'fal-ai/imagen4/preview/ultra';
+
+	// Other Top Models
+	public const FAL_REVE             = 'fal-ai/reve/text-to-image';
+	public const FAL_REVE_REMIX       = 'fal-ai/reve/remix';
+	public const FAL_RECRAFT_V3       = 'fal-ai/recraft/v3/text-to-image';
+	public const FAL_IDEOGRAM_V3      = 'fal-ai/ideogram/v3';
+	public const FAL_GPT_IMAGE_15     = 'fal-ai/gpt-image-1.5';
+	public const FAL_GPT_IMAGE_1_MINI = 'fal-ai/gpt-image-1-mini';
+	public const FAL_HIDREAM_I1_FULL  = 'fal-ai/hidream-i1-full';
+	public const FAL_HIDREAM_I1_DEV   = 'fal-ai/hidream-i1-dev';
+	public const FAL_HIDREAM_I1_FAST  = 'fal-ai/hidream-i1-fast';
+	public const FAL_SEEDREAM_45      = 'fal-ai/bytedance/seedream/v4.5/text-to-image';
+	public const FAL_SEEDREAM_45_EDIT = 'fal-ai/bytedance/seedream/v4.5/edit';
+	public const FAL_SEEDREAM_5_LITE  = 'fal-ai/bytedance/seedream/v5/lite/text-to-image';
+	public const FAL_SEEDREAM_5_EDIT  = 'fal-ai/bytedance/seedream/v5/lite/edit';
+
+	// Editing Models
+	public const FAL_FLUX_2_EDIT                = 'fal-ai/flux-2/edit';
+	public const FAL_FLUX_2_PRO_EDIT            = 'fal-ai/flux-2-pro/edit';
+	public const FAL_FLUX_2_MAX_EDIT            = 'fal-ai/flux-2-max/edit';
+	public const FAL_FLUX_2_TURBO_EDIT          = 'fal-ai/flux-2/turbo/edit';
+	public const FAL_FLUX_2_FLASH_EDIT          = 'fal-ai/flux-2/flash/edit';
+	public const FAL_FLUX_2_FLEX_EDIT           = 'fal-ai/flux-2-flex/edit';
+	public const FAL_NANO_BANANA_2_EDIT         = 'fal-ai/nano-banana-2/edit';
+	public const FAL_NANO_BANANA_PRO_EDIT       = 'fal-ai/nano-banana-pro/edit';
+	public const FAL_GEMINI_31_FLASH_IMAGE_EDIT = 'fal-ai/gemini-3.1-flash-image-preview/edit';
+	public const FAL_GEMINI_3_PRO_IMAGE_EDIT    = 'fal-ai/gemini-3-pro-image-preview/edit';
+	public const FAL_REVE_EDIT                  = 'fal-ai/reve/edit';
+	public const FAL_REVE_REMIX_EDIT            = 'fal-ai/reve/remix';
 
 	public const DEFAULT_GENERATOR_MODEL = self::GEMINI_FLASH_IMAGE_PREVIEW;
 	public const DEFAULT_EDITOR_MODEL    = self::GEMINI_FLASH_IMAGE_PREVIEW;
@@ -103,6 +159,7 @@ final class Models_Catalog {
 			'gemini'    => self::GEMINI_FLASH_IMAGE_PREVIEW,
 			'openai'    => self::OPENAI_GPT_IMAGE_1,
 			'replicate' => self::REPLICATE_FLUX,
+			'fal'       => self::FAL_FLUX_2,
 		];
 	}
 
@@ -195,6 +252,28 @@ final class Models_Catalog {
 				self::REPLICATE_FLUX_2_FLEX,
 				self::REPLICATE_REVE_REMIX,
 			],
+			'fal'       => [
+				// FLUX.2 Models with multi-image support
+				self::FAL_FLUX_2,
+				self::FAL_FLUX_2_PRO,
+				self::FAL_FLUX_2_MAX,
+				self::FAL_FLUX_2_TURBO,
+				self::FAL_FLUX_2_FLASH,
+				self::FAL_FLUX_2_FLEX,
+				// Google Models
+				self::FAL_NANO_BANANA_2,
+				self::FAL_NANO_BANANA_PRO,
+				self::FAL_NANO_BANANA,
+				self::FAL_GEMINI_31_FLASH_IMAGE,
+				self::FAL_GEMINI_3_PRO_IMAGE,
+				self::FAL_GEMINI_25_FLASH_IMAGE,
+				// FLUX 1.x Models
+				self::FAL_FLUX_DEV,
+				self::FAL_FLUX_SCHNELL,
+				self::FAL_FLUX_PRO_ULTRA,
+				self::FAL_FLUX_PRO_V11,
+				self::FAL_FLUX_DEV_V15,
+			],
 		];
 	}
 
@@ -218,6 +297,26 @@ final class Models_Catalog {
 				self::REPLICATE_SEEDREAM_45,
 				self::REPLICATE_SEEDREAM_4,
 				self::REPLICATE_SEEDREAM_5_LITE,
+			],
+			'fal'       => [
+				// FLUX.2 Models with custom resolution support
+				self::FAL_FLUX_2,
+				self::FAL_FLUX_2_PRO,
+				self::FAL_FLUX_2_MAX,
+				self::FAL_FLUX_2_TURBO,
+				self::FAL_FLUX_2_FLASH,
+				self::FAL_FLUX_2_FLEX,
+				// Google Models with resolution control
+				self::FAL_NANO_BANANA_2,
+				self::FAL_NANO_BANANA_PRO,
+				self::FAL_GEMINI_31_FLASH_IMAGE,
+				self::FAL_GEMINI_3_PRO_IMAGE,
+				// FLUX 1.x Models
+				self::FAL_FLUX_DEV,
+				self::FAL_FLUX_SCHNELL,
+				self::FAL_FLUX_PRO_ULTRA,
+				self::FAL_FLUX_PRO_V11,
+				self::FAL_FLUX_DEV_V15,
 			],
 		];
 	}
@@ -268,6 +367,45 @@ final class Models_Catalog {
 				self::REPLICATE_QWEN_IMAGE,
 				self::REPLICATE_MINIMAX_IMAGE,
 			],
+			'fal'       => [
+				// FLUX.2 Models (Latest - Best Quality)
+				self::FAL_FLUX_2,
+				self::FAL_FLUX_2_PRO,
+				self::FAL_FLUX_2_MAX,
+				self::FAL_FLUX_2_TURBO,
+				self::FAL_FLUX_2_FLASH,
+				self::FAL_FLUX_2_FLEX,
+				// Google Nano Banana Models (Fast & High Quality)
+				self::FAL_NANO_BANANA_2,
+				self::FAL_NANO_BANANA_PRO,
+				self::FAL_NANO_BANANA,
+				self::FAL_GEMINI_31_FLASH_IMAGE,
+				self::FAL_GEMINI_3_PRO_IMAGE,
+				self::FAL_GEMINI_25_FLASH_IMAGE,
+				// Imagen 4 (Google's Highest Quality)
+				self::FAL_IMAGEN_4_ULTRA,
+				self::FAL_IMAGEN_4_FAST,
+				self::FAL_IMAGEN_4_PREVIEW,
+				self::FAL_IMAGEN_4_FULL,
+				// Other Top Models
+				self::FAL_REVE,
+				self::FAL_REVE_REMIX,
+				self::FAL_RECRAFT_V3,
+				self::FAL_IDEOGRAM_V3,
+				self::FAL_GPT_IMAGE_15,
+				self::FAL_GPT_IMAGE_1_MINI,
+				self::FAL_HIDREAM_I1_FULL,
+				self::FAL_HIDREAM_I1_DEV,
+				self::FAL_HIDREAM_I1_FAST,
+				self::FAL_SEEDREAM_45,
+				self::FAL_SEEDREAM_5_LITE,
+				// FLUX 1.x Models
+				self::FAL_FLUX_PRO_ULTRA,
+				self::FAL_FLUX_PRO_V11,
+				self::FAL_FLUX_DEV,
+				self::FAL_FLUX_DEV_V15,
+				self::FAL_FLUX_SCHNELL,
+			],
 		];
 	}
 
@@ -304,6 +442,25 @@ final class Models_Catalog {
 				self::REPLICATE_FLUX_KONTEXT_DEV,
 				self::REPLICATE_REVE_EDIT,
 				self::REPLICATE_REVE_REMIX,
+			],
+			'fal'       => [
+				// FLUX.2 Editing Models
+				self::FAL_FLUX_2_EDIT,
+				self::FAL_FLUX_2_PRO_EDIT,
+				self::FAL_FLUX_2_MAX_EDIT,
+				self::FAL_FLUX_2_TURBO_EDIT,
+				self::FAL_FLUX_2_FLASH_EDIT,
+				self::FAL_FLUX_2_FLEX_EDIT,
+				// Google Nano Banana Editing
+				self::FAL_NANO_BANANA_2_EDIT,
+				self::FAL_NANO_BANANA_PRO_EDIT,
+				self::FAL_GEMINI_31_FLASH_IMAGE_EDIT,
+				self::FAL_GEMINI_3_PRO_IMAGE_EDIT,
+				self::FAL_SEEDREAM_45_EDIT,
+				self::FAL_SEEDREAM_5_EDIT,
+				// Reve Editing
+				self::FAL_REVE_EDIT,
+				self::FAL_REVE_REMIX_EDIT,
 			],
 		];
 	}
