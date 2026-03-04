@@ -103,6 +103,10 @@ final class Models_Catalog {
 	public const FAL_HIDREAM_I1_FULL  = 'fal-ai/hidream-i1-full';
 	public const FAL_HIDREAM_I1_DEV   = 'fal-ai/hidream-i1-dev';
 	public const FAL_HIDREAM_I1_FAST  = 'fal-ai/hidream-i1-fast';
+	public const FAL_SEEDREAM_45      = 'fal-ai/bytedance/seedream/v4.5/text-to-image';
+	public const FAL_SEEDREAM_45_EDIT = 'fal-ai/bytedance/seedream/v4.5/edit';
+	public const FAL_SEEDREAM_5_LITE  = 'fal-ai/bytedance/seedream/v5/lite/text-to-image';
+	public const FAL_SEEDREAM_5_EDIT  = 'fal-ai/bytedance/seedream/v5/lite/edit';
 
 	// Editing Models
 	public const FAL_FLUX_2_EDIT                = 'fal-ai/flux-2/edit';
@@ -393,6 +397,8 @@ final class Models_Catalog {
 				self::FAL_HIDREAM_I1_FULL,
 				self::FAL_HIDREAM_I1_DEV,
 				self::FAL_HIDREAM_I1_FAST,
+				self::FAL_SEEDREAM_45,
+				self::FAL_SEEDREAM_5_LITE,
 				// FLUX 1.x Models
 				self::FAL_FLUX_PRO_ULTRA,
 				self::FAL_FLUX_PRO_V11,
@@ -450,15 +456,11 @@ final class Models_Catalog {
 				self::FAL_NANO_BANANA_PRO_EDIT,
 				self::FAL_GEMINI_31_FLASH_IMAGE_EDIT,
 				self::FAL_GEMINI_3_PRO_IMAGE_EDIT,
+				self::FAL_SEEDREAM_45_EDIT,
+				self::FAL_SEEDREAM_5_EDIT,
 				// Reve Editing
 				self::FAL_REVE_EDIT,
 				self::FAL_REVE_REMIX_EDIT,
-				// FLUX 1.x Editing Models
-				self::FAL_FLUX_PRO_ULTRA,
-				self::FAL_FLUX_PRO_V11,
-				self::FAL_FLUX_DEV,
-				self::FAL_FLUX_DEV_V15,
-				self::FAL_FLUX_SCHNELL,
 			],
 		];
 	}

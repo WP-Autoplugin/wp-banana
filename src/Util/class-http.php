@@ -107,18 +107,141 @@ final class Http {
 		$message = 'HTTP ' . $status;
 		$decoded = json_decode( $body, true );
 		if ( is_array( $decoded ) ) {
-			$maybe = null;
-			if ( isset( $decoded['message'] ) ) {
-				$maybe = $decoded['message'];
-			} elseif ( isset( $decoded['error'] ) ) {
-				$maybe = $decoded['error'];
-			} elseif ( isset( $decoded['detail'] ) ) { // Replicate uses 'detail'.
-				$maybe = $decoded['detail'];
-			}
-			if ( is_string( $maybe ) && '' !== $maybe ) {
+			$maybe = self::extract_message( $decoded );
+			if ( '' !== $maybe ) {
 				$message .= ': ' . $maybe;
 			}
 		}
 		return $message;
+	}
+
+	/**
+	 * Extract a readable error message from structured API payloads.
+	 *
+	 * @param mixed $value Any decoded JSON value.
+	 * @return string
+	 */
+	private static function extract_message( $value ): string {
+		if ( is_string( $value ) ) {
+			return trim( $value );
+		}
+
+		if ( is_numeric( $value ) ) {
+			return (string) $value;
+		}
+
+		if ( ! is_array( $value ) ) {
+			return '';
+		}
+
+		$priority_keys = [ 'message', 'error', 'detail', 'reason', 'title', 'type', 'msg', 'code' ];
+		foreach ( $priority_keys as $key ) {
+			if ( ! array_key_exists( $key, $value ) ) {
+				continue;
+			}
+
+			$candidate = self::extract_message( $value[ $key ] );
+			if ( '' !== $candidate ) {
+				return $candidate;
+			}
+		}
+
+		// Handle list-style error payloads (e.g. detail:[{msg,type}, ...]).
+		if ( self::is_list_array( $value ) ) {
+			$parts = [];
+			foreach ( $value as $item ) {
+				if ( ! is_array( $item ) ) {
+					$candidate = self::extract_message( $item );
+					if ( '' !== $candidate ) {
+						$parts[] = $candidate;
+					}
+					continue;
+				}
+
+				$type = '';
+				if ( isset( $item['type'] ) && is_string( $item['type'] ) ) {
+					$type = trim( $item['type'] );
+				}
+
+				$text = '';
+				if ( isset( $item['msg'] ) && is_string( $item['msg'] ) ) {
+					$text = trim( $item['msg'] );
+				} else {
+					$text = self::extract_message( $item );
+				}
+
+				if ( '' === $text ) {
+					continue;
+				}
+
+				$loc = self::location_to_string( $item['loc'] ?? null );
+
+				if ( '' !== $loc ) {
+					$text = $loc . ': ' . $text;
+				}
+
+				if ( '' !== $type && strtolower( $type ) !== strtolower( $text ) ) {
+					$parts[] = $type . ': ' . $text;
+				} else {
+					$parts[] = $text;
+				}
+			}
+
+			if ( ! empty( $parts ) ) {
+				return implode( '; ', array_slice( $parts, 0, 3 ) );
+			}
+		}
+
+		return '';
+	}
+
+	/**
+	 * Convert an error location array to dotted field notation.
+	 *
+	 * @param mixed $loc Location payload (often ["body","field"]).
+	 * @return string
+	 */
+	private static function location_to_string( $loc ): string {
+		if ( ! is_array( $loc ) || empty( $loc ) ) {
+			return '';
+		}
+
+		$parts = [];
+		foreach ( $loc as $part ) {
+			if ( ! is_string( $part ) && ! is_numeric( $part ) ) {
+				continue;
+			}
+
+			$value = trim( (string) $part );
+			if ( '' === $value || 'body' === strtolower( $value ) ) {
+				continue;
+			}
+
+			$parts[] = $value;
+		}
+
+		return implode( '.', $parts );
+	}
+
+	/**
+	 * Polyfill-style check for array_is_list on older PHP versions.
+	 *
+	 * @param array $value Candidate array.
+	 * @return bool
+	 */
+	private static function is_list_array( array $value ): bool {
+		if ( function_exists( 'array_is_list' ) ) {
+			return array_is_list( $value );
+		}
+
+		$index = 0;
+		foreach ( array_keys( $value ) as $key ) {
+			if ( $key !== $index ) {
+				return false;
+			}
+			++$index;
+		}
+
+		return true;
 	}
 }

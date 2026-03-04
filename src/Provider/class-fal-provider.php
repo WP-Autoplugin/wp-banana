@@ -202,6 +202,11 @@ final class Fal_Provider implements Provider_Interface {
 
 		$normalized = strtolower( trim( $model ) );
 
+		if ( $this->model_is_seedream( $normalized ) ) {
+			$config['image_size'] = $this->seedream_image_size_for_dimensions( $width, $height, $aspect_ratio );
+			return $config;
+		}
+
 		if ( null !== $width && null !== $height ) {
 			$size_string = $this->dimensions_to_fal_size( $width, $height );
 			if ( '' !== $size_string ) {
@@ -570,13 +575,12 @@ final class Fal_Provider implements Provider_Interface {
 	 * @return array
 	 */
 	private function build_edit_payload( string $model, string $prompt, string $data_uri, Edit_Params $params ): array {
-		$normalized = strtolower( $model );
-
 		$input = [
 			'prompt'     => $prompt,
-			'image_url'  => $data_uri,
 			'num_images' => 1,
 		];
+
+		$image_uris = [ $data_uri ];
 
 		if ( ! empty( $params->reference_images ) ) {
 			foreach ( $params->reference_images as $reference ) {
@@ -586,9 +590,14 @@ final class Fal_Provider implements Provider_Interface {
 				if ( ! file_exists( $reference->path ) ) {
 					continue;
 				}
-				$input['image_url'] = $this->data_uri_for_file( $reference->path );
-				break;
+				$image_uris[] = $this->data_uri_for_file( $reference->path );
 			}
+		}
+
+		if ( $this->model_uses_image_urls( $model ) ) {
+			$input['image_urls'] = array_values( $image_uris );
+		} else {
+			$input['image_url'] = $image_uris[0];
 		}
 
 		$format = $this->format_for_request( $params->format );
@@ -597,10 +606,143 @@ final class Fal_Provider implements Provider_Interface {
 		}
 
 		if ( $params->target_width > 0 && $params->target_height > 0 ) {
-			$input['image_size'] = $this->dimensions_to_fal_size( $params->target_width, $params->target_height );
+			if ( $this->model_is_seedream( $model ) ) {
+				$input['image_size'] = $this->seedream_image_size_for_dimensions( $params->target_width, $params->target_height, null );
+			} elseif ( ! $this->model_uses_named_image_size( $model ) ) {
+				$input['image_size'] = $this->dimensions_to_fal_size( $params->target_width, $params->target_height );
+			}
 		}
 
 		return $input;
+	}
+
+	/**
+	 * Check whether the model expects `image_urls` instead of `image_url`.
+	 *
+	 * @param string $model Model identifier.
+	 * @return bool
+	 */
+	private function model_uses_image_urls( string $model ): bool {
+		$normalized = strtolower( trim( $model ) );
+
+		// Reve's single-image edit endpoint uses `image_url`.
+		if ( false !== strpos( $normalized, 'reve/edit' ) && false === strpos( $normalized, 'remix' ) ) {
+			return false;
+		}
+
+		// Most fal edit/remix endpoints (Flux 2, Nano Banana, Gemini image edit, Reve remix) use `image_urls`.
+		return false !== strpos( $normalized, '/edit' ) || false !== strpos( $normalized, 'remix' );
+	}
+
+	/**
+	 * Check if the model expects named/object image size values instead of `WxH`.
+	 *
+	 * @param string $model Model identifier.
+	 * @return bool
+	 */
+	private function model_uses_named_image_size( string $model ): bool {
+		$normalized = strtolower( trim( $model ) );
+
+		$needle = [
+			'flux-2/edit',
+			'flux-2-pro/edit',
+			'flux-2-max/edit',
+			'flux-2/turbo/edit',
+			'flux-2/flash/edit',
+			'flux-2-flex/edit',
+		];
+
+		foreach ( $needle as $item ) {
+			if ( false !== strpos( $normalized, $item ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Check if model is ByteDance Seedream on Fal.
+	 *
+	 * @param string $model Model identifier.
+	 * @return bool
+	 */
+	private function model_is_seedream( string $model ): bool {
+		$normalized = strtolower( trim( $model ) );
+		return false !== strpos( $normalized, 'seedream' );
+	}
+
+	/**
+	 * Map dimensions/aspect to Seedream image_size tokens.
+	 *
+	 * @param int|null    $width        Target width.
+	 * @param int|null    $height       Target height.
+	 * @param string|null $aspect_ratio Optional ratio hint (e.g. 16:9).
+	 * @return string
+	 */
+	private function seedream_image_size_for_dimensions( ?int $width, ?int $height, ?string $aspect_ratio ): string {
+		$ratio = '';
+
+		if ( is_string( $aspect_ratio ) && '' !== trim( $aspect_ratio ) ) {
+			$ratio = trim( $aspect_ratio );
+		} elseif ( is_int( $width ) && is_int( $height ) && $width > 0 && $height > 0 ) {
+			$gcd   = $this->greatest_common_divisor( $width, $height );
+			$left  = (int) round( $width / $gcd );
+			$right = (int) round( $height / $gcd );
+			$ratio = $left . ':' . $right;
+		}
+
+		$normalized = strtolower( $ratio );
+		$map        = [
+			'1:1'  => 'square',
+			'3:4'  => 'portrait_4_3',
+			'4:3'  => 'landscape_4_3',
+			'9:16' => 'portrait_16_9',
+			'16:9' => 'landscape_16_9',
+		];
+
+		if ( isset( $map[ $normalized ] ) ) {
+			return $map[ $normalized ];
+		}
+
+		$long_edge = 0;
+		if ( is_int( $width ) && is_int( $height ) ) {
+			$long_edge = max( $width, $height );
+		}
+
+		if ( $long_edge >= 2160 ) {
+			return 'auto_4K';
+		}
+
+		if ( $long_edge >= 1400 ) {
+			return 'auto_2K';
+		}
+
+		return 'square';
+	}
+
+	/**
+	 * Compute the GCD for two integers.
+	 *
+	 * @param int $a First number.
+	 * @param int $b Second number.
+	 * @return int
+	 */
+	private function greatest_common_divisor( int $a, int $b ): int {
+		$a = abs( $a );
+		$b = abs( $b );
+		if ( 0 === $a ) {
+			return max( 1, $b );
+		}
+		if ( 0 === $b ) {
+			return max( 1, $a );
+		}
+		while ( 0 !== $b ) {
+			$tmp = $b;
+			$b   = $a % $b;
+			$a   = $tmp;
+		}
+		return max( 1, $a );
 	}
 
 	/**
