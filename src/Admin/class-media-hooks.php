@@ -77,6 +77,12 @@ final class Media_Hooks {
 		if ( $this->user_can_access_ai() ) {
 			$this->enqueue_modal_style();
 		}
+
+		// Always enqueue command palette integration for users with AI access.
+		// Commands are registered client-side and only appear when the palette is opened.
+		if ( $this->user_can_access_ai() ) {
+			$this->enqueue_commands_script();
+		}
 	}
 
 	/**
@@ -200,6 +206,25 @@ final class Media_Hooks {
 		$this->localize_media_data( $handle );
 		wp_enqueue_script( $handle );
 		$this->ensure_component_styles();
+	}
+
+	/**
+	 * Register and enqueue the Command Palette commands bundle.
+	 *
+	 * @return void
+	 */
+	private function enqueue_commands_script(): void {
+		$handle = 'wp-banana-commands';
+		if ( ! wp_script_is( $handle, 'registered' ) ) {
+			$asset = $this->get_asset_metadata( 'entry-commands' );
+			$src   = trailingslashit( $this->plugin_url ) . 'build/entry-commands.js';
+			$deps  = isset( $asset['dependencies'] ) && is_array( $asset['dependencies'] ) ? $asset['dependencies'] : [];
+			$ver   = isset( $asset['version'] ) ? (string) $asset['version'] : Plugin::VERSION;
+
+			wp_register_script( $handle, $src, $deps, $ver, true );
+			wp_set_script_translations( $handle, 'wp-banana', $this->plugin_dir . '/languages' );
+		}
+		wp_enqueue_script( $handle );
 	}
 
 	/**
