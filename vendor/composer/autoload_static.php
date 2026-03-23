@@ -10,6 +10,7 @@ class ComposerStaticInitf1bfaf84312e744e7b9964884b4a0d41
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
         'WPBanana\\Abilities\\Abilities' => __DIR__ . '/../..' . '/src/Abilities/class-abilities.php',
         'WPBanana\\Admin\\AI_Editor_Integration' => __DIR__ . '/../..' . '/src/Admin/class-ai-editor-integration.php',
+        'WPBanana\\Admin\\Command_Palette' => __DIR__ . '/../..' . '/src/Admin/class-command-palette.php',
         'WPBanana\\Admin\\Generate_Page' => __DIR__ . '/../..' . '/src/Admin/class-generate-page.php',
         'WPBanana\\Admin\\Logs_List_Table' => __DIR__ . '/../..' . '/src/Admin/class-logs-list-table.php',
         'WPBanana\\Admin\\Logs_Page' => __DIR__ . '/../..' . '/src/Admin/class-logs-page.php',

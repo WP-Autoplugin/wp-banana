@@ -9,6 +9,7 @@ return array(
     'Composer\\InstalledVersions' => $vendorDir . '/composer/InstalledVersions.php',
     'WPBanana\\Abilities\\Abilities' => $baseDir . '/src/Abilities/class-abilities.php',
     'WPBanana\\Admin\\AI_Editor_Integration' => $baseDir . '/src/Admin/class-ai-editor-integration.php',
+    'WPBanana\\Admin\\Command_Palette' => $baseDir . '/src/Admin/class-command-palette.php',
     'WPBanana\\Admin\\Generate_Page' => $baseDir . '/src/Admin/class-generate-page.php',
     'WPBanana\\Admin\\Logs_List_Table' => $baseDir . '/src/Admin/class-logs-list-table.php',
     'WPBanana\\Admin\\Logs_Page' => $baseDir . '/src/Admin/class-logs-page.php',
