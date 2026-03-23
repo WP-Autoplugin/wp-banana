@@ -49,6 +49,11 @@ WP Banana is a free WordPress plugin that lets you generate and edit images with
 - Save edits as a new image or overwrite the original
 - Detailed API usage logs with a review table
 
+### WP Command Palette Integration
+- Quick access to WP Banana features via the WordPress Command Palette (Cmd+K / Ctrl+K)
+- Navigate to settings, generate images, and access API logs without menu hunting
+- Requires WordPress 6.9+ for full Command Palette support
+
 ### Developer-Friendly
 - Built with hooks and filters for extensibility
 - BYOK (Bring Your Own Key) approach — use your own API credentials
