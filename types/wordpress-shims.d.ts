@@ -50,6 +50,12 @@ declare module '@wordpress/components' {
       variant?: 'primary' | 'secondary' | 'tertiary' | 'link' | string;
     }
   >;
+  export const MenuItem: React.FC<
+    React.ComponentProps<'button'> & {
+      icon?: unknown;
+      isPressed?: boolean;
+    }
+  >;
   export const TextControl: React.FC<{ label?: string; value?: string; onChange?: (val: string) => void; placeholder?: string; help?: string; type?: string; disabled?: boolean }>;
   export const TextareaControl: React.FC<{
     label?: string;
