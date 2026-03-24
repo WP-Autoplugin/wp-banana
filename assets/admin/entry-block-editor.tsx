@@ -5,5 +5,6 @@
  */
 
 import './media-modal-generate-tab';
+import './media-placeholder-generate-button';
 import './attachment-details';
 import './edit-ai-panel';

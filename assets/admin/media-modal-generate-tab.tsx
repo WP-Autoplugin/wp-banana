@@ -35,6 +35,59 @@ type WindowWithBanana = Window & {
 
 const roots = new WeakMap< HTMLElement, { render: ( element: JSX.Element ) => void; unmount?: () => void } >();
 
+const getVisibleMediaModal = (): HTMLElement | null => {
+	const modals = Array.from(
+		document.querySelectorAll< HTMLElement >( '.media-modal' )
+	);
+
+	for ( let index = modals.length - 1; index >= 0; index-- ) {
+		const modal = modals[ index ];
+		const isHidden =
+			modal.style.display === 'none' ||
+			modal.getAttribute( 'aria-hidden' ) === 'true';
+
+		if ( ! isHidden ) {
+			return modal;
+		}
+	}
+
+	return modals.length > 0 ? modals[ modals.length - 1 ] : null;
+};
+
+const openGenerateTabInModal = ( modal: HTMLElement ): boolean => {
+	const tab = modal.querySelector< HTMLButtonElement >(
+		'.media-menu-item.wp-banana-media-tab'
+	);
+
+	if ( ! tab ) {
+		return false;
+	}
+
+	tab.click();
+	return true;
+};
+
+export const openGenerateMediaModal = ( openMediaLibrary: () => void ): void => {
+	openMediaLibrary();
+
+	let attempts = 0;
+
+	const tryOpen = () => {
+		attempts++;
+		const modal = getVisibleMediaModal();
+
+		if ( modal && openGenerateTabInModal( modal ) ) {
+			return;
+		}
+
+		if ( attempts < 20 ) {
+			window.setTimeout( tryOpen, 50 );
+		}
+	};
+
+	window.setTimeout( tryOpen, 0 );
+};
+
 const getData = (): MediaData | null => {
 	const win = window as unknown as WindowWithBanana;
 	const data = win.wpBananaMedia;
