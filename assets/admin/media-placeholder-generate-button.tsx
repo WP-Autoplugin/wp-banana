@@ -111,6 +111,7 @@ wpWindow.wp?.hooks?.addFilter?.(
 					originalMediaLibraryButton( buttonProps )
 				) : (
 					<Button
+						__next40pxDefaultSize
 						variant="secondary"
 						onClick={ buttonProps.open }
 					>
@@ -122,6 +123,7 @@ wpWindow.wp?.hooks?.addFilter?.(
 					<Fragment>
 						{ mediaLibraryButtonElement }
 						<Button
+							__next40pxDefaultSize
 							variant="secondary"
 							onClick={ () => openGenerateMediaModal( buttonProps.open ) }
 						>

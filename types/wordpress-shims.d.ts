@@ -46,6 +46,7 @@ declare module '@wordpress/components' {
       isSecondary?: boolean;
       isBusy?: boolean;
       disabled?: boolean;
+      __next40pxDefaultSize?: boolean;
       variant?: 'primary' | 'secondary' | 'tertiary' | 'link' | string;
     }
   >;
