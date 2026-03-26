@@ -369,7 +369,7 @@ final class Media_Hooks {
 			$default_resolution = Resolutions::default();
 		}
 
-		return [
+		$payload = [
 			'restNamespace'            => 'wp-banana/v1',
 			'canGenerate'              => $can_generate,
 			'canEdit'                  => $can_edit,
@@ -386,6 +386,16 @@ final class Media_Hooks {
 			'resolutionModelAllowlist' => Models_Catalog::resolution_model_allowlist(),
 			'iconUrl'                  => trailingslashit( $this->plugin_url ) . 'assets/images/banana-icon-2.svg',
 		];
+
+		/**
+		 * Filter localized admin payload passed to WP Banana scripts.
+		 *
+		 * @param array<string,mixed> $payload Localized JS payload.
+		 * @param string              $context Screen context identifier.
+		 */
+		$payload = apply_filters( 'wp_banana_admin_payload', $payload, 'media' );
+
+		return is_array( $payload ) ? $payload : [];
 	}
 
 	/**

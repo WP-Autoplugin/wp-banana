@@ -23,7 +23,36 @@ final class Resolutions {
 	 * @return array<int,string>
 	 */
 	public static function all(): array {
-		return [ '1K', '2K', '4K' ];
+		$resolutions = [ '1K', '2K', '4K' ];
+
+		/**
+		 * Filter the supported generation resolutions.
+		 *
+		 * Values must be resolution strings such as `1K`, `2K`, or `4K`.
+		 * Unsupported resolutions may still be rejected by individual providers.
+		 *
+		 * @param array<int,string> $resolutions Canonical resolution options.
+		 */
+		$resolutions = apply_filters( 'wp_banana_resolutions', $resolutions );
+		if ( ! is_array( $resolutions ) ) {
+			return [];
+		}
+
+		$normalized = [];
+		foreach ( $resolutions as $resolution ) {
+			if ( ! is_scalar( $resolution ) ) {
+				continue;
+			}
+
+			$canonical = strtoupper( trim( (string) $resolution ) );
+			if ( ! preg_match( '/^[1-9][0-9]*K$/', $canonical ) ) {
+				continue;
+			}
+
+			$normalized[] = $canonical;
+		}
+
+		return array_values( array_unique( $normalized ) );
 	}
 
 	/**

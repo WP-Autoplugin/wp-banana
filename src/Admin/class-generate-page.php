@@ -144,23 +144,32 @@ final class Generate_Page {
 			$default_resolution = Resolutions::default();
 		}
 
-		wp_localize_script(
-			$handle,
-			'wpBananaGeneratePage',
-			[
-				'restNamespace'            => 'wp-banana/v1',
-				'providers'                => $this->build_providers_payload(),
-				'redirectUrl'              => admin_url( 'upload.php' ),
-				'defaultGeneratorModel'    => $default_generator_model,
-				'defaultGeneratorProvider' => $this->detect_provider_for_model( $default_generator_model ),
-				'defaultAspectRatio'       => $default_aspect_ratio,
-				'aspectRatioOptions'       => Aspect_Ratios::all(),
-				'defaultResolution'        => $default_resolution,
-				'resolutionOptions'        => Resolutions::all(),
-				'resolutionModelAllowlist' => Models_Catalog::resolution_model_allowlist(),
-				'multiImageModelAllowlist' => Models_Catalog::multi_image_allowlist(),
-			]
-		);
+		$payload = [
+			'restNamespace'            => 'wp-banana/v1',
+			'providers'                => $this->build_providers_payload(),
+			'redirectUrl'              => admin_url( 'upload.php' ),
+			'defaultGeneratorModel'    => $default_generator_model,
+			'defaultGeneratorProvider' => $this->detect_provider_for_model( $default_generator_model ),
+			'defaultAspectRatio'       => $default_aspect_ratio,
+			'aspectRatioOptions'       => Aspect_Ratios::all(),
+			'defaultResolution'        => $default_resolution,
+			'resolutionOptions'        => Resolutions::all(),
+			'resolutionModelAllowlist' => Models_Catalog::resolution_model_allowlist(),
+			'multiImageModelAllowlist' => Models_Catalog::multi_image_allowlist(),
+		];
+
+		/**
+		 * Filter localized admin payload passed to WP Banana scripts.
+		 *
+		 * @param array<string,mixed> $payload Localized JS payload.
+		 * @param string              $context Screen context identifier.
+		 */
+		$payload = apply_filters( 'wp_banana_admin_payload', $payload, 'generate-page' );
+		if ( ! is_array( $payload ) ) {
+			$payload = [];
+		}
+
+		wp_localize_script( $handle, 'wpBananaGeneratePage', $payload );
 
 		wp_enqueue_script( $handle );
 
