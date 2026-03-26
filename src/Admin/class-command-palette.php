@@ -3,7 +3,7 @@
  * Command Palette admin integration.
  *
  * @package WPBanana\Admin
- * @since   0.8.0
+ * @since   0.9.0
  */
 
 namespace WPBanana\Admin;
