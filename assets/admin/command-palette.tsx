@@ -38,6 +38,8 @@ declare global {
 				isLogs?: boolean;
 			};
 		};
+		wpBananaOpenGeneratePanel?: () => boolean;
+		wpBananaOpenGenerateMediaModal?: () => boolean;
 		__wpBananaCommandPaletteMounted?: boolean;
 	}
 }
@@ -62,6 +64,26 @@ const navigateTo = ( url: string ) => ( { close }: CommandCallbackContext ) => {
 	window.location.href = url;
 };
 
+const openGenerateUi = ( url: string ) => ( { close }: CommandCallbackContext ) => {
+	close();
+
+	if ( typeof window.wpBananaOpenGeneratePanel === 'function' ) {
+		const opened = window.wpBananaOpenGeneratePanel();
+		if ( opened ) {
+			return;
+		}
+	}
+
+	if ( typeof window.wpBananaOpenGenerateMediaModal === 'function' ) {
+		const opened = window.wpBananaOpenGenerateMediaModal();
+		if ( opened ) {
+			return;
+		}
+	}
+
+	window.location.href = url;
+};
+
 const buildCommands = ( payload: CommandPalettePayload ): CommandDefinition[] => {
 	const commands: CommandDefinition[] = [];
 	const urls = payload.urls ?? {};
@@ -74,7 +96,7 @@ const buildCommands = ( payload: CommandPalettePayload ): CommandDefinition[] =>
 			icon: plus,
 			category: 'view',
 			keywords: [ 'banana', 'ai', 'image', 'generate', 'media' ],
-			callback: navigateTo( urls.generatePage ),
+			callback: openGenerateUi( urls.generatePage ),
 		} );
 	}
 

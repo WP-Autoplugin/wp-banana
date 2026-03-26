@@ -25,6 +25,7 @@ type MediaData = {
 
 type WindowWithBanana = Window & {
 	wpBananaMedia?: MediaData;
+	wpBananaOpenGenerateMediaModal?: () => boolean;
 	wp?: {
 		element?: {
 			createRoot?: ( container: HTMLElement ) => { render: ( element: JSX.Element ) => void; unmount?: () => void };
@@ -86,6 +87,34 @@ export const openGenerateMediaModal = ( openMediaLibrary: () => void ): void => 
 	};
 
 	window.setTimeout( tryOpen, 0 );
+};
+
+const ensureGenerateMediaModal = (): boolean => {
+	const win = window as unknown as WindowWithBanana;
+	const media = win.wp?.media;
+
+	if ( ! media ) {
+		return false;
+	}
+
+	if ( ! media.frame ) {
+		media.frame = media( {
+			frame: 'select',
+			library: {
+				type: 'image',
+			},
+			multiple: false,
+			title: __( 'Select or Upload Media', 'wp-banana' ),
+		} );
+	}
+
+	const frame = media.frame;
+	if ( ! frame || typeof frame.open !== 'function' ) {
+		return false;
+	}
+
+	openGenerateMediaModal( () => frame.open() );
+	return true;
 };
 
 const getData = (): MediaData | null => {
@@ -416,3 +445,5 @@ if ( document.readyState === 'loading' ) {
 } else {
 	init();
 }
+
+( window as unknown as WindowWithBanana ).wpBananaOpenGenerateMediaModal = ensureGenerateMediaModal;

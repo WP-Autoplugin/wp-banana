@@ -26,6 +26,7 @@ declare global {
 			resolutionModelAllowlist?: Record< string, string[] >;
 		};
 		wpBananaReferenceQueue?: ReferencePayload[][];
+		wpBananaOpenGeneratePanel?: () => boolean;
 	}
 }
 
@@ -249,6 +250,11 @@ const init = () => {
 		panel.style.display = 'none';
 		button.setAttribute( 'aria-expanded', 'false' );
 		button.classList.remove( 'wp-banana-generate-toggle--open' );
+	};
+
+	window.wpBananaOpenGeneratePanel = () => {
+		openPanel();
+		return true;
 	};
 
 	button.addEventListener( 'click', ( event ) => {
