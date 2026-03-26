@@ -8,5 +8,6 @@ module.exports = {
 		'attachment-editor': path.resolve( process.cwd(), 'assets/admin/entry-attachment-editor.tsx' ),
 		'block-editor': path.resolve( process.cwd(), 'assets/admin/entry-block-editor.tsx' ),
 		'generate-page': path.resolve( process.cwd(), 'assets/admin/generate-page.tsx' ),
+		'command-palette': path.resolve( process.cwd(), 'assets/admin/entry-command-palette.tsx' ),
 	},
 };

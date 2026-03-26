@@ -13,6 +13,7 @@ use WPBanana\Admin\Settings_Page;
 use WPBanana\Admin\Generate_Page;
 use WPBanana\Admin\Logs_Page;
 use WPBanana\Admin\AI_Editor_Integration;
+use WPBanana\Admin\Command_Palette;
 use WPBanana\Admin\Updater;
 use WPBanana\Abilities\Abilities;
 use WPBanana\REST\Routes;
@@ -94,6 +95,7 @@ final class Plugin {
 			( new Generate_Page( $options, self::$plugin_url ) )->register();
 			( new Logs_Page( $logger ) )->register();
 			( new AI_Editor_Integration( $buffer ) )->register();
+			( new Command_Palette( $options, self::$plugin_url ) )->register();
 
 			// GitHub plugin updater.
 			new Updater();

@@ -38,6 +38,15 @@ declare module '@wordpress/api-fetch' {
   export default apiFetch;
 }
 
+declare module '@wordpress/commands' {
+  export function useCommands(commands: Array<Record<string, any>>): void;
+}
+
+declare module '@wordpress/icons' {
+  export const plus: any;
+  export const settings: any;
+}
+
 declare module '@wordpress/components' {
   import * as React from 'react';
   export const Button: React.FC<
