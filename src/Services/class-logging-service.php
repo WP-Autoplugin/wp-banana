@@ -222,18 +222,15 @@ final class Logging_Service {
 		$sql        = "SELECT * FROM {$table} {$where_sql} ORDER BY {$orderby} {$order} LIMIT %d OFFSET %d";
 		$query_args = array_merge( $where_args, [ $per_page, max( 0, (int) $offset ) ] );
 
-		$prepared = $wpdb->prepare( $sql, $query_args );
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Read-only admin query.
-		$items = $wpdb->get_results( $prepared, ARRAY_A );
+		$prepared = $wpdb->prepare( $sql, $query_args ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Dynamic ORDER BY and LIMIT require manual preparation.
+		$items    = $wpdb->get_results( $prepared, ARRAY_A ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Prepared above with dynamic components.
 
 		$count_sql = "SELECT COUNT(*) FROM {$table} {$where_sql}";
 		if ( empty( $where_args ) ) {
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-			$total = (int) $wpdb->get_var( $count_sql );
+			$total = (int) $wpdb->get_var( $count_sql ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- No dynamic input.
 		} else {
-			$prepared_count = $wpdb->prepare( $count_sql, $where_args );
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-			$total = (int) $wpdb->get_var( $prepared_count );
+			$prepared_count = $wpdb->prepare( $count_sql, $where_args ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Dynamic WHERE requires manual preparation.
+			$total          = (int) $wpdb->get_var( $prepared_count ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Prepared above with dynamic components.
 		}
 
 		return [
@@ -293,8 +290,7 @@ final class Logging_Service {
 		global $wpdb;
 
 		$table = self::table_name();
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Needed during uninstall.
-		$wpdb->query( "DROP TABLE IF EXISTS {$table}" );
+		$wpdb->query( "DROP TABLE IF EXISTS {$table}" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.SchemaChange -- Required for uninstallation.
 		self::$table_verified = null;
 	}
 
@@ -311,8 +307,7 @@ final class Logging_Service {
 		global $wpdb;
 
 		$table = self::table_name();
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Required for log maintenance.
-		return false !== $wpdb->query( "TRUNCATE TABLE {$table}" );
+		return false !== $wpdb->query( "TRUNCATE TABLE {$table}" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.SchemaChange -- Required for log maintenance.
 	}
 
 	/**
@@ -328,8 +323,7 @@ final class Logging_Service {
 		global $wpdb;
 
 		$table = self::table_name();
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Lightweight existence check.
-		$value = $wpdb->get_var( "SELECT 1 FROM {$table} LIMIT 1" );
+		$value = $wpdb->get_var( "SELECT 1 FROM {$table} LIMIT 1" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- No dynamic input.
 
 		return ! empty( $value );
 	}
@@ -351,7 +345,7 @@ final class Logging_Service {
 		global $wpdb;
 
 		$table = self::table_name();
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Lightweight metadata query.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Table name is properly escaped.
 		$result = $wpdb->get_var(
 			$wpdb->prepare(
 				'SHOW TABLES LIKE %s',

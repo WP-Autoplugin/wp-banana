@@ -93,7 +93,7 @@ final class Plugin {
 			( new Settings_Page( $options, self::$plugin_file, self::$plugin_url ) )->register();
 			( new Media_Hooks( $options, self::$plugin_url ) )->register();
 			( new Generate_Page( $options, self::$plugin_url ) )->register();
-			( new Logs_Page( $logger ) )->register();
+			( new Logs_Page( $logger, self::$plugin_url ) )->register();
 			( new AI_Editor_Integration( $buffer ) )->register();
 			( new Command_Palette( $options, self::$plugin_url ) )->register();
 

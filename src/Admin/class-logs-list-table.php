@@ -294,7 +294,8 @@ class Logs_List_Table extends \WP_List_Table {
 		if ( $milliseconds <= 0 ) {
 			return __( '—', 'wp-banana' );
 		}
-		return sprintf( _n( '%d ms', '%d ms', $milliseconds, 'wp-banana' ), $milliseconds ); // phpcs:ignore WordPress.WP.I18n.NonSingularStringLiteralSingle
+		// translators: %d is a duration in milliseconds, e.g. "123 ms".
+		return sprintf( _n( '%d ms', '%d ms', $milliseconds, 'wp-banana' ), $milliseconds );
 	}
 
 	/**
