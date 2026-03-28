@@ -230,7 +230,7 @@ final class Logging_Service {
 			$total = (int) $wpdb->get_var( $count_sql ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- No dynamic input.
 		} else {
 			$prepared_count = $wpdb->prepare( $count_sql, $where_args ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Dynamic WHERE requires manual preparation.
-			$total = (int) $wpdb->get_var( $prepared_count ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Prepared above with dynamic components.
+			$total          = (int) $wpdb->get_var( $prepared_count ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Prepared above with dynamic components.
 		}
 
 		return [

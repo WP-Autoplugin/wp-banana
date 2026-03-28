@@ -3,7 +3,7 @@ Contributors: pbalazs
 Tags: ai, images, openai, replicate, google
 Requires at least: 6.0
 Tested up to: 6.9
-Stable tag: 0.9.0
+Stable tag: 0.9.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -128,6 +128,10 @@ All images are saved directly into your WordPress Media Library. You can use the
 ---
 
 == Changelog ==
+
+= 0.9.1 =
+* Fixed fal.ai API key tester button
+* Code cleanup and WPCS compliance improvements
 
 = 0.9.0 =
 * Upgrade core image block to include a new Generate button
