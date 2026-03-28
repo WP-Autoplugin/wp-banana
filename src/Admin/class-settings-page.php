@@ -696,7 +696,9 @@ final class Settings_Page {
 			return;
 		}
 
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Notices are based on query parameters set after nonce-verified actions.
 		if ( ! empty( $_GET['wp-banana-logs'] ) ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- See above.
 			$status = sanitize_key( wp_unslash( (string) $_GET['wp-banana-logs'] ) );
 			if ( 'cleared' === $status ) {
 				?>
@@ -719,7 +721,9 @@ final class Settings_Page {
 			}
 		}
 
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- See above.
 		if ( ! empty( $_GET['wp-banana-meta'] ) ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- See above.
 			$status = sanitize_key( wp_unslash( (string) $_GET['wp-banana-meta'] ) );
 			if ( 'cleared' === $status ) {
 				?>
