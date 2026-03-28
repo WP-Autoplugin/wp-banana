@@ -19,8 +19,6 @@ use WPBanana\Domain\Binary_Image;
 use WPBanana\Domain\Edit_Params;
 use WPBanana\Domain\Image_Params;
 use WPBanana\Domain\Reference_Image;
-use WPBanana\Services\Options;
-use WPBanana\Services\Models_Catalog;
 use WPBanana\Util\Http;
 
 /**

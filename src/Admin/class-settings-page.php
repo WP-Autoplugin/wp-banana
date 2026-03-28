@@ -934,7 +934,7 @@ final class Settings_Page {
 				];
 				break;
 			case 'fal':
-				$url     = 'https://api.fal.ai/v1/models/requests/by-endpoint';
+				$url     = 'https://api.fal.ai/v1/models';
 				$headers = [
 					'Authorization' => 'Key ' . $secret,
 				];
