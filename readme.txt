@@ -8,11 +8,11 @@ Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Free plugin for generating and editing images with AI. Works with Google Nano Banana, Seedream 4.0, and others. Compatible with virtually all plugins.
+Free plugin for generating and editing images with AI. Works with Google Nano Banana, Seedream 5.0, and others. Compatible with virtually all plugins.
 
 == Description ==
 
-WP Banana is a clean, free, and open-source WordPress plugin that brings AI image generation and editing directly into your WordPress admin area.  
+WP Banana is a free WordPress plugin that brings AI image generation and editing directly into your WordPress admin area.
 
 **Key capabilities**:
 - Generate images from text prompts
@@ -62,26 +62,41 @@ WP Banana supports a wide range of AI image models:
 
 ### External Services
 
-The plugin depends on third-party APIs for AI image generation and editing.  
-No data is transmitted until you configure your API credentials in settings.
+The plugin depends on third-party APIs for AI image generation and editing. It only communicates with these services when you use the plugin's features. No data is transmitted until you configure your API credentials in settings. 
 
 **OpenAI**
-- Used for AI image generation/editing via `gpt-image-1`
+- Used for AI image generation/editing via GPT-Image models
 - Data sent: prompts, optional reference images
-- [Terms of Use](https://openai.com/policies/terms-of-use)  
-- [Privacy Policy](https://openai.com/policies/privacy-policy)  
+- [Terms of Use](https://openai.com/policies/terms-of-use)
+- [Privacy Policy](https://openai.com/policies/privacy-policy)
 
 **Google Generative AI**
-- Used for image generation/editing (Gemini Nano Banana, Imagen models)
+- Used for image generation/editing via Google Gemini and Imagen models
 - Data sent: prompts, optional reference images
-- [Terms of Service](https://policies.google.com/terms)  
-- [Privacy Policy](https://policies.google.com/privacy)  
+- [Terms of Service](https://policies.google.com/terms)
+- [Privacy Policy](https://policies.google.com/privacy)
 
 **Replicate API**
 - Provides access to third-party AI image models (Seedream, FLUX, Recraft, Ideogram, etc.)
 - Data sent: prompts, optional reference images
-- [Terms of Service](https://replicate.com/terms)  
-- [Privacy Policy](https://replicate.com/privacy)  
+- [Terms of Service](https://replicate.com/terms)
+- [Privacy Policy](https://replicate.com/privacy)
+
+**FAL AI**
+- Provides access to third-party AI image models (Seedream, FLUX, Recraft, Ideogram, etc.)
+- Data sent: prompts, optional reference images
+- [Terms of Service](https://fal.ai/terms)
+- [Privacy Policy](https://fal.ai/privacy)
+
+#### Plugin Updates
+
+WP Banana uses the GitHub API to check for plugin updates and download new versions. You can opt out of update checks by defining the `WP_BANANA_DISABLE_GITHUB_UPDATER` constant as true, or by returning false from the `wp_banana_github_updater_enabled` filter.
+
+**GitHub API**
+- Used for checking plugin updates and downloading new versions
+- Data sent: none
+- [GitHub Terms of Service](https://docs.github.com/en/site-policy/github-terms-of-service)
+- [GitHub Privacy Statement](https://docs.github.com/en/site-policy/privacy-policy)
 
 ---
 
@@ -112,18 +127,18 @@ All images are saved directly into your WordPress Media Library. You can use the
 
 == Screenshots ==
 
-1. Generate AI images from prompts  
-2. Edit images inside the Media Library  
-3. Combine multiple images into a new AI composite  
-4. Settings page for configuring API credentials  
+1. Generate AI images from prompts
+2. Edit images inside the Media Library
+3. Combine multiple images into a new AI composite
+4. Settings page for configuring API credentials
 
 ---
 
 == Requirements ==
 
-- WordPress 6.0 or higher  
-- PHP 7.4 or higher  
-- API key from a supported provider  
+- WordPress 6.0 or higher
+- PHP 7.4 or higher
+- API key from a supported provider
 
 ---
 
@@ -195,5 +210,5 @@ All images are saved directly into your WordPress Media Library. You can use the
 
 == License ==
 
-This plugin is licensed under the GPLv2 or later.  
+This plugin is licensed under the GPLv2 or later.
 https://www.gnu.org/licenses/gpl-2.0.html
