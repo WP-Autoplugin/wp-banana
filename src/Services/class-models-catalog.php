@@ -78,7 +78,7 @@ final class Models_Catalog {
 	public const FAL_FLUX_PRO_V11               = 'fal-ai/flux-pro/v1.1';
 	public const FAL_FLUX_DEV_V15               = 'fal-ai/flux/dev/v1.5';
 
-	// FLUX.2 Models (Latest Generation)
+	// FLUX.2 Models (Latest Generation).
 	public const FAL_FLUX_2       = 'fal-ai/flux-2';
 	public const FAL_FLUX_2_PRO   = 'fal-ai/flux-2-pro';
 	public const FAL_FLUX_2_MAX   = 'fal-ai/flux-2-max';
@@ -86,7 +86,7 @@ final class Models_Catalog {
 	public const FAL_FLUX_2_FLASH = 'fal-ai/flux-2/flash';
 	public const FAL_FLUX_2_FLEX  = 'fal-ai/flux-2-flex';
 
-	// Google Nano Banana Models
+	// Google Nano Banana Models.
 	public const FAL_NANO_BANANA           = 'fal-ai/nano-banana';
 	public const FAL_NANO_BANANA_2         = 'fal-ai/nano-banana-2';
 	public const FAL_NANO_BANANA_PRO       = 'fal-ai/nano-banana-pro';
@@ -94,11 +94,11 @@ final class Models_Catalog {
 	public const FAL_GEMINI_31_FLASH_IMAGE = 'fal-ai/gemini-3.1-flash-image-preview';
 	public const FAL_GEMINI_3_PRO_IMAGE    = 'fal-ai/gemini-3-pro-image-preview';
 
-	// Imagen 4 Variants
+	// Imagen 4 Variants.
 	public const FAL_IMAGEN_4_FAST  = 'fal-ai/imagen4/preview/fast';
 	public const FAL_IMAGEN_4_ULTRA = 'fal-ai/imagen4/preview/ultra';
 
-	// Other Top Models
+	// Other Top Models.
 	public const FAL_REVE             = 'fal-ai/reve/text-to-image';
 	public const FAL_REVE_REMIX       = 'fal-ai/reve/remix';
 	public const FAL_RECRAFT_V3       = 'fal-ai/recraft/v3/text-to-image';
@@ -115,7 +115,7 @@ final class Models_Catalog {
 	public const FAL_SEEDREAM_5_LITE  = 'fal-ai/bytedance/seedream/v5/lite/text-to-image';
 	public const FAL_SEEDREAM_5_EDIT  = 'fal-ai/bytedance/seedream/v5/lite/edit';
 
-	// Editing Models
+	// Editing Models.
 	public const FAL_FLUX_2_EDIT                = 'fal-ai/flux-2/edit';
 	public const FAL_FLUX_2_PRO_EDIT            = 'fal-ai/flux-2-pro/edit';
 	public const FAL_FLUX_2_MAX_EDIT            = 'fal-ai/flux-2-max/edit';
