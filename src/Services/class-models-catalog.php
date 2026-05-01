@@ -61,8 +61,6 @@ final class Models_Catalog {
 	public const REPLICATE_SEEDEDIT_30          = 'bytedance/seededit-3.0';
 	public const REPLICATE_NANO_BANANA          = 'google/nano-banana';
 	public const REPLICATE_NANO_BANANA_2        = 'google/nano-banana-2';
-	public const REPLICATE_GPT_IMAGE_1          = 'openai/gpt-image-1';
-	public const REPLICATE_GPT_IMAGE_1_MINI     = 'openai/gpt-image-1-mini';
 	public const REPLICATE_GPT_IMAGE_15         = 'openai/gpt-image-1.5';
 	public const REPLICATE_GPT_IMAGE_2          = 'openai/gpt-image-2';
 	public const REPLICATE_FLUX_KONTEXT_MAX     = 'black-forest-labs/flux-kontext-max';
@@ -256,8 +254,6 @@ final class Models_Catalog {
 				self::REPLICATE_NANO_BANANA,
 				self::REPLICATE_NANO_BANANA_PRO,
 				self::REPLICATE_NANO_BANANA_2,
-				self::REPLICATE_GPT_IMAGE_1,
-				self::REPLICATE_GPT_IMAGE_1_MINI,
 				self::REPLICATE_GPT_IMAGE_15,
 				self::REPLICATE_GPT_IMAGE_2,
 				self::REPLICATE_SEEDREAM_45,
@@ -375,8 +371,6 @@ final class Models_Catalog {
 				self::REPLICATE_IMAGEN_4_FAST,
 				self::REPLICATE_NANO_BANANA_PRO,
 				self::REPLICATE_NANO_BANANA_2,
-				self::REPLICATE_GPT_IMAGE_1,
-				self::REPLICATE_GPT_IMAGE_1_MINI,
 				self::REPLICATE_GPT_IMAGE_15,
 				self::REPLICATE_GPT_IMAGE_2,
 				self::REPLICATE_FLUX_2_DEV,
@@ -468,6 +462,8 @@ final class Models_Catalog {
 				self::REPLICATE_NANO_BANANA_PRO,
 				self::REPLICATE_NANO_BANANA,
 				self::REPLICATE_NANO_BANANA_2,
+				self::REPLICATE_GPT_IMAGE_15,
+				self::REPLICATE_GPT_IMAGE_2,
 				self::REPLICATE_SEEDREAM_45,
 				self::REPLICATE_SEEDREAM_4,
 				self::REPLICATE_SEEDREAM_5_LITE,
