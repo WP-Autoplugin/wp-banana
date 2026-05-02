@@ -90,7 +90,7 @@ WP Banana uses a customized version of the [GitHub Updater library](https://gith
 define( 'WP_BANANA_DISABLE_GITHUB_UPDATER', true );
 ```
 
-Or use the filter:
+Or use the filter in your theme’s `functions.php` or a custom plugin:
 
 ```php
 add_filter( 'wp_banana_disable_github_updater', '__return_true' );
