@@ -791,6 +791,10 @@ final class Replicate_Provider implements Provider_Interface {
 			strtolower( Models_Catalog::REPLICATE_NANO_BANANA_PRO ),
 			strtolower( Models_Catalog::REPLICATE_NANO_BANANA_2 ),
 		];
+		$gpt_image_models = [
+			strtolower( Models_Catalog::REPLICATE_GPT_IMAGE_15 ),
+			strtolower( Models_Catalog::REPLICATE_GPT_IMAGE_2 ),
+		];
 		$flux_2_models    = [
 			strtolower( Models_Catalog::REPLICATE_FLUX_2_DEV ),
 			strtolower( Models_Catalog::REPLICATE_FLUX_2_PRO ),
@@ -803,7 +807,8 @@ final class Replicate_Provider implements Provider_Interface {
 		];
 		$reve_remix_lower = strtolower( Models_Catalog::REPLICATE_REVE_REMIX );
 
-		if ( $this->needle_contains_any( $needle, $flux_2_models ) ) {
+		// Flux-2 & GPT-image models expect an array of images under `input_images`.
+		if ( $this->needle_contains_any( $needle, $flux_2_models ) || $this->needle_contains_any( $needle, $gpt_image_models ) ) {
 			$input['input_images'] = $data_uris;
 		} elseif ( $this->needle_contains_any( $needle, $banana_variants ) || $this->needle_contains_any( $needle, $seedream_needles ) ) {
 			$input['image_input'] = $data_uris;
@@ -862,6 +867,10 @@ final class Replicate_Provider implements Provider_Interface {
 			strtolower( Models_Catalog::REPLICATE_NANO_BANANA_PRO ),
 			strtolower( Models_Catalog::REPLICATE_NANO_BANANA_2 ),
 		];
+		$gpt_image_models = [
+			strtolower( Models_Catalog::REPLICATE_GPT_IMAGE_15 ),
+			strtolower( Models_Catalog::REPLICATE_GPT_IMAGE_2 ),
+		];
 		$seedream        = [
 			strtolower( Models_Catalog::REPLICATE_SEEDREAM_4 ),
 			strtolower( Models_Catalog::REPLICATE_SEEDREAM_45 ),
@@ -886,6 +895,8 @@ final class Replicate_Provider implements Provider_Interface {
 			if ( false !== strpos( $needle, strtolower( Models_Catalog::REPLICATE_FLUX_2_DEV ) ) ) {
 				$defaults['go_fast'] = true;
 			}
+		} elseif ( $this->needle_contains_any( $needle, $gpt_image_models ) ) {
+			$defaults['input_images'] = [ $data_uri ];
 		} elseif ( $needle === $reve_remix ) {
 			$defaults['reference_images'] = [
 				$data_uri,

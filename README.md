@@ -18,7 +18,7 @@ WP Banana is a free WordPress plugin that lets you generate and edit images with
 - **Native Integration**: Looks and feels like WordPress core — no flashy UI, no distractions
 - **Free & Open Source**: 100% free, GPL-licensed, no upsells
 - **Bring Your Own Key**: Connect your own Google, OpenAI, Fal or Replicate API key (no middleman fees)
-- **Multiple AI Models**: Supports OpenAI’s `gpt-image-1`, Google's Nano Banana 2 (`gemini-3.1-flash-image`), and more
+- **Multiple AI Models**: Supports OpenAI’s `gpt-image-2`, Google's Nano Banana 2 (`gemini-3.1-flash-image`), and more
 - **Secure & Performant**: Clean codebase, minimal overhead, optimized for WordPress best practices
 - **Universal Compatibility**: Works with Gutenberg, Classic Editor, Elementor, WooCommerce, ACF, and more
 
@@ -81,6 +81,20 @@ define( 'WP_BANANA_FAL_API_KEY', '...' );
 ```
 
 Constants (if present) take priority over saved settings.
+
+## Updates
+
+WP Banana uses a customized version of the [GitHub Updater library](https://github.com/radishconcepts/WordPress-GitHub-Plugin-Updater) to enable seamless updates directly from GitHub. When a new release is published, you can update WP Banana just like any other plugin from the WordPress dashboard. You can disable these update checks if you prefer by adding the following line to your `wp-config.php`:
+
+```php
+define( 'WP_BANANA_DISABLE_GITHUB_UPDATER', true );
+```
+
+Or use the filter in your theme’s `functions.php` or a custom plugin:
+
+```php
+add_filter( 'wp_banana_disable_github_updater', '__return_true' );
+```
 
 ## Usage Examples
 
@@ -166,6 +180,7 @@ WP Banana supports a wide range of state-of-the-art AI image models for both gen
 - **Imagen 4** (`fal-ai/imagen4/preview`)
 - **Imagen 4 Fast** (`fal-ai/imagen4/preview/fast`)
 - **Imagen 4 Ultra** (`fal-ai/imagen4/preview/ultra`)
+- **GPT-Image-2** (`fal-ai/gpt-image-2`)
 - **GPT-Image-1.5** (`fal-ai/gpt-image-1.5`)
 - **GPT-Image-1 Mini** (`fal-ai/gpt-image-1-mini`)
 - **Reve** (`fal-ai/reve/text-to-image`)
@@ -183,9 +198,10 @@ WP Banana supports a wide range of state-of-the-art AI image models for both gen
 
 ### Via OpenAI
 
-- **OpenAI GPT-Image-1.5** (`gpt-image-1.5`) - latest OpenAI image generation model
-- **OpenAI GPT-Image-1** (`gpt-image-1`) - the same model used by ChatGPT for image generation and editing
-- **OpenAI GPT-Image-1-Mini** (`gpt-image-1-mini`) - a smaller, faster version of the GPT-Image-1 model, ideal for quick iterations and previews
+- **OpenAI GPT-Image-2** (`gpt-image-2`)
+- **OpenAI GPT-Image-1.5** (`gpt-image-1.5`)
+- **OpenAI GPT-Image-1** (`gpt-image-1`)
+- **OpenAI GPT-Image-1-Mini** (`gpt-image-1-mini`)
 
 ### Via Replicate
 
@@ -194,6 +210,10 @@ WP Banana supports a wide range of state-of-the-art AI image models for both gen
 - **FLUX 1.1 Pro** (`black-forest-labs/flux-1.1-pro`)
 - **FLUX Schnell** (`black-forest-labs/flux-schnell`)
 - **FLUX Dev** (`black-forest-labs/flux-dev`)
+- **OpenAI GPT-Image-2** (`openai/gpt-image-2`)
+- **OpenAI GPT-Image-1.5** (`openai/gpt-image-1.5`)
+- **OpenAI GPT-Image-1** (`openai/gpt-image-1`)
+- **OpenAI GPT-Image-1-Mini** (`openai/gpt-image-1-mini`)
 - **Nano Banana 2** (`google/nano-banana-2`)
 - **Nano Banana Pro** (`google/nano-banana-pro`)
 - **Nano Banana** (`google/nano-banana`)
