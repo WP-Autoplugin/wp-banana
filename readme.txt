@@ -3,7 +3,7 @@ Contributors: pbalazs
 Tags: ai, images, openai, replicate, google
 Requires at least: 6.0
 Tested up to: 6.9
-Stable tag: 0.9.1
+Stable tag: 0.9.2
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -54,11 +54,11 @@ WP Banana supports a wide range of AI image models:
 
 - **Google Gemini 3 Pro Image Preview** (`gemini-3-pro-image-preview`), a.k.a. *Google Nano Banana Pro* (`google/nano-banana-pro`)
 - **Google Gemini 2.5 Flash Image**, a.k.a. *Google Nano Banana* (`gemini-2.5-flash-image`)
-- **OpenAI GPT-Image-1** (`gpt-image-1`) — same model ChatGPT uses for image generation
+- **OpenAI GPT-Image-2** (`gpt-image-2`) — same model ChatGPT uses for image generation
 - **Google Imagen 4 (Gemini API)** (`imagen-4.0-generate-001`, `imagen-4.0-ultra-generate-001`, `imagen-4.0-fast-generate-001`)
 - **Google Imagen 4 (Replicate)** (`google/imagen-4`, `google/imagen-4-ultra`, `google/imagen-4-fast`)
 - **FLUX Models** (`flux-kontext-max`, `flux-1.1-pro`, `flux-schnell`, `flux-dev`)
-- **Recraft v3**, **Reve Create**, **Ideogram v3**, **Seedream 4.0**, **Qwen Image** and more
+- **Recraft v3**, **Reve Create**, **Ideogram v3**, **Seedream 5.0**, **Qwen Image** and more
 
 ### External Services
 
@@ -143,6 +143,11 @@ All images are saved directly into your WordPress Media Library. You can use the
 ---
 
 == Changelog ==
+
+= 0.9.2 =
+* Added support for new models: GPT-Image-2
+* Added support for GPT-Image models through Replicate & Fal.ai providers
+* Added option to disable GitHub API-based update checks
 
 = 0.9.1 =
 * Fixed fal.ai API key tester button
